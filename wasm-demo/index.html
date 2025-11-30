@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spintronics WASM Demo - Real-time Magnetization Dynamics</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        h2 {
+            color: #764ba2;
+            margin-top: 0;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type="number"], input[type="range"] {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #canvas {
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            display: block;
+            margin: 20px auto;
+            background: white;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        canvas {
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧲 Spintronics WASM Demo</h1>
+        <p class="subtitle">Real-time Magnetization Dynamics in Your Browser</p>
+
+        <div class="info-box">
+            <h3>About This Demo</h3>
+            <p>
+                This demonstration runs physics-accurate spintronics simulations entirely in your browser
+                using WebAssembly. The simulation solves the Landau-Lifshitz-Gilbert (LLG) equation in real-time,
+                showing how magnetic moments precess and relax in response to external fields.
+            </p>
+        </div>
+
+        <!-- Demo 1: Single Spin Precession -->
+        <div class="demo-section">
+            <h2>🎯 Demo 1: Single Spin Precession</h2>
+            <p>Visualize magnetization precession around an applied magnetic field</p>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="hx">H<sub>x</sub> (kA/m): <span id="hx-value">0</span></label>
+                    <input type="range" id="hx" min="-50" max="50" value="0" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="hy">H<sub>y</sub> (kA/m): <span id="hy-value">0</span></label>
+                    <input type="range" id="hy" min="-50" max="50" value="0" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="hz">H<sub>z</sub> (kA/m): <span id="hz-value">10</span></label>
+                    <input type="range" id="hz" min="-50" max="50" value="10" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="damping">Damping α: <span id="damping-value">0.01</span></label>
+                    <input type="range" id="damping" min="0.001" max="0.5" value="0.01" step="0.001">
+                </div>
+            </div>
+
+            <canvas id="canvas" width="600" height="400"></canvas>
+
+            <div class="button-group">
+                <button onclick="startSimulation()">▶️ Start</button>
+                <button onclick="stopSimulation()">⏸️ Pause</button>
+                <button onclick="resetSimulation()">🔄 Reset</button>
+            </div>
+
+            <div class="stats">
+                <div>Time: <span class="stat-value" id="time">0.000</span> ns</div>
+                <div>M<sub>x</sub>: <span class="stat-value" id="mx">0.000</span></div>
+                <div>M<sub>y</sub>: <span class="stat-value" id="my">0.000</span></div>
+                <div>M<sub>z</sub>: <span class="stat-value" id="mz">1.000</span></div>
+                <div>|M|: <span class="stat-value" id="mag">1.000</span></div>
+            </div>
+        </div>
+
+        <!-- Demo 2: Spin Chain Magnons -->
+        <div class="demo-section">
+            <h2>🌊 Demo 2: Magnon Propagation in Spin Chain</h2>
+            <p>Watch spin waves (magnons) propagate through a 1D chain of coupled spins</p>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="chain-length">Chain Length: <span id="chain-length-value">50</span></label>
+                    <input type="range" id="chain-length" min="20" max="100" value="50" step="10">
+                </div>
+                <div class="control-group">
+                    <label for="excitation-pos">Excitation Position: <span id="excitation-pos-value">25</span></label>
+                    <input type="range" id="excitation-pos" min="0" max="49" value="25" step="1">
+                </div>
+                <div class="control-group">
+                    <label for="excitation-amp">Amplitude: <span id="excitation-amp-value">0.5</span></label>
+                    <input type="range" id="excitation-amp" min="0.1" max="1.0" value="0.5" step="0.1">
+                </div>
+            </div>
+
+            <canvas id="chain-canvas" width="600" height="300"></canvas>
+
+            <div class="button-group">
+                <button onclick="startChainSimulation()">▶️ Start</button>
+                <button onclick="stopChainSimulation()">⏸️ Pause</button>
+                <button onclick="resetChainSimulation()">🔄 Reset</button>
+                <button onclick="exciteChain()">⚡ Excite Wave</button>
+            </div>
+
+            <div class="stats">
+                <div>Time: <span class="stat-value" id="chain-time">0.000</span> ns</div>
+                <div>Spins: <span class="stat-value" id="chain-length-display">50</span></div>
+            </div>
+        </div>
+
+        <!-- Demo 3: Spin Hall Effect Calculator -->
+        <div class="demo-section">
+            <h2>⚡ Demo 3: Spin Hall Effect Calculator</h2>
+            <p>Calculate spin current generation from charge current</p>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="charge-current">Charge Current Density (10<sup>10</sup> A/m²):</label>
+                    <input type="number" id="charge-current" value="1.0" step="0.1">
+                </div>
+                <div class="control-group">
+                    <label for="spin-hall-angle">Spin Hall Angle θ<sub>SH</sub>:</label>
+                    <input type="number" id="spin-hall-angle" value="0.07" step="0.01">
+                </div>
+            </div>
+
+            <button onclick="calculateSpinHall()">🧮 Calculate</button>
+
+            <div class="info-box">
+                <h3>Result:</h3>
+                <p>Spin Current Density: <span class="stat-value" id="spin-current-result">—</span> A/m²</p>
+                <p style="margin-top: 10px; font-size: 14px;">
+                    The spin Hall effect converts charge current into transverse spin current.
+                    This is a key mechanism for electrical manipulation of magnetization in spintronic devices.
+                </p>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚡ Performance Note:</strong> These simulations run natively in your browser using Rust compiled to WebAssembly.
+            For optimal performance, use a modern browser (Chrome, Firefox, Edge, or Safari).
+        </div>
+    </div>
+
+    <script type="module">
+        import init, { SpinSimulator, SpinChain, SpinHallCalculator, Vec3 } from './pkg/spintronics.js';
+
+        let simulator = null;
+        let spinChain = null;
+        let spinHallCalc = null;
+        let animationId = null;
+        let chainAnimationId = null;
+
+        // Initialize WASM module
+        async function initWasm() {
+            try {
+                await init();
+                console.log('WASM module initialized successfully');
+
+                // Create simulators
+                simulator = new SpinSimulator();
+                spinChain = new SpinChain(50, 1e-21);
+                spinHallCalc = new SpinHallCalculator();
+
+                // Set up initial field
+                updateField();
+                drawSpin();
+                drawChain();
+
+            } catch (error) {
+                console.error('Failed to initialize WASM:', error);
+                alert('Failed to load WASM module. Please check console for errors.');
+            }
+        }
+
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const chainCanvas = document.getElementById('chain-canvas');
+        const chainCtx = chainCanvas.getContext('2d');
+
+        // Update field from sliders
+        function updateField() {
+            if (!simulator) return;
+            const hx = parseFloat(document.getElementById('hx').value) * 1000;
+            const hy = parseFloat(document.getElementById('hy').value) * 1000;
+            const hz = parseFloat(document.getElementById('hz').value) * 1000;
+            simulator.set_field(hx, hy, hz);
+        }
+
+        // Update damping
+        function updateDamping() {
+            if (!simulator) return;
+            const alpha = parseFloat(document.getElementById('damping').value);
+            const ms = 8.6e5; // Permalloy
+            const gamma = 2.21e5;
+            simulator = new SpinSimulator.with_material(ms, alpha, gamma);
+            updateField();
+        }
+
+        // Draw single spin
+        function drawSpin() {
+            if (!simulator) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw coordinate axes
+            ctx.strokeStyle = '#ccc';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(300, 0);
+            ctx.lineTo(300, 400);
+            ctx.moveTo(0, 200);
+            ctx.lineTo(600, 200);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#666';
+            ctx.font = '14px Arial';
+            ctx.fillText('x', 580, 195);
+            ctx.fillText('y', 305, 15);
+
+            // Get magnetization
+            const mx = simulator.get_mx();
+            const my = simulator.get_my();
+            const mz = simulator.get_mz();
+
+            // Project onto x-y plane and draw
+            const scale = 150;
+            const centerX = 300;
+            const centerY = 200;
+
+            const endX = centerX + mx * scale;
+            const endY = centerY - my * scale;
+
+            // Draw magnetization vector
+            ctx.strokeStyle = '#667eea';
+            ctx.fillStyle = '#667eea';
+            ctx.lineWidth = 3;
+
+            // Arrow shaft
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            // Arrow head
+            const angle = Math.atan2(-(my), mx);
+            const headSize = 15;
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle - Math.PI / 6),
+                endY + headSize * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                endX - headSize * Math.cos(angle + Math.PI / 6),
+                endY + headSize * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw z-component indicator
+            const zBarHeight = mz * 100;
+            ctx.fillStyle = mz > 0 ? '#4CAF50' : '#f44336';
+            ctx.fillRect(550, 200 - zBarHeight, 30, zBarHeight);
+            ctx.strokeRect(550, 100, 30, 200);
+            ctx.fillStyle = '#666';
+            ctx.fillText('M_z', 550, 320);
+
+            // Update stats
+            document.getElementById('time').textContent = (simulator.get_time() * 1e9).toFixed(3);
+            document.getElementById('mx').textContent = mx.toFixed(3);
+            document.getElementById('my').textContent = my.toFixed(3);
+            document.getElementById('mz').textContent = mz.toFixed(3);
+            const mag = Math.sqrt(mx*mx + my*my + mz*mz);
+            document.getElementById('mag').textContent = mag.toFixed(3);
+        }
+
+        // Draw spin chain
+        function drawChain() {
+            if (!spinChain) return;
+
+            chainCtx.clearRect(0, 0, chainCanvas.width, chainCanvas.height);
+
+            const n = spinChain.length();
+            const width = chainCanvas.width - 40;
+            const spacing = width / (n - 1);
+            const centerY = chainCanvas.height / 2;
+
+            // Draw spins
+            for (let i = 0; i < n; i++) {
+                const x = 20 + i * spacing;
+                const mx = spinChain.get_mx(i);
+                const my = spinChain.get_my(i);
+
+                // Color based on m_z
+                const mz = spinChain.get_mz(i);
+                const hue = (mz + 1) * 120; // Blue to red
+                chainCtx.strokeStyle = `hsl(${hue}, 70%, 50%)`;
+                chainCtx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+                chainCtx.lineWidth = 2;
+
+                const scale = 30;
+                const endX = x + mx * scale;
+                const endY = centerY - my * scale;
+
+                // Arrow
+                chainCtx.beginPath();
+                chainCtx.moveTo(x, centerY);
+                chainCtx.lineTo(endX, endY);
+                chainCtx.stroke();
+
+                // Arrow head
+                const angle = Math.atan2(-my, mx);
+                const headSize = 5;
+                chainCtx.beginPath();
+                chainCtx.moveTo(endX, endY);
+                chainCtx.lineTo(
+                    endX - headSize * Math.cos(angle - Math.PI / 6),
+                    endY + headSize * Math.sin(angle - Math.PI / 6)
+                );
+                chainCtx.lineTo(
+                    endX - headSize * Math.cos(angle + Math.PI / 6),
+                    endY + headSize * Math.sin(angle + Math.PI / 6)
+                );
+                chainCtx.closePath();
+                chainCtx.fill();
+            }
+
+            // Update time
+            document.getElementById('chain-time').textContent = (spinChain.get_time() * 1e9).toFixed(3);
+        }
+
+        // Animation loop
+        function animate() {
+            if (!simulator) return;
+
+            simulator.step(0.01); // 0.01 ns steps
+            drawSpin();
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function animateChain() {
+            if (!spinChain) return;
+
+            spinChain.step(0.01);
+            drawChain();
+
+            chainAnimationId = requestAnimationFrame(animateChain);
+        }
+
+        // Control functions
+        window.startSimulation = function() {
+            if (animationId) return;
+            animate();
+        };
+
+        window.stopSimulation = function() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        };
+
+        window.resetSimulation = function() {
+            stopSimulation();
+            simulator.reset();
+            updateField();
+            drawSpin();
+        };
+
+        window.startChainSimulation = function() {
+            if (chainAnimationId) return;
+            animateChain();
+        };
+
+        window.stopChainSimulation = function() {
+            if (chainAnimationId) {
+                cancelAnimationFrame(chainAnimationId);
+                chainAnimationId = null;
+            }
+        };
+
+        window.resetChainSimulation = function() {
+            stopChainSimulation();
+            const n = parseInt(document.getElementById('chain-length').value);
+            spinChain = new SpinChain(n, 1e-21);
+            document.getElementById('chain-length-display').textContent = n;
+            drawChain();
+        };
+
+        window.exciteChain = function() {
+            const pos = parseInt(document.getElementById('excitation-pos').value);
+            const amp = parseFloat(document.getElementById('excitation-amp').value);
+            spinChain.excite_wave(pos, amp, 3.0);
+            drawChain();
+        };
+
+        window.calculateSpinHall = function() {
+            const jc = parseFloat(document.getElementById('charge-current').value) * 1e10;
+            const theta_sh = parseFloat(document.getElementById('spin-hall-angle').value);
+
+            spinHallCalc = SpinHallCalculator.with_angle(theta_sh);
+            const js = spinHallCalc.spin_current(jc, 0, 0);
+
+            document.getElementById('spin-current-result').textContent = js.toExponential(3);
+        };
+
+        // Slider event listeners
+        document.getElementById('hx').addEventListener('input', function(e) {
+            document.getElementById('hx-value').textContent = e.target.value;
+            updateField();
+        });
+        document.getElementById('hy').addEventListener('input', function(e) {
+            document.getElementById('hy-value').textContent = e.target.value;
+            updateField();
+        });
+        document.getElementById('hz').addEventListener('input', function(e) {
+            document.getElementById('hz-value').textContent = e.target.value;
+            updateField();
+        });
+        document.getElementById('damping').addEventListener('input', function(e) {
+            document.getElementById('damping-value').textContent = e.target.value;
+            updateDamping();
+        });
+        document.getElementById('chain-length').addEventListener('input', function(e) {
+            document.getElementById('chain-length-value').textContent = e.target.value;
+            document.getElementById('excitation-pos').max = e.target.value - 1;
+        });
+        document.getElementById('excitation-pos').addEventListener('input', function(e) {
+            document.getElementById('excitation-pos-value').textContent = e.target.value;
+        });
+        document.getElementById('excitation-amp').addEventListener('input', function(e) {
+            document.getElementById('excitation-amp-value').textContent = e.target.value;
+        });
+
+        // Initialize when DOM is ready
+        initWasm();
+    </script>
+</body>
+</html>

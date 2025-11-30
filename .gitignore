@@ -1,0 +1,31 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# WASM build artifacts
+/pkg/
+/wasm-demo/pkg/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated simulation outputs
+*.csv
+*.json
+*.vtu
+*.vtk
+
+# Test and example binaries
+test_*
+performance_*
+/examples/*/target/

@@ -1,0 +1,87 @@
+//! Spin interface properties
+//!
+//! This module implements the spin-mixing conductance model that is central
+//! to Prof. Saitoh's research on spin pumping phenomena.
+
+use crate::vector3::Vector3;
+
+/// Spin interface between ferromagnet and normal metal
+///
+/// The spin-mixing conductance g_r is a key parameter introduced in:
+/// Saitoh et al., "Conversion of spin current into charge current at room
+/// temperature: Inverse spin-Hall effect", Appl. Phys. Lett. 88, 182509 (2006)
+#[derive(Debug, Clone)]
+pub struct SpinInterface {
+    /// Real part of spin-mixing conductance [Ω⁻¹ m⁻²]
+    ///
+    /// This parameter determines the efficiency of spin current transmission
+    /// across the ferromagnet/normal-metal interface.
+    /// Typical values: 1e18 to 1e20 for YIG/Pt, Py/Pt interfaces
+    pub g_r: f64,
+
+    /// Imaginary part of spin-mixing conductance [Ω⁻¹ m⁻²]
+    ///
+    /// Related to interface-induced magnetic anisotropy
+    pub g_i: f64,
+
+    /// Interface normal vector (normalized)
+    ///
+    /// Points from ferromagnet to normal metal
+    pub normal: Vector3<f64>,
+
+    /// Interface area \[m²\]
+    pub area: f64,
+}
+
+impl Default for SpinInterface {
+    fn default() -> Self {
+        Self {
+            g_r: 1.0e19,
+            g_i: 0.0,
+            normal: Vector3::new(0.0, 1.0, 0.0),
+            area: 1.0e-12, // 1 μm²
+        }
+    }
+}
+
+impl SpinInterface {
+    /// Create a YIG/Pt interface
+    ///
+    /// Parameters based on experimental values from Saitoh group's research
+    pub fn yig_pt() -> Self {
+        Self {
+            g_r: 1.0e19,
+            g_i: 0.0,
+            normal: Vector3::new(0.0, 1.0, 0.0),
+            area: 1.0e-12,
+        }
+    }
+
+    /// Create a Permalloy/Pt interface
+    pub fn py_pt() -> Self {
+        Self {
+            g_r: 5.0e19,
+            g_i: 0.0,
+            normal: Vector3::new(0.0, 1.0, 0.0),
+            area: 1.0e-12,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_interface() {
+        let interface = SpinInterface::default();
+        assert!(interface.g_r > 0.0);
+        assert!((interface.normal.magnitude() - 1.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_yig_pt_interface() {
+        let interface = SpinInterface::yig_pt();
+        assert!((interface.g_r - 1.0e19).abs() < 1.0);
+    }
+}
