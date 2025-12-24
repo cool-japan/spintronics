@@ -3,6 +3,11 @@
 //! This module defines the parameters needed for the Landau-Lifshitz-Gilbert (LLG)
 //! equation, which describes magnetization dynamics in ferromagnetic materials.
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Ferromagnetic material with LLG parameters
@@ -31,6 +36,7 @@ use crate::vector3::Vector3;
 /// };
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Ferromagnet {
     /// Gilbert damping constant (dimensionless)
     /// Typical values: 0.001-0.1 depending on material
@@ -213,6 +219,38 @@ impl Ferromagnet {
             easy_axis: easy_axis.normalize(),
             exchange_a,
         }
+    }
+}
+
+impl fmt::Display for Ferromagnet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Ferromagnet(α={:.4}, Ms={:.2e} A/m, K={:.2e} J/m³, A={:.2e} J/m)",
+            self.alpha, self.ms, self.anisotropy_k, self.exchange_a
+        )
+    }
+}
+
+impl super::traits::MagneticMaterial for Ferromagnet {
+    fn saturation_magnetization(&self) -> f64 {
+        self.ms
+    }
+
+    fn damping(&self) -> f64 {
+        self.alpha
+    }
+
+    fn exchange_stiffness(&self) -> f64 {
+        self.exchange_a
+    }
+
+    fn anisotropy(&self) -> f64 {
+        self.anisotropy_k
+    }
+
+    fn easy_axis(&self) -> Vector3<f64> {
+        self.easy_axis
     }
 }
 

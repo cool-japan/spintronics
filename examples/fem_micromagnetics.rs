@@ -1,11 +1,16 @@
 //! Finite Element Micromagnetic Simulation Example
 //!
+//! **Difficulty**: ⭐⭐⭐ Advanced
+//! **Category**: Computational Methods
+//! **Physics**: Micromagnetics, FEM, energy minimization
+//! **Requirements**: `fem` feature
+//!
 //! Demonstrates the use of the FEM module for micromagnetic simulations,
 //! including mesh generation, energy calculations, and solver usage.
 //!
 //! Run with:
 //! ```bash
-//! cargo run --example fem_micromagnetics
+//! cargo run --features fem --example fem_micromagnetics
 //! ```
 
 use spintronics::fem::{Mesh2D, MicromagneticFEM, SolverParams, SolverType};
@@ -103,7 +108,7 @@ fn main() -> Result<(), String> {
                 m_eq_avg.x, m_eq_avg.y, m_eq_avg.z
             );
             println!("   ✓ Equilibrium solution converged");
-        }
+        },
         Err(e) => println!("   ✗ Equilibrium solver failed: {}", e),
     }
 
@@ -173,10 +178,10 @@ fn demonstrate_solvers() -> Result<(), String> {
 fn average_vector(vectors: &[Vector3<f64>]) -> Vector3<f64> {
     let n = vectors.len() as f64;
     if n == 0.0 {
-        return Vector3::new(0.0, 0.0, 0.0);
+        return Vector3::zero();
     }
 
-    let mut sum = Vector3::new(0.0, 0.0, 0.0);
+    let mut sum = Vector3::zero();
     for v in vectors {
         sum = sum + *v;
     }

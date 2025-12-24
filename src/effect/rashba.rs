@@ -34,6 +34,8 @@
 //! - J. C. R. Sánchez et al., "Spin-to-charge conversion using Rashba coupling",
 //!   Nat. Commun. 4, 2944 (2013)
 
+use std::fmt;
+
 use crate::constants::HBAR;
 use crate::vector3::Vector3;
 
@@ -58,6 +60,13 @@ pub struct RashbaSystem {
 
     /// Surface normal direction
     pub surface_normal: Vector3<f64>,
+}
+
+impl Default for RashbaSystem {
+    /// Default to Ag/Bi interface parameters
+    fn default() -> Self {
+        Self::ag_bi()
+    }
 }
 
 impl RashbaSystem {
@@ -233,6 +242,7 @@ impl RashbaSystem {
     /// assert!(spin_y.x < -0.9);
     /// assert!(spin_y.y.abs() < 1e-10);
     /// ```
+    #[inline]
     pub fn spin_texture(&self, k_momentum: Vector3<f64>) -> Vector3<f64> {
         let k_inplane = k_momentum - self.surface_normal * k_momentum.dot(&self.surface_normal);
         self.surface_normal.cross(&k_inplane).normalize()
@@ -280,6 +290,7 @@ impl RashbaSystem {
     /// // Spin density magnitude proportional to current
     /// assert!(spin_density.magnitude() > 0.0);
     /// ```
+    #[inline]
     pub fn edelstein_spin_density(
         &self,
         current_density: f64,
@@ -304,6 +315,7 @@ impl RashbaSystem {
     ///
     /// # Returns
     /// Charge current density \[A/m²\]
+    #[inline]
     pub fn inverse_edelstein_current(&self, spin_density: Vector3<f64>) -> Vector3<f64> {
         let e = 1.602e-19; // Elementary charge \[C\]
         let alpha_r_si = self.alpha_r * 1.602e-19 * 1e-10; // Convert eV·Å to J·m
@@ -376,6 +388,16 @@ impl RashbaSystem {
     pub fn with_carrier_density(mut self, density: f64) -> Self {
         self.carrier_density = density;
         self
+    }
+}
+
+impl fmt::Display for RashbaSystem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}: α_R={:.2} eV·Å, E_F={:.2} eV, m*={:.2} m_e",
+            self.name, self.alpha_r, self.fermi_energy, self.effective_mass
+        )
     }
 }
 

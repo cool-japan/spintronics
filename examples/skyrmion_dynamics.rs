@@ -1,5 +1,9 @@
 //! Skyrmion Creation and Dynamics
 //!
+//! **Difficulty**: ⭐⭐ Intermediate
+//! **Category**: Topological Textures
+//! **Physics**: Magnetic skyrmions, DMI, spin-orbit torque, topological charge
+//!
 //! This example demonstrates:
 //! - Creating a Néel-type skyrmion with DMI
 //! - Calculating topological charge
@@ -11,11 +15,11 @@
 //! Dzyaloshinskii-Moriya interaction (DMI). They can be moved by
 //! electric currents with extremely low threshold densities.
 //!
-//! Run with: cargo run --example skyrmion_dynamics
+//! Run with: `cargo run --example skyrmion_dynamics`
+
+use std::f64::consts::PI;
 
 use spintronics::prelude::*;
-use spintronics::texture::skyrmion::{Chirality, Helicity, Skyrmion};
-use std::f64::consts::PI;
 
 fn main() {
     println!("=== Skyrmion Dynamics Simulation ===\n");

@@ -1,5 +1,9 @@
 //! YIG/Pt Spin Pumping Simulation
 //!
+//! **Difficulty**: ⭐ Beginner
+//! **Category**: Core Physics - Basic Spintronics
+//! **Physics**: Spin pumping, Inverse Spin Hall Effect (ISHE)
+//!
 //! This example demonstrates the complete spin pumping + ISHE process:
 //! 1. Magnetization dynamics in YIG under FMR conditions
 //! 2. Spin current generation via spin pumping

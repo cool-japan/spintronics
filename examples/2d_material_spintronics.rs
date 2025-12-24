@@ -20,8 +20,9 @@
 //!
 //! Run with: cargo run --example 2d_material_spintronics
 
-use spintronics::prelude::*;
 use std::f64::consts::PI;
+
+use spintronics::prelude::*;
 
 fn main() {
     println!("=== 2D Magnetic Materials for Spintronics ===\n");

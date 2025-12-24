@@ -31,11 +31,12 @@
 //! }
 //! ```
 
+use wasm_bindgen::prelude::*;
+
 use crate::constants::GAMMA;
 use crate::llg::LLGSolver;
 use crate::material::Ferromagnet;
 use crate::vector3::Vector3;
-use wasm_bindgen::prelude::*;
 
 /// Initialize panic hook for better error messages in browser console
 #[wasm_bindgen(start)]
@@ -460,8 +461,9 @@ impl SpinChain {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use wasm_bindgen_test::*;
+
+    use super::*;
 
     #[wasm_bindgen_test]
     fn test_vec3_creation() {

@@ -57,26 +57,26 @@ impl fmt::Display for Error {
         match self {
             Error::InvalidParameter { param, reason } => {
                 write!(f, "Invalid parameter '{}': {}", param, reason)
-            }
+            },
             Error::DimensionMismatch { expected, actual } => {
                 write!(
                     f,
                     "Dimension mismatch: expected {}, got {}",
                     expected, actual
                 )
-            }
+            },
             Error::NumericalError { description } => {
                 write!(f, "Numerical error: {}", description)
-            }
+            },
             Error::IoError { description } => {
                 write!(f, "I/O error: {}", description)
-            }
+            },
             Error::ConfigurationError { description } => {
                 write!(f, "Configuration error: {}", description)
-            }
+            },
             Error::NotImplemented { feature } => {
                 write!(f, "Feature not implemented: {}", feature)
-            }
+            },
         }
     }
 }

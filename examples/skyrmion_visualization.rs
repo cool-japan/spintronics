@@ -7,11 +7,12 @@
 //!
 //! Run with: cargo run --example skyrmion_visualization
 
+use std::f64::consts::PI;
+
 use spintronics::prelude::*;
 use spintronics::visualization::csv::CsvWriter;
 use spintronics::visualization::json::{JsonWriter, SimulationData};
 use spintronics::visualization::vtk::VtkWriter;
-use std::f64::consts::PI;
 
 fn main() -> std::io::Result<()> {
     println!("=== Skyrmion Visualization Example ===\n");

@@ -37,7 +37,7 @@
 use crate::vector3::Vector3;
 
 /// Antiferromagnetic crystal structure
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AfmStructure {
     /// Type-I: Simple antiferromagnetic (e.g., MnO, NiO)
     TypeI,
@@ -267,6 +267,36 @@ impl Antiferromagnet {
     /// Builder method to set easy axis
     pub fn with_easy_axis(mut self, axis: Vector3<f64>) -> Self {
         self.easy_axis = axis.normalize();
+        self
+    }
+
+    /// Builder method to set sublattice magnetization
+    pub fn with_sublattice_magnetization(mut self, ms: f64) -> Self {
+        self.sublattice_magnetization = ms;
+        self
+    }
+
+    /// Builder method to set exchange field
+    pub fn with_exchange_field(mut self, h_ex: f64) -> Self {
+        self.exchange_field = h_ex;
+        self
+    }
+
+    /// Builder method to set anisotropy field
+    pub fn with_anisotropy_field(mut self, h_k: f64) -> Self {
+        self.anisotropy_field = h_k;
+        self
+    }
+
+    /// Builder method to set resonance frequency
+    pub fn with_resonance_frequency(mut self, freq: f64) -> Self {
+        self.resonance_frequency = freq;
+        self
+    }
+
+    /// Builder method to set spin Hall angle
+    pub fn with_spin_hall_angle(mut self, theta_sh: f64) -> Self {
+        self.spin_hall_angle = theta_sh;
         self
     }
 }

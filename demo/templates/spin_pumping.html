@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Spin Pumping Calculator{% endblock %}
+
+{% block content %}
+<div class="demo-header">
+    <h1>⚡ Spin Pumping & ISHE</h1>
+    <p>Calculate spin current generation and voltage conversion</p>
+</div>
+
+<div class="demo-layout">
+    <div class="controls-panel">
+        <h2>Experiment Parameters</h2>
+
+        <form id="pumping-form" class="param-form">
+            <div class="param-group">
+                <h3>Material System</h3>
+                <div class="param-row">
+                    <label>Ferromagnet:</label>
+                    <select name="material" class="select-input">
+                        <option value="YIG" selected>YIG (Yttrium Iron Garnet)</option>
+                        <option value="Permalloy">Permalloy (Ni₈₀Fe₂₀)</option>
+                        <option value="CoFeB">CoFeB</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h3>FMR Conditions</h3>
+                <div class="param-row">
+                    <label>Frequency (GHz):</label>
+                    <input type="number" name="frequency_ghz" value="9.0" step="0.1" min="1" max="100">
+                    <span class="hint">X-band: ~9 GHz, K-band: ~20 GHz</span>
+                </div>
+                <div class="param-row">
+                    <label>RF Field (A/m):</label>
+                    <input type="number" name="h_rf" value="100" step="10" min="10" max="10000">
+                    <span class="hint">Typical: 10-1000 A/m</span>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="btn btn-primary btn-large"
+                    hx-get="/api/spin-pumping/calculate"
+                    hx-include="#pumping-form"
+                    hx-target="#pumping-result"
+                    hx-trigger="click, change from:select, change from:input delay:500ms">
+                🧮 Calculate
+            </button>
+        </form>
+
+        <div class="info-box">
+            <h3>📖 Saitoh 2006 Experiment</h3>
+            <p>
+                This demo reproduces the landmark experiment from:<br>
+                <strong>E. Saitoh et al., APL 88, 182509 (2006)</strong>
+            </p>
+            <p>Key concepts:</p>
+            <ul>
+                <li><strong>Spin Pumping</strong>: FMR generates spin current j<sub>s</sub></li>
+                <li><strong>ISHE</strong>: Pt converts j<sub>s</sub> to voltage V</li>
+                <li><strong>g<sub>r</sub></strong>: Spin mixing conductance (interface parameter)</li>
+                <li><strong>θ<sub>SH</sub></strong>: Spin Hall angle (~0.07 for Pt)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="viz-panel">
+        <h2>Results</h2>
+        <div id="pumping-result" class="result-area">
+            <div class="placeholder">
+                <p>👈 Select material and FMR parameters</p>
+                <p class="hint">Results will update automatically as you adjust parameters</p>
+            </div>
+        </div>
+
+        <div class="diagram">
+            <h3>Experimental Setup</h3>
+            <svg width="500" height="300" viewBox="0 0 500 300" style="border: 1px solid #ccc; background: #f9f9f9;">
+                <!-- FM layer -->
+                <rect x="100" y="100" width="300" height="80" fill="#e74c3c" stroke="#000" stroke-width="2"/>
+                <text x="250" y="145" text-anchor="middle" font-size="18" fill="white" font-weight="bold">Ferromagnet (FM)</text>
+
+                <!-- NM layer -->
+                <rect x="100" y="180" width="300" height="40" fill="#95a5a6" stroke="#000" stroke-width="2"/>
+                <text x="250" y="205" text-anchor="middle" font-size="16" fill="white" font-weight="bold">Pt (NM)</text>
+
+                <!-- Arrows for spin current -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#3498db" />
+                    </marker>
+                </defs>
+                <line x1="250" y1="180" x2="250" y2="140" stroke="#3498db" stroke-width="3" marker-end="url(#arrowhead)"/>
+                <text x="270" y="160" font-size="14" fill="#3498db" font-weight="bold">j<sub>s</sub></text>
+
+                <!-- Voltage measurement -->
+                <line x1="100" y1="240" x2="140" y2="240" stroke="#000" stroke-width="2"/>
+                <line x1="360" y1="240" x2="400" y2="240" stroke="#000" stroke-width="2"/>
+                <text x="120" y="260" font-size="16" font-weight="bold">−</text>
+                <text x="380" y="260" font-size="16" font-weight="bold">+</text>
+                <text x="250" y="260" text-anchor="middle" font-size="14" fill="#e74c3c" font-weight="bold">V<sub>ISHE</sub></text>
+
+                <!-- RF field -->
+                <path d="M 50 120 Q 50 140, 70 140" fill="none" stroke="#f39c12" stroke-width="2"/>
+                <path d="M 50 160 Q 50 140, 70 140" fill="none" stroke="#f39c12" stroke-width="2"/>
+                <text x="20" y="145" font-size="14" fill="#f39c12" font-weight="bold">h<sub>RF</sub></text>
+            </svg>
+        </div>
+    </div>
+</div>
+{% endblock %}

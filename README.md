@@ -24,19 +24,29 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📊 Development Status
 
-**Current Version**: 0.1.0 ✅ **PRODUCTION READY**
+**Current Version**: 0.2.0 ✅ **PRODUCTION READY**
 
-**First Release**: 1st December, 2025
+**Latest Release**: December 2025
 
-- ✅ **14 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
+### Version 0.2.0 Highlights
+- ✅ **Interactive Web Demo**: HTMX + Axum demonstration subcrate with 4 physics simulations
+- ✅ **Python Bindings (PyO3)**: Use from Python with native performance
+- ✅ **HDF5 Export**: Large-scale data storage for simulation results
+- ✅ **Memory Pool Allocator**: 99% allocation reduction in hot paths
+- ✅ **Serde Serialization**: JSON/binary data interchange
+- ✅ **Unit Validation**: Runtime checks for physical quantity sanity
+- ✅ **Performance**: 21 inline attributes on hot-path functions
+- ✅ **17 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
+- ✅ **448 Tests Passing**: 431 library (381 unit + 50 doc) + 17 demo, zero warnings
+
+### Core Capabilities
+- ✅ **18 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
 - ✅ **60+ Source Files**: Well-organized, modular codebase
-- ✅ **7 Working Examples**: Practical demonstrations including FEM micromagnetics
-- ✅ **391 Tests Passing**: 351 unit tests + 40 doc tests with zero warnings
 - ✅ **5 Experimental Validations**: Against landmark papers (Saitoh 2006, Woo 2016, etc.)
-- ✅ **40 Comprehensive Doc Tests**: With LaTeX equations and runnable examples
+- ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
-- ✅ **Memory Optimized**: 99% allocation reduction in hot paths
-- ✅ **Release Build**: Successfully compiles with optimizations
+- ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
+- ✅ **Production Quality**: Zero warnings, 448 tests passing
 
 ## ✨ Key Features
 
@@ -57,6 +67,9 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - 🧪 **Thoroughly Tested**: Unit tests for physical correctness
 - 🔧 **Minimal Dependencies**: Fast compilation, easy integration
 - 🌐 **Ecosystem Integration**: Part of the `scirs2` scientific computing suite
+- 🐍 **Python Integration**: PyO3 bindings for seamless Python interop
+- 💾 **Data Export**: HDF5, JSON, CSV, VTK formats supported
+- ✅ **Unit Validation**: 14 validators for physical quantity sanity checks
 
 ## 📚 Key References
 
@@ -65,19 +78,19 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📦 Implemented Modules
 
-The library is organized into 14 physics-focused modules:
+The library is organized into 18 physics-focused modules:
 
 | Module | Physics Concept | Key Papers / Concepts |
 |--------|----------------|----------------------|
-| **constants** | Physical Constants | ℏ, γ, e, μ_B, k_B |
+| **constants** | Physical Constants | ℏ, γ, e, μ_B, k_B, 20+ NIST-validated constants |
 | **vector3** | 3D Vector Math | Optimized for spin/magnetization operations |
-| **material** | Material Properties | Ferromagnets (YIG, Py), interfaces, spin mixing conductance |
-| **dynamics** | Magnetization Dynamics | Landau-Lifshitz-Gilbert equation solver |
+| **material** | Material Properties | Ferromagnets (YIG, Py), interfaces, 2D materials, topological |
+| **dynamics** | Magnetization Dynamics | LLG solver with RK4, Heun, adaptive methods |
 | **transport** | Spin Transport | Spin pumping (Saitoh 2006), diffusion equations |
-| **effect** | Spin-Charge Conversion | ISHE, SSE (Uchida, Saitoh et al., Nature 2008) |
+| **effect** | Spin-Charge Conversion | ISHE, SSE, SOT, Rashba, topological Hall |
 | **magnon** | Magnon Propagation | Spin wave dynamics, spin chains, magnon detection |
 | **thermo** | Thermoelectric Effects | Anomalous Nernst, thermal magnons, multilayers |
-| **texture** | Magnetic Textures | Skyrmions, domain walls, topological charge calculation |
+| **texture** | Magnetic Textures | Skyrmions, domain walls, DMI, topological charge |
 | **circuit** | Spin Circuit Theory | Resistor networks, spin accumulation |
 | **fluid** | Spin-Vorticity Coupling | Barnett effect in liquid metals |
 | **mech** | Nanomechanical Spintronics | Barnett, Einstein-de Haas, cantilever coupling |
@@ -85,6 +98,10 @@ The library is organized into 14 physics-focused modules:
 | **afm** | Antiferromagnetic Dynamics | THz spintronics (NiO, MnF₂, etc.) |
 | **stochastic** | Thermal Fluctuations | Finite-temperature effects, Langevin dynamics |
 | **cavity** | Cavity Magnonics | Magnon-photon hybrid quantum systems |
+| **memory** | Memory Management | Pool allocators, workspace buffers (v0.2.0) |
+| **units** | Unit Validation | 14 validators for physical quantities (v0.2.0) |
+| **visualization** | Data Export | HDF5, JSON, CSV, VTK formats (v0.2.0) |
+| **python** | Python Bindings | PyO3 integration for Python users (v0.2.0) |
 
 ### Module Architecture
 
@@ -181,7 +198,22 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spintronics = "0.1.0"
+spintronics = "0.2.0"
+```
+
+### Optional Features
+
+```toml
+[dependencies]
+spintronics = { version = "0.2.0", features = ["python", "hdf5", "serde"] }
+```
+
+Available features:
+- `python` - Python bindings via PyO3
+- `hdf5` - HDF5 file export support
+- `serde` - JSON/binary serialization
+- `fem` - Finite element method solver
+- `wasm` - WebAssembly support
 ```
 
 Or install directly from the repository:
@@ -194,7 +226,9 @@ cargo build --release
 
 ## 💡 Examples
 
-The library includes 6 comprehensive examples demonstrating various spintronics phenomena:
+The library includes **17 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
+
+### 📚 Quick Start Examples (Beginner)
 
 ### 1. YIG/Pt Spin Pumping + ISHE
 ```bash
@@ -205,49 +239,25 @@ Reproduces the landmark Saitoh et al. (2006) experiment:
 - Spin current generation via spin pumping
 - Voltage detection via inverse spin Hall effect in Pt
 
-### 2. Magnon Propagation
-```bash
-cargo run --release --example magnon_propagation
-```
-Simulates magnon dynamics and spin wave propagation:
-- Spin chain evolution
-- Magnon dispersion relations
-- Energy and momentum conservation
+### 🔬 Intermediate Examples
 
-### 3. Advanced Spintronics Phenomena
-```bash
-cargo run --release --example advanced_spintronics
-```
-Demonstrates multiple advanced effects:
-- Spin Seebeck effect simulation
-- Thermal spin transport
-- Multi-material heterostructures
+- **Skyrmion Dynamics** - Topological spin textures and current-driven motion
+- **Spin Torque Oscillators** - Auto-oscillations and phase locking
+- **2D Materials** - Van der Waals heterostructures (CrI₃, Fe₃GeTe₂)
 
-### 4. Magneto-Mechanical Coupling
-```bash
-cargo run --release --example mech_coupling
-```
-Explores angular momentum transfer between mechanical and spin systems:
-- Barnett effect (rotation → magnetization)
-- Einstein-de Haas effect (magnetization → rotation)
-- Coupled dynamics in nanomechanical resonators
+### 🚀 Advanced Examples
 
-### 5. Fluid Spintronics
-```bash
-cargo run --release --example fluid_barnett
-```
-Simulates spin-vorticity coupling in liquid metals:
-- Barnett effect in flowing conductors
-- Vorticity-induced magnetization
-- Applications to fluid-based spin generation
+- **FEM Micromagnetics** - Finite element simulations with realistic geometries
+- **Parallel Magnon Dynamics** - Multi-threaded large-scale simulations
+- **Thermal Magnon Transport** - Spin Seebeck effect and thermal gradients
+- **Topological Insulators** - Surface states and Edelstein effect
+- **Reservoir Computing** - Neuromorphic computing with magnons
 
-### 6. Physical Reservoir Computing
-```bash
-cargo run --release --example reservoir_computing
-```
-Demonstrates neuromorphic computing with magnon dynamics:
-- Magnon-based information processing
-- Temporal pattern recognition
+**See [`examples/README.md`](examples/README.md) for:**
+- Detailed descriptions of all 17 examples
+- Learning paths for different backgrounds
+- Difficulty ratings and prerequisites
+- Feature requirements and build commands
 - Physical implementation of reservoir computing
 
 ### Running All Examples
@@ -259,12 +269,48 @@ for example in yig_pt_pumping magnon_propagation advanced_spintronics \
 done
 ```
 
+## 🌐 Interactive Web Demo
+
+**NEW in v0.2.0!** Try the interactive web demonstrations:
+
+```bash
+cd demo
+cargo run --release
+# Open http://localhost:3000 in your browser
+```
+
+### Available Demonstrations
+
+1. **LLG Magnetization Dynamics** (`/llg`)
+   - Real-time LLG solver with trajectory visualization
+   - Interactive parameter controls (damping, field, initial state)
+   - RK4 integration with configurable time steps
+
+2. **Spin Pumping Calculator** (`/spin-pumping`)
+   - Reproduces Saitoh 2006 APL experiment
+   - Material selection (YIG, Permalloy, CoFeB)
+   - Frequency and RF field parameter sweep
+
+3. **Materials Explorer** (`/materials`)
+   - Compare magnetic properties across ferromagnets
+   - Saturation magnetization, damping, exchange stiffness
+   - Database of common spintronics materials
+
+4. **Skyrmion Visualizer** (`/skyrmion`)
+   - Real-time magnetization field rendering
+   - Helicity (Néel/Bloch) and chirality controls
+   - Topological charge calculation
+
+**Tech Stack**: Axum + HTMX + Askama (Server-side rendering, no JavaScript frameworks)
+
+See [`demo/README.md`](demo/README.md) and [`demo/TESTING.md`](demo/TESTING.md) for full documentation and automated testing guide.
+
 ## 🧪 Testing
 
 Run the full test suite:
 
 ```bash
-cargo test
+cargo test --all
 ```
 
 Run tests with output:
@@ -278,7 +324,19 @@ cargo test dynamics::
 cargo test transport::
 ```
 
+Test the demo subcrate:
+```bash
+cd demo
+./test_server.sh  # Automated endpoint testing
+cargo test        # Unit tests
+```
+
 ### Test Coverage
+
+**Total: 448 tests passing** (431 library + 17 demo)
+- ✅ **381 Unit Tests**: Core physics calculations
+- ✅ **50 Doc Tests**: Documentation examples
+- ✅ **17 Demo Tests**: Web endpoints and physics validation
 
 All modules include comprehensive tests covering:
 - ✅ **Physical Correctness**: Conservation laws, symmetries, gauge invariance
@@ -318,7 +376,7 @@ Minimal dependency footprint for fast compilation and easy integration:
 
 ```toml
 [dependencies]
-scirs2-core = { version = "0.1.0-rc.2", features = ["random"] }
+scirs2-core = { version = "0.1.0-rc.4", features = ["random"] }
 ```
 
 **scirs2-core** provides:
@@ -526,8 +584,8 @@ See `wasm-demo/` directory for complete interactive examples.
 - ✅ **Comprehensive FEM micromagnetics example**
 
 **Documentation & Testing** ✅ **COMPLETE**
-- ✅ **391 tests passing** (351 unit + 40 doc tests)
-- ✅ **40 comprehensive doc tests** with LaTeX equations and runnable examples
+- ✅ **431 tests passing** (381 unit + 50 doc tests)
+- ✅ **50 comprehensive doc tests** with LaTeX equations and runnable examples
 - ✅ **5 experimental validation tests** against landmark papers
 - ✅ Zero clippy warnings
 - ✅ Zero compilation warnings

@@ -15,11 +15,12 @@
 //! - A. Vansteenkiste et al., "The design and verification of MuMax3",
 //!   AIP Advances 4, 107133 (2014)
 
-use crate::magnon::chain::{ChainParameters, SpinChain};
-use crate::vector3::Vector3;
 // Import rayon parallel iterator traits via scirs2_core::parallel_ops
 // which re-exports rayon::prelude::* when the parallel feature is enabled
 use scirs2_core::parallel_ops::*;
+
+use crate::magnon::chain::{ChainParameters, SpinChain};
+use crate::vector3::Vector3;
 
 /// Multi-domain system for parallel magnetic simulations
 #[derive(Clone)]

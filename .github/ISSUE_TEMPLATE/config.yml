@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://docs.rs/spintronics
+    about: Check the API documentation for usage examples
+  - name: Security Issues
+    url: https://github.com/cool-japan/spintronics/security/policy
+    about: Report security vulnerabilities privately

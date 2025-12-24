@@ -18,8 +18,9 @@
 //!
 //! Run with: cargo run --example saitoh_2006_ishe
 
-use spintronics::prelude::*;
 use std::f64::consts::PI;
+
+use spintronics::prelude::*;
 
 fn main() {
     println!("=== Saitoh 2006 ISHE Experiment Simulation ===\n");

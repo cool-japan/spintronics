@@ -30,10 +30,16 @@
 //! - A. Thiaville et al., "Dynamics of Dzyaloshinskii domain walls in ultrathin
 //!   magnetic films", Europhys. Lett. 100, 57002 (2012)
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Type of DMI
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum DmiType {
     /// Bulk DMI (in non-centrosymmetric crystals like MnSi)
     Bulk,
@@ -43,6 +49,7 @@ pub enum DmiType {
 
 /// DMI parameters
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DmiParameters {
     /// DMI constant \[J/m²\]
     ///
@@ -218,7 +225,7 @@ impl DmiParameters {
                     prefactor * dm_dy.z,
                     -prefactor * (dm_dx.x + dm_dy.y),
                 )
-            }
+            },
             DmiType::Bulk => {
                 // H_DMI ∝ D · ∇ × m
                 // Simplified: curl of magnetization
@@ -227,7 +234,7 @@ impl DmiParameters {
                 let curl_m_y = -dm_dx.z; // Assuming -∂m_z/∂x
 
                 Vector3::new(curl_m_x, curl_m_y, curl_m_z) * (self.d / 1.0e6)
-            }
+            },
         }
     }
 
@@ -352,6 +359,21 @@ impl DmiParameters {
     pub fn with_vector(mut self, vector: Vector3<f64>) -> Self {
         self.dmi_vector = vector.normalize();
         self
+    }
+}
+
+impl fmt::Display for DmiType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DmiType::Bulk => write!(f, "Bulk"),
+            DmiType::Interfacial => write!(f, "Interfacial"),
+        }
+    }
+}
+
+impl fmt::Display for DmiParameters {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "DMI[{}]: D={:.2} mJ/m²", self.dmi_type, self.d * 1e3)
     }
 }
 

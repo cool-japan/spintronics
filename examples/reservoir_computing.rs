@@ -70,11 +70,11 @@ fn main() {
                 );
             }
             println!();
-        }
+        },
         Err(e) => {
             println!("  Training error: {}", e);
             println!();
-        }
+        },
     }
 
     // Task 2: Linear function
@@ -113,11 +113,11 @@ fn main() {
                 );
             }
             println!();
-        }
+        },
         Err(e) => {
             println!("  Training error: {}", e);
             println!();
-        }
+        },
     }
 
     // Task 3: Non-linear function (XOR-like)
@@ -156,11 +156,11 @@ fn main() {
                 );
             }
             println!();
-        }
+        },
         Err(e) => {
             println!("  Training error: {}", e);
             println!();
-        }
+        },
     }
 
     // Information about the reservoir

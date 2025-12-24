@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Materials Database Explorer{% endblock %}
+
+{% block content %}
+<div class="demo-header">
+    <h1>🔬 Magnetic Materials Explorer</h1>
+    <p>Compare properties of ferromagnets, topological insulators, and 2D materials</p>
+</div>
+
+<div class="demo-content">
+    <div class="materials-intro">
+        <p>
+            The spintronics library includes comprehensive material databases validated against experimental literature.
+            Explore saturation magnetization (M<sub>s</sub>), damping constant (α), exchange stiffness (A<sub>ex</sub>),
+            and anisotropy (K) for common magnetic materials.
+        </p>
+    </div>
+
+    <div class="materials-controls">
+        <button class="btn btn-primary"
+                hx-get="/api/materials/compare"
+                hx-target="#materials-table"
+                hx-trigger="load, click">
+            📊 Load Material Comparison
+        </button>
+    </div>
+
+    <div id="materials-table" class="materials-display">
+        <div class="htmx-indicator">
+            <div class="spinner"></div>
+            <p>Loading materials database...</p>
+        </div>
+    </div>
+
+    <div class="materials-details">
+        <h2>Material Highlights</h2>
+
+        <div class="material-card">
+            <h3>🟡 YIG (Yttrium Iron Garnet)</h3>
+            <ul>
+                <li><strong>Ultra-low damping</strong>: α ≈ 0.0001</li>
+                <li><strong>Magnetic insulator</strong>: No Joule heating</li>
+                <li><strong>Applications</strong>: Spin pumping, magnon transport</li>
+                <li><strong>Why special</strong>: Longest magnon propagation distance (~mm)</li>
+            </ul>
+        </div>
+
+        <div class="material-card">
+            <h3>⚪ Permalloy (Ni₈₀Fe₂₀)</h3>
+            <ul>
+                <li><strong>Near-zero anisotropy</strong>: K ≈ 0</li>
+                <li><strong>Moderate damping</strong>: α ≈ 0.008</li>
+                <li><strong>Applications</strong>: MRAM, spin valves, GMR sensors</li>
+                <li><strong>Why special</strong>: Easy to pattern, industry standard</li>
+            </ul>
+        </div>
+
+        <div class="material-card">
+            <h3>🔵 CoFeB</h3>
+            <ul>
+                <li><strong>Perpendicular anisotropy</strong>: K ~1 MJ/m³</li>
+                <li><strong>Low damping</strong>: α ≈ 0.004</li>
+                <li><strong>Applications</strong>: STT-MRAM, SOT devices</li>
+                <li><strong>Why special</strong>: Compatible with MgO barrier, PMA</li>
+            </ul>
+        </div>
+
+        <div class="material-card">
+            <h3>🔴 Iron (Fe)</h3>
+            <ul>
+                <li><strong>Highest M<sub>s</sub></strong>: ~1.7 MA/m</li>
+                <li><strong>High Curie temperature</strong>: 1043 K</li>
+                <li><strong>Applications</strong>: High-field applications</li>
+                <li><strong>Why special</strong>: Most magnetic element</li>
+            </ul>
+        </div>
+
+        <div class="material-card">
+            <h3>⚫ Cobalt (Co)</h3>
+            <ul>
+                <li><strong>Strong SOC</strong>: Large Rashba/DMI</li>
+                <li><strong>HCP crystal structure</strong>: Uniaxial anisotropy</li>
+                <li><strong>Applications</strong>: Skyrmion hosting, SOT sources</li>
+                <li><strong>Why special</strong>: Balance of M<sub>s</sub> and anisotropy</li>
+            </ul>
+        </div>
+
+        <div class="material-card">
+            <h3>⚪ Nickel (Ni)</h3>
+            <ul>
+                <li><strong>Moderate properties</strong>: M<sub>s</sub> ≈ 0.5 MA/m</li>
+                <li><strong>Alloying element</strong>: Base for Permalloy, Heuslers</li>
+                <li><strong>Applications</strong>: Alloys, catalysis</li>
+                <li><strong>Why special</strong>: Tunable when alloyed</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="units-info">
+        <h2>📏 Units Guide</h2>
+        <div class="units-table">
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Symbol</th>
+                    <th>Units</th>
+                    <th>Typical Range</th>
+                </tr>
+                <tr>
+                    <td>Saturation Magnetization</td>
+                    <td>M<sub>s</sub></td>
+                    <td>MA/m (= 10⁶ A/m)</td>
+                    <td>0.1 - 1.7</td>
+                </tr>
+                <tr>
+                    <td>Gilbert Damping</td>
+                    <td>α</td>
+                    <td>dimensionless</td>
+                    <td>0.0001 - 0.1</td>
+                </tr>
+                <tr>
+                    <td>Exchange Stiffness</td>
+                    <td>A<sub>ex</sub></td>
+                    <td>pJ/m (= 10⁻¹² J/m)</td>
+                    <td>5 - 30</td>
+                </tr>
+                <tr>
+                    <td>Anisotropy Constant</td>
+                    <td>K</td>
+                    <td>kJ/m³ (= 10³ J/m³)</td>
+                    <td>0 - 5000</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

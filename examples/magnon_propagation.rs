@@ -8,11 +8,9 @@
 //! This reproduces the experimental setup from Saitoh group's research on
 //! magnon-driven spin currents and their electrical detection.
 
-use spintronics::magnon::{
-    chain::{ChainParameters, SpinChain},
-    detector::SpinPumpingDetector,
-    solver::{MagnonSolver, RfExcitation},
-};
+use spintronics::magnon::chain::{ChainParameters, SpinChain};
+use spintronics::magnon::detector::SpinPumpingDetector;
+use spintronics::magnon::solver::{MagnonSolver, RfExcitation};
 use spintronics::vector3::Vector3;
 
 fn main() {

@@ -18,10 +18,11 @@
 //! - OOMMF User's Guide: <https://math.nist.gov/oommf/>
 //! - OVF Format Specification: <https://math.nist.gov/oommf/doc/userguide20a3/userguide/OVF_2.0_format.html>
 
-use crate::vector3::Vector3;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::Path;
+
+use crate::vector3::Vector3;
 
 /// OVF file format version and encoding
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -446,8 +447,9 @@ impl OvfReader {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     #[test]
     fn test_ovf_data_creation() {

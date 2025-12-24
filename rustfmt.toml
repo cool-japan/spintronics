@@ -1,0 +1,55 @@
+# Rustfmt configuration for spintronics library
+# https://rust-lang.github.io/rustfmt/
+
+# Maximum line width
+max_width = 100
+
+# Use spaces, not tabs
+hard_tabs = false
+tab_spaces = 4
+
+# Edition
+edition = "2021"
+
+# Import grouping
+imports_granularity = "Module"
+group_imports = "StdExternalCrate"
+reorder_imports = true
+reorder_modules = true
+
+# Function and struct formatting
+fn_single_line = false
+struct_lit_single_line = true
+struct_variant_width = 35
+
+# Control flow formatting
+control_brace_style = "AlwaysSameLine"
+match_block_trailing_comma = true
+
+# Comment formatting
+comment_width = 100
+wrap_comments = false
+normalize_comments = false
+normalize_doc_attributes = true
+
+# String formatting
+format_strings = false
+
+# Macro formatting
+format_macro_matchers = true
+format_macro_bodies = true
+
+# Use field init shorthand
+use_field_init_shorthand = true
+
+# Use try shorthand
+use_try_shorthand = true
+
+# Newline style (native for cross-platform)
+newline_style = "Auto"
+
+# Trailing semicolons
+trailing_semicolon = true
+
+# Force explicit paths in macros
+force_explicit_abi = true

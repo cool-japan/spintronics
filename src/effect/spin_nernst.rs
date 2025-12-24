@@ -34,6 +34,8 @@
 //! - S. Meyer et al., "Observation of the spin Nernst effect",
 //!   Nat. Mater. 16, 977 (2017)
 
+use std::fmt;
+
 use crate::vector3::Vector3;
 
 /// Spin Nernst effect in metals and semiconductors
@@ -54,6 +56,13 @@ pub struct SpinNernst {
 
     /// Seebeck coefficient \[V/K\]
     pub seebeck_coefficient: f64,
+}
+
+impl Default for SpinNernst {
+    /// Default to Platinum parameters
+    fn default() -> Self {
+        Self::platinum()
+    }
 }
 
 impl SpinNernst {
@@ -146,6 +155,7 @@ impl SpinNernst {
     /// let expected = pt.spin_nernst_angle * 1.0e6;
     /// assert!((js.magnitude() - expected).abs() < 1.0);
     /// ```
+    #[inline]
     pub fn spin_current(&self, grad_t: Vector3<f64>, spin_direction: Vector3<f64>) -> Vector3<f64> {
         // j_s = θ_SN (∇T × σ)
         grad_t.cross(&spin_direction) * self.spin_nernst_angle
@@ -160,6 +170,7 @@ impl SpinNernst {
     ///
     /// # Returns
     /// Heat current density \[W/m²\]
+    #[inline]
     pub fn heat_current(&self, grad_t: Vector3<f64>) -> Vector3<f64> {
         grad_t * (-self.thermal_conductivity)
     }
@@ -241,6 +252,16 @@ impl SpinNernst {
     pub fn with_thermal_conductivity(mut self, kappa: f64) -> Self {
         self.thermal_conductivity = kappa;
         self
+    }
+}
+
+impl fmt::Display for SpinNernst {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}: θ_SN={:.4}, κ={:.1} W/(m·K), S={:.2e} V/K",
+            self.name, self.spin_nernst_angle, self.thermal_conductivity, self.seebeck_coefficient
+        )
     }
 }
 

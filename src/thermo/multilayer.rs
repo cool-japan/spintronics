@@ -3,8 +3,14 @@
 //! Models heat flow and spin-thermal effects in multilayer thin films,
 //! accounting for interface thermal resistance (Kapitza resistance).
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Single layer in a multilayer stack
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Layer {
     /// Layer name/identifier
     pub name: String,
@@ -70,6 +76,7 @@ impl Layer {
 
 /// Thermal boundary between two layers
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ThermalBoundary {
     /// Interface thermal conductance [W/(m²·K)]
     ///
@@ -111,6 +118,7 @@ impl ThermalBoundary {
 
 /// Multilayer thin film stack
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MultilayerStack {
     /// Layers from bottom to top
     pub layers: Vec<Layer>,
@@ -218,6 +226,37 @@ impl MultilayerStack {
     /// Get total thickness
     pub fn total_thickness(&self) -> f64 {
         self.layers.iter().map(|l| l.thickness).sum()
+    }
+}
+
+impl fmt::Display for Layer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}[{:.1} nm]: κ={:.1} W/(m·K){}",
+            self.name,
+            self.thickness * 1e9,
+            self.thermal_conductivity,
+            if self.is_magnetic { " (mag)" } else { "" }
+        )
+    }
+}
+
+impl fmt::Display for ThermalBoundary {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ThermalBoundary(G={:.2e} W/(m²·K))", self.conductance)
+    }
+}
+
+impl fmt::Display for MultilayerStack {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "MultilayerStack: {} layers, t_total={:.1} nm, A={:.2e} m²",
+            self.layers.len(),
+            self.total_thickness() * 1e9,
+            self.area
+        )
     }
 }
 

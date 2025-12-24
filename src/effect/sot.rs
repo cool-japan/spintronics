@@ -30,6 +30,11 @@
 //! - K. Garello et al., "Symmetry and magnitude of spin–orbit torques in ferromagnetic
 //!   heterostructures", Nat. Nanotechnology 8, 587 (2013)
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::constants::HBAR;
 use crate::vector3::Vector3;
 
@@ -54,6 +59,7 @@ use crate::vector3::Vector3;
 /// assert!(sot_ta.theta_sh.abs() > sot.theta_sh.abs());
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SpinOrbitTorque {
     /// Spin Hall angle of the heavy metal (dimensionless)
     /// Pt: ~0.07, Ta: ~-0.15, W: ~-0.3
@@ -70,6 +76,13 @@ pub struct SpinOrbitTorque {
 
     /// Interfacial spin transparency (0 to 1)
     pub transparency: f64,
+}
+
+impl Default for SpinOrbitTorque {
+    /// Default to Pt/CoFeB parameters
+    fn default() -> Self {
+        Self::platinum_cofeb()
+    }
 }
 
 impl SpinOrbitTorque {
@@ -160,6 +173,7 @@ impl SpinOrbitTorque {
     /// assert!(h_dl.magnitude() > 0.0);
     /// assert!(h_dl.magnitude() < 1.0e5);
     /// ```
+    #[inline]
     pub fn damping_like_field(
         &self,
         j_charge: f64,
@@ -197,6 +211,7 @@ impl SpinOrbitTorque {
     ///
     /// # Returns
     /// Field-like effective field H_FL \[A/m\]
+    #[inline]
     pub fn field_like_field(
         &self,
         j_charge: f64,
@@ -274,6 +289,49 @@ impl SpinOrbitTorque {
         let h_eff = h_k + ms;
 
         (2.0 * e_charge / HBAR) * (ms * self.thickness / theta_eff.abs()) * h_eff
+    }
+
+    /// Builder method to set spin Hall angle
+    pub fn with_theta_sh(mut self, theta_sh: f64) -> Self {
+        self.theta_sh = theta_sh;
+        self
+    }
+
+    /// Builder method to set resistivity
+    pub fn with_resistivity(mut self, rho: f64) -> Self {
+        self.resistivity = rho;
+        self
+    }
+
+    /// Builder method to set heavy metal thickness
+    pub fn with_thickness(mut self, thickness: f64) -> Self {
+        self.thickness = thickness;
+        self
+    }
+
+    /// Builder method to set spin diffusion length
+    pub fn with_lambda_sd(mut self, lambda_sd: f64) -> Self {
+        self.lambda_sd = lambda_sd;
+        self
+    }
+
+    /// Builder method to set interface transparency
+    pub fn with_transparency(mut self, transparency: f64) -> Self {
+        self.transparency = transparency.clamp(0.0, 1.0);
+        self
+    }
+}
+
+impl fmt::Display for SpinOrbitTorque {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SpinOrbitTorque(θ_SH={:.3}, t={:.1} nm, λ_sd={:.1} nm, T={:.2})",
+            self.theta_sh,
+            self.thickness * 1e9,
+            self.lambda_sd * 1e9,
+            self.transparency
+        )
     }
 }
 

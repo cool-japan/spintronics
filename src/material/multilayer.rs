@@ -41,7 +41,7 @@
 use crate::material::Ferromagnet;
 
 /// Type of magnetic multilayer structure
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MultilayerType {
     /// GMR spin valve (FM/NM/FM)
     GmrSpinValve,

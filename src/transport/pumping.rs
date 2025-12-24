@@ -41,10 +41,11 @@
 //! - Y. Tserkovnyak et al., "Spin pumping and magnetization dynamics in metallic
 //!   multilayers", Rev. Mod. Phys. 77, 1375 (2005)
 
+use std::f64::consts::PI;
+
 use crate::constants::HBAR;
 use crate::material::SpinInterface;
 use crate::vector3::Vector3;
-use std::f64::consts::PI;
 
 /// Calculate spin pumping current density using Saitoh's formula
 ///
@@ -87,6 +88,7 @@ use std::f64::consts::PI;
 /// // Spin current should be non-zero when magnetization is precessing
 /// assert!(js.magnitude() > 0.0);
 /// ```
+#[inline]
 pub fn spin_pumping_current(
     interface: &SpinInterface,
     m: Vector3<f64>,

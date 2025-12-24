@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Spintronics Interactive Demos{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>⚛️ Spintronics Physics</h1>
+                <p class="tagline">Interactive Demonstrations</p>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/llg">LLG Dynamics</a></li>
+                <li><a href="/spin-pumping">Spin Pumping</a></li>
+                <li><a href="/materials">Materials</a></li>
+                <li><a href="/skyrmion">Skyrmions</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Powered by <strong>spintronics</strong> v0.2.0</p>
+            <p>© 2025 COOLJAPAN OÜ (Team KitaSan) • MIT OR Apache-2.0</p>
+            <p class="tech-stack">Rust + Axum + HTMX + Askama</p>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

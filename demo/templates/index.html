@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Spintronics Interactive Demos - Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Interactive Spintronics Simulations</h1>
+    <p class="hero-subtitle">Real-time physics calculations powered by Rust</p>
+</div>
+
+<div class="demos-grid">
+    <div class="demo-card">
+        <div class="demo-icon">🌀</div>
+        <h2>LLG Dynamics</h2>
+        <p>Visualize magnetization precession and relaxation using the Landau-Lifshitz-Gilbert equation</p>
+        <a href="/llg" class="btn btn-primary">Launch Demo</a>
+        <div class="demo-tags">
+            <span class="tag">Real-time</span>
+            <span class="tag">RK4 Solver</span>
+        </div>
+    </div>
+
+    <div class="demo-card">
+        <div class="demo-icon">⚡</div>
+        <h2>Spin Pumping</h2>
+        <p>Calculate spin current generation and ISHE voltage in YIG/Pt and Py/Pt systems</p>
+        <a href="/spin-pumping" class="btn btn-primary">Launch Demo</a>
+        <div class="demo-tags">
+            <span class="tag">Experimental</span>
+            <span class="tag">Saitoh 2006</span>
+        </div>
+    </div>
+
+    <div class="demo-card">
+        <div class="demo-icon">🔬</div>
+        <h2>Materials Explorer</h2>
+        <p>Compare magnetic properties of ferromagnets, topological insulators, and 2D materials</p>
+        <a href="/materials" class="btn btn-primary">Launch Demo</a>
+        <div class="demo-tags">
+            <span class="tag">Database</span>
+            <span class="tag">Comparison</span>
+        </div>
+    </div>
+
+    <div class="demo-card">
+        <div class="demo-icon">🎯</div>
+        <h2>Magnetic Skyrmions</h2>
+        <p>Visualize topological magnetic textures with tunable radius, helicity, and chirality</p>
+        <a href="/skyrmion" class="btn btn-primary">Launch Demo</a>
+        <div class="demo-tags">
+            <span class="tag">Topology</span>
+            <span class="tag">2D Viz</span>
+        </div>
+    </div>
+</div>
+
+<div class="features">
+    <h2>Why Spintronics?</h2>
+    <div class="features-grid">
+        <div class="feature">
+            <h3>🚀 High Performance</h3>
+            <p>Compiled Rust code for maximum simulation speed</p>
+        </div>
+        <div class="feature">
+            <h3>📊 Accurate Physics</h3>
+            <p>Validated against 5 landmark experimental papers</p>
+        </div>
+        <div class="feature">
+            <h3>🎓 Educational</h3>
+            <p>17 examples from basic to advanced levels</p>
+        </div>
+        <div class="feature">
+            <h3>🔧 Open Source</h3>
+            <p>MIT/Apache-2.0 licensed, 431 tests passing</p>
+        </div>
+    </div>
+</div>
+
+<div class="about">
+    <h2>About the Library</h2>
+    <p>
+        The <strong>spintronics</strong> library implements physical models from Prof. Eiji Saitoh's research
+        (Univ. Tokyo/RIKEN) and the broader spintronics community. It provides pure Rust implementations of:
+    </p>
+    <ul class="physics-list">
+        <li><strong>Spin Pumping</strong> - Generation of spin current from FMR</li>
+        <li><strong>Inverse Spin Hall Effect (ISHE)</strong> - Spin-to-charge conversion</li>
+        <li><strong>Spin Seebeck Effect (SSE)</strong> - Thermal spin current generation</li>
+        <li><strong>Spin-Orbit Torque (SOT)</strong> - Current-driven magnetization switching</li>
+        <li><strong>Topological Hall Effect</strong> - Berry phase from skyrmion textures</li>
+        <li><strong>Rashba & Edelstein Effects</strong> - 2DEG spin-charge conversion</li>
+    </ul>
+</div>
+
+<div class="cta">
+    <h2>Ready to Explore?</h2>
+    <p>Choose a demonstration above to start simulating spintronics physics in real-time</p>
+    <div class="cta-buttons">
+        <a href="/llg" class="btn btn-large btn-primary">Start with LLG Dynamics</a>
+        <a href="https://github.com/cool-japan/spintronics" class="btn btn-large btn-secondary" target="_blank">View on GitHub</a>
+    </div>
+</div>
+{% endblock %}

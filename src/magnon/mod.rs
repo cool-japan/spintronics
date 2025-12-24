@@ -6,10 +6,12 @@
 
 pub mod chain;
 pub mod detector;
+#[cfg(feature = "scirs2")]
 pub mod parallel;
 pub mod solver;
 
 pub use chain::SpinChain;
 pub use detector::SpinPumpingDetector;
+#[cfg(feature = "scirs2")]
 pub use parallel::MultiDomainSystem;
 pub use solver::MagnonSolver;

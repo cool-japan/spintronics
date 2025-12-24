@@ -35,10 +35,16 @@
 //! - E. Liu et al., "Giant anomalous Hall effect in a ferromagnetic kagome-lattice semimetal",
 //!   Nat. Phys. 14, 1125 (2018) - Co₃Sn₂S₂
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Weyl semimetal classification
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WeylType {
     /// Type-I: Weyl nodes with point-like Fermi surface
     TypeI,
@@ -47,7 +53,8 @@ pub enum WeylType {
 }
 
 /// Magnetic state
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MagneticState {
     /// Non-magnetic (inversion symmetry broken)
     Nonmagnetic,
@@ -57,6 +64,7 @@ pub enum MagneticState {
 
 /// Weyl semimetal material properties
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WeylSemimetal {
     /// Material name
     pub name: String,
@@ -87,6 +95,13 @@ pub struct WeylSemimetal {
 
     /// Carrier density [m⁻³]
     pub carrier_density: f64,
+}
+
+impl Default for WeylSemimetal {
+    /// Default to TaAs parameters
+    fn default() -> Self {
+        Self::taas()
+    }
 }
 
 impl WeylSemimetal {
@@ -264,6 +279,61 @@ impl WeylSemimetal {
     pub fn with_fermi_velocity(mut self, vf: f64) -> Self {
         self.fermi_velocity = vf;
         self
+    }
+}
+
+impl fmt::Display for WeylType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            WeylType::TypeI => write!(f, "Type-I"),
+            WeylType::TypeII => write!(f, "Type-II"),
+        }
+    }
+}
+
+impl fmt::Display for MagneticState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MagneticState::Nonmagnetic => write!(f, "Non-magnetic"),
+            MagneticState::Ferromagnetic => write!(f, "Ferromagnetic"),
+        }
+    }
+}
+
+impl fmt::Display for WeylSemimetal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} [{}, {}]: {} Weyl nodes, v_F={:.2e} m/s, σ_AH={:.2e} S/m",
+            self.name,
+            self.weyl_type,
+            self.magnetic_state,
+            self.num_weyl_nodes * 2,
+            self.fermi_velocity,
+            self.anomalous_hall_conductivity
+        )
+    }
+}
+
+impl super::traits::SpinChargeConverter for WeylSemimetal {
+    fn spin_hall_angle(&self) -> f64 {
+        self.anomalous_hall_angle()
+    }
+
+    fn spin_hall_conductivity(&self) -> f64 {
+        self.anomalous_hall_conductivity
+    }
+}
+
+impl super::traits::TopologicalMaterial for WeylSemimetal {
+    fn bulk_gap(&self) -> f64 {
+        // Weyl semimetals are gapless at Weyl nodes
+        // Return the energy separation between nodes as a characteristic scale
+        self.node_separation_energy
+    }
+
+    fn surface_fermi_velocity(&self) -> f64 {
+        self.fermi_velocity
     }
 }
 

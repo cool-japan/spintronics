@@ -47,6 +47,11 @@
 //!   Phys. Rev. Lett. 98, 156601 (2007)
 //! - J. Sinova et al., "Spin Hall effects", Rev. Mod. Phys. 87, 1213 (2015)
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Inverse Spin Hall Effect converter
@@ -73,6 +78,7 @@ use crate::vector3::Vector3;
 /// assert!(e_field.y.abs() > 0.0);
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct InverseSpinHall {
     /// Spin Hall angle (dimensionless)
     ///
@@ -142,6 +148,7 @@ impl InverseSpinHall {
     /// # Convention
     /// Following Saitoh Lab's convention:
     /// E = ρ * θ_SH * (j × σ)
+    #[inline]
     pub fn convert(&self, js_flow: Vector3<f64>, js_polarization: Vector3<f64>) -> Vector3<f64> {
         // Cross product: j × σ
         // Physical meaning: The ISHE electric field is perpendicular to BOTH the
@@ -196,6 +203,7 @@ impl InverseSpinHall {
     /// // Compare with Saitoh 2006 experiment (~1 μV)
     /// println!("ISHE voltage: {:.3} μV", voltage * 1e6);
     /// ```
+    #[inline]
     pub fn voltage(
         &self,
         js_flow: Vector3<f64>,
@@ -211,6 +219,28 @@ impl InverseSpinHall {
     /// This is useful for comparing different material systems
     pub fn efficiency(&self) -> f64 {
         self.rho * self.theta_sh.abs()
+    }
+
+    /// Builder method to set spin Hall angle
+    pub fn with_theta_sh(mut self, theta_sh: f64) -> Self {
+        self.theta_sh = theta_sh;
+        self
+    }
+
+    /// Builder method to set resistivity
+    pub fn with_rho(mut self, rho: f64) -> Self {
+        self.rho = rho;
+        self
+    }
+}
+
+impl fmt::Display for InverseSpinHall {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "InverseSpinHall(θ_SH={:.3}, ρ={:.2e} Ω·m)",
+            self.theta_sh, self.rho
+        )
     }
 }
 

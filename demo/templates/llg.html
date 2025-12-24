@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}LLG Magnetization Dynamics{% endblock %}
+
+{% block content %}
+<div class="demo-header">
+    <h1>🌀 Landau-Lifshitz-Gilbert Dynamics</h1>
+    <p>Real-time magnetization precession and relaxation simulation</p>
+</div>
+
+<div class="demo-layout">
+    <div class="controls-panel">
+        <h2>Simulation Parameters</h2>
+
+        <form id="llg-form" class="param-form">
+            <div class="param-group">
+                <h3>Initial Magnetization</h3>
+                <div class="param-row">
+                    <label>m<sub>x</sub>:</label>
+                    <input type="range" name="mx" min="-1" max="1" step="0.1" value="0.1" id="mx-slider">
+                    <span id="mx-value">0.1</span>
+                </div>
+                <div class="param-row">
+                    <label>m<sub>y</sub>:</label>
+                    <input type="range" name="my" min="-1" max="1" step="0.1" value="0.0" id="my-slider">
+                    <span id="my-value">0.0</span>
+                </div>
+                <div class="param-row">
+                    <label>m<sub>z</sub>:</label>
+                    <input type="range" name="mz" min="-1" max="1" step="0.1" value="1.0" id="mz-slider">
+                    <span id="mz-value">1.0</span>
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h3>Applied Field (A/m)</h3>
+                <div class="param-row">
+                    <label>H<sub>x</sub>:</label>
+                    <input type="number" name="hx" value="1000" step="100">
+                </div>
+                <div class="param-row">
+                    <label>H<sub>y</sub>:</label>
+                    <input type="number" name="hy" value="0" step="100">
+                </div>
+                <div class="param-row">
+                    <label>H<sub>z</sub>:</label>
+                    <input type="number" name="hz" value="0" step="100">
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h3>Dynamics</h3>
+                <div class="param-row">
+                    <label>Damping (α):</label>
+                    <input type="number" name="alpha" value="0.01" step="0.001" min="0" max="1">
+                </div>
+                <div class="param-row">
+                    <label>Time step (ps):</label>
+                    <input type="number" name="dt_ps" value="1.0" step="0.1" min="0.1">
+                </div>
+                <div class="param-row">
+                    <label>Steps:</label>
+                    <input type="number" name="steps" value="200" step="10" min="10" max="1000">
+                </div>
+            </div>
+
+            <button type="button"
+                    class="btn btn-primary btn-large"
+                    hx-get="/api/llg/simulate"
+                    hx-include="#llg-form"
+                    hx-target="#llg-result"
+                    hx-indicator=".htmx-indicator">
+                🚀 Run Simulation
+            </button>
+
+            <div class="htmx-indicator">
+                <div class="spinner"></div>
+                <p>Computing trajectory...</p>
+            </div>
+        </form>
+
+        <div class="info-box">
+            <h3>ℹ️ About LLG</h3>
+            <p>The Landau-Lifshitz-Gilbert equation describes magnetization dynamics:</p>
+            <div class="equation">
+                dm/dt = -γ m × H<sub>eff</sub> + α m × dm/dt
+            </div>
+            <ul>
+                <li><strong>First term</strong>: Precession around effective field</li>
+                <li><strong>Second term</strong>: Damping toward field direction</li>
+                <li><strong>α</strong>: Gilbert damping (0 = no damping)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="viz-panel">
+        <h2>Visualization</h2>
+        <div id="llg-result" class="result-area">
+            <div class="placeholder">
+                <p>👈 Configure parameters and click "Run Simulation"</p>
+                <p class="hint">The magnetization will precess around the applied field and relax due to damping</p>
+            </div>
+        </div>
+
+        <div class="realtime-section" style="margin-top: 2rem;">
+            <h3>Real-Time Update</h3>
+            <button class="btn btn-secondary"
+                    hx-get="/api/llg/step"
+                    hx-include="#llg-form"
+                    hx-target="#mag-display"
+                    hx-trigger="click">
+                Single Step
+            </button>
+            <button class="btn btn-secondary"
+                    hx-get="/api/llg/step"
+                    hx-include="#llg-form"
+                    hx-target="#mag-display"
+                    hx-trigger="every 100ms">
+                Auto-Step (10 Hz)
+            </button>
+            <div id="mag-display" class="mag-display">
+                <p class="hint">Click "Single Step" or "Auto-Step" to see live updates</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update slider value displays
+    ['mx', 'my', 'mz'].forEach(axis => {
+        const slider = document.getElementById(axis + '-slider');
+        const display = document.getElementById(axis + '-value');
+        slider.addEventListener('input', (e) => {
+            display.textContent = parseFloat(e.target.value).toFixed(1);
+        });
+    });
+</script>
+{% endblock %}

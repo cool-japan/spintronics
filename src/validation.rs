@@ -151,6 +151,8 @@ pub fn check_spin_polarization(p: f64) -> crate::error::Result<()> {
 /// Experimental validation tests comparing with published results
 #[cfg(test)]
 mod experimental_validation {
+    use std::f64::consts::PI;
+
     use crate::constants::GAMMA;
     use crate::dynamics::llg::calc_dm_dt;
     use crate::effect::ishe::InverseSpinHall;
@@ -158,7 +160,6 @@ mod experimental_validation {
     use crate::texture::dmi::DmiParameters;
     use crate::transport::pumping::spin_pumping_current;
     use crate::Vector3;
-    use std::f64::consts::PI;
 
     /// Validate against Saitoh et al. 2006 APL 88, 182509
     ///

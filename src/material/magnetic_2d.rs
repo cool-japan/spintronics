@@ -34,10 +34,16 @@
 //! - D. Zhong et al., "Van der Waals engineering of ferromagnetic semiconductor
 //!   heterostructures for spin and valleytronics", Sci. Adv. 3, e1603113 (2017)
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Type of 2D magnetic ordering
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MagneticOrdering {
     /// Ferromagnetic (parallel spins)
     Ferromagnetic,
@@ -49,6 +55,7 @@ pub enum MagneticOrdering {
 
 /// 2D magnetic material properties
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Magnetic2D {
     /// Material name
     pub name: String,
@@ -82,6 +89,13 @@ pub struct Magnetic2D {
 
     /// Lattice constant \[Å\]
     pub lattice_constant: f64,
+}
+
+impl Default for Magnetic2D {
+    /// Default to monolayer CrI₃ parameters
+    fn default() -> Self {
+        Self::cri3(1)
+    }
 }
 
 impl Magnetic2D {
@@ -367,6 +381,30 @@ impl Magnetic2D {
     pub fn with_tc(mut self, tc: f64) -> Self {
         self.critical_temperature = tc;
         self
+    }
+}
+
+impl fmt::Display for MagneticOrdering {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            MagneticOrdering::Ferromagnetic => write!(f, "FM"),
+            MagneticOrdering::Antiferromagnetic => write!(f, "AFM"),
+            MagneticOrdering::Ferrimagnetic => write!(f, "FiM"),
+        }
+    }
+}
+
+impl fmt::Display for Magnetic2D {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} [{}]: {} layer(s), T_c={:.0} K, μ={:.1} μ_B",
+            self.name,
+            self.ordering,
+            self.num_layers,
+            self.critical_temperature,
+            self.magnetic_moment
+        )
     }
 }
 

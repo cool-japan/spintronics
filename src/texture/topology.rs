@@ -2,8 +2,9 @@
 //!
 //! Implements calculation of topological invariants like the skyrmion number.
 
-use crate::vector3::Vector3;
 use std::f64::consts::PI;
+
+use crate::vector3::Vector3;
 
 /// Topological charge calculator
 pub struct TopologicalCharge;

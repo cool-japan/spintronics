@@ -3,10 +3,11 @@
 //! This module implements the detection of magnon-driven spin currents
 //! using the spin pumping effect and ISHE, as demonstrated by Saitoh et al.
 
+use std::f64::consts::PI;
+
 use super::chain::SpinChain;
 use crate::constants::HBAR;
 use crate::vector3::Vector3;
-use std::f64::consts::PI;
 
 /// Spin pumping detector using inverse spin Hall effect
 ///

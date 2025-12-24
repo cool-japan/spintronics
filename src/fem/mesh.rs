@@ -3,9 +3,10 @@
 //! Uses Delaunay triangulation from scirs2-spatial for generating
 //! high-quality finite element meshes.
 
-use crate::vector3::Vector3;
 use scirs2_core::ndarray::Array2;
 use scirs2_spatial::delaunay::Delaunay;
+
+use crate::vector3::Vector3;
 
 /// Node in the finite element mesh
 #[derive(Debug, Clone)]

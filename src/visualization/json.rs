@@ -32,13 +32,21 @@
 //! JsonWriter::write("simulation.json", &data).unwrap();
 //! ```
 
-use crate::vector3::Vector3;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufWriter, Result, Write};
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::vector3::Vector3;
+
 /// Simulation data container with metadata
+///
+/// With the `serde` feature enabled, this struct can be serialized/deserialized
+/// directly using serde_json for more flexible data handling.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SimulationData {
     /// Simulation type/name
     pub name: String,

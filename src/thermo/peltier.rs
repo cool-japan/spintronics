@@ -7,8 +7,14 @@
 //!
 //! where Π_s is the spin Peltier coefficient and J_s is the spin current.
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// Spin Peltier Effect
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SpinPeltier {
     /// Spin Peltier coefficient [W·m²/J]
     ///
@@ -52,6 +58,7 @@ impl SpinPeltier {
     ///
     /// # Returns
     /// Heat current \[W\]
+    #[inline]
     pub fn heat_current(&self, js_magnitude: f64) -> f64 {
         self.pi_s * js_magnitude * self.area
     }
@@ -65,6 +72,7 @@ impl SpinPeltier {
     ///
     /// # Returns
     /// dT/dt [K/s]
+    #[inline]
     pub fn temperature_change_rate(
         &self,
         js_magnitude: f64,
@@ -80,6 +88,34 @@ impl SpinPeltier {
         let seebeck_spin = self.pi_s / self.temperature;
         self.temperature = new_temperature;
         self.pi_s = new_temperature * seebeck_spin;
+    }
+
+    /// Builder method to set spin Peltier coefficient
+    pub fn with_pi_s(mut self, pi_s: f64) -> Self {
+        self.pi_s = pi_s;
+        self
+    }
+
+    /// Builder method to set temperature
+    pub fn with_temperature(mut self, temperature: f64) -> Self {
+        self.temperature = temperature;
+        self
+    }
+
+    /// Builder method to set interface area
+    pub fn with_area(mut self, area: f64) -> Self {
+        self.area = area;
+        self
+    }
+}
+
+impl fmt::Display for SpinPeltier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SpinPeltier: Π_s={:.2e} W·m²/J, T={:.0} K, A={:.2e} m²",
+            self.pi_s, self.temperature, self.area
+        )
     }
 }
 

@@ -3,6 +3,11 @@
 //! Magnons (spin waves) can carry both angular momentum and heat.
 //! This module implements thermal transport by magnons in magnetic insulators.
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::constants::KB;
 
 /// Magnon thermal conductivity
@@ -10,6 +15,7 @@ use crate::constants::KB;
 /// In magnetic insulators like YIG, magnons are the primary heat carriers
 /// at low temperatures.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MagnonThermalConductivity {
     /// Magnon thermal conductivity \[W/(m·K)\]
     pub kappa_magnon: f64,
@@ -35,6 +41,7 @@ impl MagnonThermalConductivity {
     /// Calculate thermal conductivity at given temperature
     ///
     /// For magnons, κ(T) typically follows T² or T³ behavior at low T
+    #[inline]
     pub fn conductivity_at_temperature(&self, temp: f64) -> f64 {
         if temp < 1.0 {
             return 0.0;
@@ -55,6 +62,7 @@ impl MagnonThermalConductivity {
 
 /// Thermal magnon transport calculator
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ThermalMagnonTransport {
     /// Magnon thermal conductivity calculator
     pub conductivity: MagnonThermalConductivity,
@@ -95,6 +103,7 @@ impl ThermalMagnonTransport {
     ///
     /// # Returns
     /// Heat flux \[W/m²\]
+    #[inline]
     pub fn heat_flux(&self, grad_t_magnitude: f64, temperature: f64) -> f64 {
         let kappa = self.conductivity.conductivity_at_temperature(temperature);
         kappa * grad_t_magnitude
@@ -105,6 +114,7 @@ impl ThermalMagnonTransport {
     /// μ_m = S_m × ∇T
     ///
     /// where S_m is the magnon Seebeck coefficient
+    #[inline]
     pub fn magnon_chemical_potential(&self, grad_t_magnitude: f64) -> f64 {
         self.seebeck_coefficient * grad_t_magnitude
     }
@@ -112,6 +122,7 @@ impl ThermalMagnonTransport {
     /// Calculate thermal magnon accumulation
     ///
     /// Δμ_m / k_B T gives the effective magnon population change
+    #[inline]
     pub fn thermal_magnon_accumulation(&self, grad_t_magnitude: f64, temperature: f64) -> f64 {
         if temperature < 1.0 {
             return 0.0;
@@ -119,6 +130,28 @@ impl ThermalMagnonTransport {
 
         let mu_m = self.magnon_chemical_potential(grad_t_magnitude);
         mu_m / (KB * temperature)
+    }
+}
+
+impl fmt::Display for MagnonThermalConductivity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "MagnonThermalConductivity: κ={:.2} W/(m·K), T={:.0} K, λ={:.2} μm",
+            self.kappa_magnon,
+            self.temperature,
+            self.mean_free_path * 1e6
+        )
+    }
+}
+
+impl fmt::Display for ThermalMagnonTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "ThermalMagnonTransport: S={:.2e} V/K, {}",
+            self.seebeck_coefficient, self.conductivity
+        )
     }
 }
 

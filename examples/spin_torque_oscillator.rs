@@ -17,8 +17,9 @@
 //!
 //! Run with: cargo run --example spin_torque_oscillator
 
-use spintronics::prelude::*;
 use std::f64::consts::PI;
+
+use spintronics::prelude::*;
 
 fn main() {
     println!("=== Spin-Torque Nano-Oscillator Simulation ===\n");

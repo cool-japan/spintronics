@@ -18,8 +18,9 @@
 //!
 //! Run with: cargo run --example magnonic_crystal
 
-use spintronics::prelude::*;
 use std::f64::consts::PI;
+
+use spintronics::prelude::*;
 
 fn main() {
     println!("=== Magnonic Crystal Band Structure ===\n");

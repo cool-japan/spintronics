@@ -2,8 +2,9 @@
 //!
 //! Multi-terminal spin circuits with Kirchhoff's laws for spin currents.
 
-use super::resistor::SpinResistor;
 use std::collections::HashMap;
+
+use super::resistor::SpinResistor;
 
 /// Circuit terminal (node)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

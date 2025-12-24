@@ -19,11 +19,13 @@
 //! - Thermally-activated reversal
 //! - Spin Seebeck effect with fluctuations
 
+use scirs2_core::random::core::Random;
+use scirs2_core::random::rand_distributions::Normal;
+use scirs2_core::random::thread_rng;
+use scirs2_core::rngs;
+
 use crate::constants::{GAMMA, KB};
 use crate::vector3::Vector3;
-use scirs2_core::random::rand_distributions::Normal;
-use scirs2_core::random::{core::Random, thread_rng};
-use scirs2_core::rngs;
 
 /// Thermal field generator based on fluctuation-dissipation theorem
 pub struct ThermalField {

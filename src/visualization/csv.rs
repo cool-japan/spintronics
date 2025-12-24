@@ -30,9 +30,10 @@
 //! }
 //! ```
 
-use crate::vector3::Vector3;
 use std::fs::File;
 use std::io::{BufWriter, Result, Write};
+
+use crate::vector3::Vector3;
 
 /// CSV file writer for time series and spatial data
 pub struct CsvWriter {

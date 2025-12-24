@@ -37,6 +37,7 @@
 //!   Heusler compound Co₂MnGa", Phys. Rev. B 95, 075133 (2017)
 
 use std::f64::consts::PI;
+use std::fmt;
 
 /// Topological Hall effect in skyrmion-hosting materials
 #[derive(Debug, Clone)]
@@ -58,6 +59,13 @@ pub struct TopologicalHall {
 
     /// Typical skyrmion size \[nm\]
     pub skyrmion_diameter: f64,
+}
+
+impl Default for TopologicalHall {
+    /// Default to MnSi parameters
+    fn default() -> Self {
+        Self::mnsi()
+    }
 }
 
 impl TopologicalHall {
@@ -342,6 +350,16 @@ impl TopologicalHall {
     pub fn with_hall_coefficient(mut self, r0: f64) -> Self {
         self.hall_coefficient = r0;
         self
+    }
+}
+
+impl fmt::Display for TopologicalHall {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}: R₀={:.2e} Ω·cm/T, d_sk={:.1} nm, M_s={:.2e} A/m",
+            self.name, self.hall_coefficient, self.skyrmion_diameter, self.magnetization
+        )
     }
 }
 

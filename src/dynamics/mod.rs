@@ -2,4 +2,4 @@
 
 pub mod llg;
 
-pub use llg::{calc_dm_dt, LlgSolver};
+pub use llg::{anisotropy_energy, calc_dm_dt, exchange_energy, zeeman_energy, LlgSolver};

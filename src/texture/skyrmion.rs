@@ -52,11 +52,17 @@
 //! - N. Nagaosa and Y. Tokura, "Topological properties and dynamics of
 //!   magnetic skyrmions", Nat. Nanotechnol. 8, 899 (2013)
 
-use crate::vector3::Vector3;
 use std::f64::consts::PI;
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::vector3::Vector3;
 
 /// Skyrmion helicity types
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Helicity {
     /// Néel-type (radial)
     Neel,
@@ -65,7 +71,8 @@ pub enum Helicity {
 }
 
 /// Chirality (handedness) of skyrmion
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Chirality {
     /// Clockwise rotation
     Clockwise,
@@ -97,6 +104,7 @@ pub enum Chirality {
 /// assert_eq!(skyrmion.topological_charge, -1);
 /// ```
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Skyrmion {
     /// Center position \[m\]
     pub center: (f64, f64),
@@ -113,6 +121,18 @@ pub struct Skyrmion {
     /// Topological charge (skyrmion number)
     /// Typically ±1 for skyrmions
     pub topological_charge: i32,
+}
+
+impl Default for Skyrmion {
+    /// Default skyrmion: Néel-type with counter-clockwise chirality, 50 nm radius at origin
+    fn default() -> Self {
+        Self::new(
+            (0.0, 0.0),
+            50.0e-9,
+            Helicity::Neel,
+            Chirality::CounterClockwise,
+        )
+    }
 }
 
 impl Skyrmion {
@@ -217,11 +237,40 @@ impl Skyrmion {
         let cross = dm_dx.cross(&dm_dy);
         m.dot(&cross) / (4.0 * PI)
     }
+
+    /// Builder method to set center position
+    pub fn with_center(mut self, center: (f64, f64)) -> Self {
+        self.center = center;
+        self
+    }
+
+    /// Builder method to set radius
+    pub fn with_radius(mut self, radius: f64) -> Self {
+        self.radius = radius;
+        self
+    }
+
+    /// Builder method to set helicity
+    pub fn with_helicity(mut self, helicity: Helicity) -> Self {
+        self.helicity = helicity;
+        self
+    }
+
+    /// Builder method to set chirality
+    pub fn with_chirality(mut self, chirality: Chirality) -> Self {
+        self.chirality = chirality;
+        self.topological_charge = match chirality {
+            Chirality::CounterClockwise => -1,
+            Chirality::Clockwise => 1,
+        };
+        self
+    }
 }
 
 /// Skyrmion lattice (array of skyrmions)
 #[derive(Debug, Clone)]
-pub struct SkymionLattice {
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct SkyrmionLattice {
     /// Skyrmions in the lattice
     pub skyrmions: Vec<Skyrmion>,
 
@@ -233,7 +282,8 @@ pub struct SkymionLattice {
 }
 
 /// Lattice arrangement type
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LatticeType {
     /// Square lattice
     Square,
@@ -241,7 +291,7 @@ pub enum LatticeType {
     Hexagonal,
 }
 
-impl SkymionLattice {
+impl SkyrmionLattice {
     /// Create a square lattice of skyrmions
     pub fn square(
         nx: usize,
@@ -301,6 +351,59 @@ impl SkymionLattice {
     }
 }
 
+impl fmt::Display for Helicity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Helicity::Neel => write!(f, "Néel"),
+            Helicity::Bloch => write!(f, "Bloch"),
+        }
+    }
+}
+
+impl fmt::Display for Chirality {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Chirality::Clockwise => write!(f, "CW"),
+            Chirality::CounterClockwise => write!(f, "CCW"),
+        }
+    }
+}
+
+impl fmt::Display for Skyrmion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Skyrmion[{} {}]: r={:.1} nm, Q={}",
+            self.helicity,
+            self.chirality,
+            self.radius * 1e9,
+            self.topological_charge
+        )
+    }
+}
+
+impl fmt::Display for LatticeType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LatticeType::Square => write!(f, "Square"),
+            LatticeType::Hexagonal => write!(f, "Hexagonal"),
+        }
+    }
+}
+
+impl fmt::Display for SkyrmionLattice {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SkyrmionLattice[{}]: {} skyrmions, a={:.1} nm, Q_tot={}",
+            self.lattice_type,
+            self.skyrmions.len(),
+            self.lattice_constant * 1e9,
+            self.total_topological_charge()
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -352,7 +455,7 @@ mod tests {
 
     #[test]
     fn test_square_lattice() {
-        let lattice = SkymionLattice::square(
+        let lattice = SkyrmionLattice::square(
             3,
             3,
             50.0e-9,
@@ -367,7 +470,7 @@ mod tests {
 
     #[test]
     fn test_hexagonal_lattice() {
-        let lattice = SkymionLattice::hexagonal(
+        let lattice = SkyrmionLattice::hexagonal(
             4,
             4,
             50.0e-9,
@@ -378,5 +481,21 @@ mod tests {
 
         assert_eq!(lattice.skyrmions.len(), 16);
         assert_eq!(lattice.lattice_type, LatticeType::Hexagonal);
+    }
+
+    #[test]
+    fn test_default_skyrmion() {
+        let sk = Skyrmion::default();
+
+        // Default should be Néel-type
+        assert_eq!(sk.helicity, Helicity::Neel);
+        // Default should be counter-clockwise
+        assert_eq!(sk.chirality, Chirality::CounterClockwise);
+        // Default topological charge should be -1
+        assert_eq!(sk.topological_charge, -1);
+        // Default center should be at origin
+        assert_eq!(sk.center, (0.0, 0.0));
+        // Default radius should be 50 nm
+        assert_eq!(sk.radius, 50.0e-9);
     }
 }

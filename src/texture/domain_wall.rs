@@ -3,10 +3,16 @@
 //! Domain walls are interfaces between regions of different magnetization.
 //! They are characterized by their width, energy, and type (Bloch vs Néel).
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Domain wall type
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum WallType {
     /// Bloch wall (magnetization rotates in-plane perpendicular to wall normal)
     Bloch,
@@ -16,6 +22,7 @@ pub enum WallType {
 
 /// Magnetic domain wall
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DomainWall {
     /// Position of wall center \[m\]
     pub center: f64,
@@ -28,6 +35,13 @@ pub struct DomainWall {
 
     /// Propagation direction normal to wall
     pub normal: Vector3<f64>,
+}
+
+impl Default for DomainWall {
+    /// Default domain wall: Bloch type with 10 nm width at origin
+    fn default() -> Self {
+        Self::new(0.0, 10.0e-9, WallType::Bloch)
+    }
 }
 
 impl DomainWall {
@@ -69,11 +83,11 @@ impl DomainWall {
             WallType::Bloch => {
                 // Bloch wall: rotation in yz plane
                 Vector3::new(theta.cos(), theta.sin(), 0.0)
-            }
+            },
             WallType::Neel => {
                 // Néel wall: rotation in xz plane
                 Vector3::new(theta.cos(), 0.0, theta.sin())
-            }
+            },
         }
     }
 
@@ -100,6 +114,51 @@ impl DomainWall {
 
         let prefactor = MU_B * spin_polarization / (E_CHARGE * saturation_mag * self.width);
         prefactor * current_density
+    }
+
+    /// Builder method to set wall center position
+    pub fn with_center(mut self, center: f64) -> Self {
+        self.center = center;
+        self
+    }
+
+    /// Builder method to set wall width
+    pub fn with_width(mut self, width: f64) -> Self {
+        self.width = width;
+        self
+    }
+
+    /// Builder method to set wall type
+    pub fn with_type(mut self, wall_type: WallType) -> Self {
+        self.wall_type = wall_type;
+        self
+    }
+
+    /// Builder method to set normal direction
+    pub fn with_normal(mut self, normal: Vector3<f64>) -> Self {
+        self.normal = normal.normalize();
+        self
+    }
+}
+
+impl fmt::Display for WallType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            WallType::Bloch => write!(f, "Bloch"),
+            WallType::Neel => write!(f, "Néel"),
+        }
+    }
+}
+
+impl fmt::Display for DomainWall {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "DomainWall[{}]: δ={:.1} nm, center={:.1} nm",
+            self.wall_type,
+            self.width * 1e9,
+            self.center * 1e9
+        )
     }
 }
 
@@ -142,6 +201,22 @@ mod tests {
         let energy = DomainWall::energy_density(a_ex, k_u);
         assert!(energy > 0.0);
         assert!(energy < 1.0); // Should be mJ/m² scale
+    }
+
+    #[test]
+    fn test_default_domain_wall() {
+        let dw = DomainWall::default();
+
+        // Default should be Bloch type
+        assert_eq!(dw.wall_type, WallType::Bloch);
+        // Default width should be 10 nm
+        assert_eq!(dw.width, 10.0e-9);
+        // Default center should be at origin
+        assert_eq!(dw.center, 0.0);
+        // Default normal should be along x
+        assert_eq!(dw.normal.x, 1.0);
+        assert_eq!(dw.normal.y, 0.0);
+        assert_eq!(dw.normal.z, 0.0);
     }
 
     #[test]

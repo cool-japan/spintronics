@@ -20,8 +20,9 @@
 //!
 //! Run with: cargo run --example topological_insulator
 
-use spintronics::prelude::*;
 use std::f64::consts::PI;
+
+use spintronics::prelude::*;
 
 fn main() {
     println!("=== Topological Insulator Surface States ===\n");

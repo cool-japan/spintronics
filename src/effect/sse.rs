@@ -12,10 +12,16 @@
 //!
 //! where L_s is the spin Seebeck coefficient and ∇T is the temperature gradient.
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Spin Seebeck Effect properties
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SpinSeebeck {
     /// Spin Seebeck coefficient [J/(K·m²)]
     ///
@@ -111,6 +117,7 @@ impl SpinSeebeck {
     /// assert!(js.x.abs() < 1e-20);
     /// assert!(js.y.abs() < 1e-20);
     /// ```
+    #[inline]
     pub fn spin_current(&self, grad_t: Vector3<f64>) -> Vector3<f64> {
         // Spin current is proportional to temperature gradient
         // and polarized along the magnetization direction
@@ -166,9 +173,38 @@ impl SpinSeebeck {
     /// Calculate thermal spin current across interface
     ///
     /// Accounts for finite thermal interface conductance
+    #[inline]
     pub fn interface_current(&self, delta_t_interface: f64) -> Vector3<f64> {
         let magnitude = self.l_s * self.g_th * delta_t_interface;
         self.polarization * magnitude
+    }
+
+    /// Builder method to set spin Seebeck coefficient
+    pub fn with_l_s(mut self, l_s: f64) -> Self {
+        self.l_s = l_s;
+        self
+    }
+
+    /// Builder method to set thermal conductance
+    pub fn with_g_th(mut self, g_th: f64) -> Self {
+        self.g_th = g_th;
+        self
+    }
+
+    /// Builder method to set spin polarization direction
+    pub fn with_polarization(mut self, polarization: Vector3<f64>) -> Self {
+        self.polarization = polarization.normalize();
+        self
+    }
+}
+
+impl fmt::Display for SpinSeebeck {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "SpinSeebeck(L_s={:.2e} J/(K·m²), G_th={:.2e} W/(K·m²))",
+            self.l_s, self.g_th
+        )
     }
 }
 

@@ -39,9 +39,10 @@
 //! writer.write_snapshot(&spins, (3, 1, 1)).unwrap();
 //! ```
 
-use crate::vector3::Vector3;
 use std::fs::File;
 use std::io::{BufWriter, Result, Write};
+
+use crate::vector3::Vector3;
 
 /// VTK file writer for exporting spin configurations to ParaView
 ///

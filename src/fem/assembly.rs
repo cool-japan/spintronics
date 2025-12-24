@@ -4,9 +4,10 @@
 //! Parallel assembly uses scirs2-core's parallel features for
 //! multi-threaded element-wise assembly.
 
+use scirs2_core::{IntoParallelRefIterator, ParallelIterator};
+
 use crate::fem::element::TriangularElement;
 use crate::fem::mesh::Mesh2D;
-use scirs2_core::{IntoParallelRefIterator, ParallelIterator};
 
 /// Simple sparse matrix in triplet (COO) format
 #[derive(Debug, Clone)]

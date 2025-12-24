@@ -1,0 +1,26 @@
+# Clippy configuration for spintronics library
+# https://doc.rust-lang.org/clippy/configuration.html
+
+# Maximum cognitive complexity before warning
+cognitive-complexity-threshold = 30
+
+# Allow up to 10 function arguments (physics functions often need many parameters)
+too-many-arguments-threshold = 10
+
+# Type complexity threshold
+type-complexity-threshold = 300
+
+# Allow longer function bodies for physics calculations
+too-many-lines-threshold = 200
+
+# Minimum size for Vec to trigger large_types warning
+vec-box-size-threshold = 4096
+
+# Documentation
+missing-docs-in-crate-items = false
+
+# Allow common physics variable names
+allowed-idents-below-min-chars = ["x", "y", "z", "m", "t", "r", "k", "e", "n", "i", "j", "q"]
+
+# MSRV (Minimum Supported Rust Version)
+msrv = "1.70.0"

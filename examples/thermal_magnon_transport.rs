@@ -17,8 +17,9 @@
 //!
 //! Run with: cargo run --example thermal_magnon_transport
 
-use spintronics::prelude::*;
 use std::f64::consts::PI;
+
+use spintronics::prelude::*;
 
 fn main() {
     println!("=== Thermal Magnon Transport Simulation ===\n");

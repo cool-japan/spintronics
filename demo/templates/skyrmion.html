@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Magnetic Skyrmion Visualizer{% endblock %}
+
+{% block content %}
+<div class="demo-header">
+    <h1>🎯 Magnetic Skyrmion Simulator</h1>
+    <p>Visualize topologically protected magnetic textures</p>
+</div>
+
+<div class="demo-layout">
+    <div class="controls-panel">
+        <h2>Skyrmion Parameters</h2>
+
+        <form id="skyrmion-form" class="param-form">
+            <div class="param-group">
+                <h3>Geometry</h3>
+                <div class="param-row">
+                    <label>Radius (nm):</label>
+                    <input type="range" name="radius_nm" min="10" max="200" step="5" value="50" id="radius-slider">
+                    <span id="radius-value">50</span> nm
+                </div>
+            </div>
+
+            <div class="param-group">
+                <h3>Topology</h3>
+                <div class="param-row">
+                    <label>Helicity:</label>
+                    <select name="helicity" class="select-input">
+                        <option value="Neel" selected>Néel-type (radial)</option>
+                        <option value="Bloch">Bloch-type (circular)</option>
+                    </select>
+                </div>
+                <div class="param-row">
+                    <label>Chirality:</label>
+                    <select name="chirality" class="select-input">
+                        <option value="CCW" selected>Counter-clockwise (Q = −1)</option>
+                        <option value="CW">Clockwise (Q = +1)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="btn btn-primary btn-large"
+                    hx-post="/api/skyrmion/visualize"
+                    hx-include="#skyrmion-form"
+                    hx-target="#skyrmion-viz"
+                    hx-trigger="click, change from:select, change from:input delay:300ms">
+                🎨 Visualize
+            </button>
+        </form>
+
+        <div class="info-box">
+            <h3>🌀 What is a Skyrmion?</h3>
+            <p>
+                A magnetic skyrmion is a topologically protected spin texture, characterized by:
+            </p>
+            <ul>
+                <li><strong>Topological charge</strong>: Q = ±1 (cannot be smoothly deformed to uniform state)</li>
+                <li><strong>Particle-like behavior</strong>: Can be created, moved, and destroyed</li>
+                <li><strong>Nanoscale size</strong>: Typically 10-200 nm diameter</li>
+                <li><strong>Low current drive</strong>: ~10⁶ A/m² (5-6 orders less than domain walls)</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>📐 Helicity vs Chirality</h3>
+            <p><strong>Helicity</strong> (in-plane rotation):</p>
+            <ul>
+                <li><strong>Néel</strong>: Spins point radially (m ∥ r)</li>
+                <li><strong>Bloch</strong>: Spins point tangentially (m ⊥ r)</li>
+            </ul>
+            <p><strong>Chirality</strong> (winding direction):</p>
+            <ul>
+                <li><strong>CCW</strong>: Counter-clockwise rotation (Q = −1)</li>
+                <li><strong>CW</strong>: Clockwise rotation (Q = +1)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="viz-panel">
+        <h2>Magnetization Field</h2>
+        <div id="skyrmion-viz" class="result-area">
+            <div class="placeholder">
+                <p>👈 Configure skyrmion parameters</p>
+                <p class="hint">Color represents m<sub>z</sub>: Blue = −1 (down), Red = +1 (up)</p>
+            </div>
+        </div>
+
+        <div class="skyrmion-legend">
+            <h3>Color Legend</h3>
+            <div class="gradient-bar">
+                <div class="gradient" style="background: linear-gradient(to right, rgb(0,100,255), rgb(100,100,255), rgb(255,100,0));"></div>
+                <div class="gradient-labels">
+                    <span>m<sub>z</sub> = −1</span>
+                    <span>m<sub>z</sub> = 0</span>
+                    <span>m<sub>z</sub> = +1</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="skyrmion-physics">
+            <h3>⚙️ Physical Origin</h3>
+            <p>Skyrmions are stabilized by the <strong>Dzyaloshinskii-Moriya Interaction (DMI)</strong>:</p>
+            <div class="equation">
+                E<sub>DMI</sub> = D ∫ m · (∇ × m) dV
+            </div>
+            <p>
+                The DMI arises from <strong>spin-orbit coupling</strong> at interfaces or in non-centrosymmetric materials.
+                It favors perpendicular alignment of neighboring spins, creating the twisted texture.
+            </p>
+        </div>
+
+        <div class="skyrmion-applications">
+            <h3>💾 Applications</h3>
+            <ul>
+                <li><strong>Racetrack Memory</strong>: Skyrmion bits moved by spin current pulses</li>
+                <li><strong>Logic Devices</strong>: Skyrmion gates and transistors</li>
+                <li><strong>Neuromorphic Computing</strong>: Skyrmion-based synapses</li>
+                <li><strong>THz Emitters</strong>: Breathing modes generate electromagnetic radiation</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update slider display
+    const slider = document.getElementById('radius-slider');
+    const display = document.getElementById('radius-value');
+    slider.addEventListener('input', (e) => {
+        display.textContent = e.target.value;
+    });
+</script>
+{% endblock %}

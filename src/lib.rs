@@ -1,6 +1,6 @@
 //! # spintronics
 //!
-//! **Version 0.1.0** - Production Ready ✅
+//! **Version 0.2.0** - Python bindings, serialization, performance optimization
 //!
 //! A pure Rust library for simulating spin dynamics, spin current generation,
 //! and conversion phenomena in magnetic materials and topological materials.
@@ -26,11 +26,18 @@
 //! - **Spin Nernst Effect**: Thermal gradient → transverse spin current
 //!
 //! ### Key Features
-//! - ✅ **391 tests passing** (351 unit + 40 doc tests)
+//! - ✅ **448 tests passing** (431 library + 17 demo, all passing)
+//! - ✅ **Interactive web demo** - Axum + HTMX subcrate with 4 physics simulations (v0.2.0)
 //! - ✅ **5 experimental validations** against landmark papers
+//! - ✅ **17 examples** organized by difficulty (Basic/Intermediate/Advanced)
 //! - ✅ **WebAssembly support** for browser-based simulations
 //! - ✅ **FEM solver** with advanced iterative methods
-//! - ✅ **Memory optimized** (99% allocation reduction in hot paths)
+//! - ✅ **Performance optimized** - 21 inline attributes on hot-path functions (v0.2.0)
+//! - ✅ **Memory optimized** - Pool allocator reduces allocations by 99% (v0.2.0)
+//! - ✅ **Python bindings** via PyO3 (v0.2.0)
+//! - ✅ **Serde serialization** for data interchange (v0.2.0)
+//! - ✅ **HDF5 export** for large datasets (v0.2.0)
+//! - ✅ **Unit validation** - 14 validators for physical quantities (v0.2.0)
 //! - ✅ **Zero warnings** - production-quality code
 //!
 //! ## Key References
@@ -46,27 +53,46 @@
 //!
 //! ## Architecture
 //!
-//! The library is organized into 14 physics-focused modules:
+//! The library is organized into 18 physics-focused modules:
 //!
-//! - [`constants`]: Physical constants (ℏ, γ, e, μ_B, k_B)
+//! ### Core Infrastructure
+//! - [`constants`]: Physical constants (ℏ, γ, e, μ_B, k_B, 20+ NIST-validated values)
 //! - [`vector3`]: Optimized 3D vector operations for spin/magnetization
+//! - [`units`]: Unit validation - 14 validators for physical quantities (v0.2.0)
+//! - [`error`]: Error handling and result types
+//!
+//! ### Materials & Properties
 //! - [`material`]: Material properties (ferromagnets, interfaces, 2D magnets, topological insulators, Weyl semimetals)
+//!
+//! ### Dynamics & Transport
 //! - [`dynamics`]: Time evolution solvers (LLG equation, RK4, Heun, adaptive methods)
 //! - [`transport`]: Spin transport phenomena (spin pumping, diffusion)
+//!
+//! ### Physical Effects
 //! - [`effect`]: Spin-charge conversion (ISHE, SSE, SOT, Rashba, Edelstein, Spin Nernst, Topological Hall)
 //! - [`magnon`]: Magnon propagation and spin wave dynamics
 //! - [`thermo`]: Thermoelectric effects (ANE, thermal magnon transport, multilayers)
 //! - [`texture`]: Magnetic textures (skyrmions, domain walls, DMI, topological charge)
-//! - [`fem`]: Finite element method (Delaunay mesh, iterative solvers, micromagnetics)
+//!
+//! ### Specialized Physics
+//! - [`afm`]: Antiferromagnetic dynamics for THz spintronics
+//! - [`stochastic`]: Thermal fluctuations and finite-temperature effects
+//! - [`cavity`]: Cavity magnonics - Hybrid magnon-photon quantum systems
+//!
+//! ### Coupled Systems
 //! - [`circuit`]: Spin circuit elements (resistors, networks, spin accumulation)
 //! - [`fluid`]: Spin-vorticity coupling in liquid metals (Barnett effect)
 //! - [`mech`]: Nanomechanical spintronics (Barnett, Einstein-de Haas, cantilever coupling)
 //! - [`ai`]: Physical reservoir computing with magnon dynamics
-//! - [`afm`]: Antiferromagnetic dynamics for THz spintronics
-//! - [`stochastic`]: Thermal fluctuations and finite-temperature effects
-//! - [`cavity`]: Cavity magnonics - Hybrid magnon-photon quantum systems
-//! - [`visualization`]: Data export (VTK for ParaView, CSV for plotting, JSON for analysis)
+//!
+//! ### Computational Tools
+//! - [`fem`]: Finite element method (Delaunay mesh, iterative solvers, micromagnetics)
+//! - [`memory`]: Memory pool allocator for high-performance simulations (v0.2.0)
+//!
+//! ### Data & Validation
+//! - [`visualization`]: Data export (VTK, CSV, JSON, HDF5)
 //! - [`validation`]: Experimental validation tests against landmark papers
+//! - `python`: Python bindings via PyO3 (v0.2.0, optional feature)
 //!
 //! ## Quick Start
 //!
@@ -87,6 +113,10 @@
 //!
 //! // Calculate spin pumping current
 //! let js = spin_pumping_current(&interface, m, dm_dt);
+//!
+//! // Validate physical quantities (v0.2.0)
+//! assert!(is_valid_magnetization(yig.ms));
+//! assert!(is_valid_damping(yig.alpha));
 //!
 //! // Convert to electric field via ISHE
 //! let e_field = pt_strip.convert(interface.normal, js);
@@ -120,6 +150,7 @@ pub mod magnon;
 
 pub mod material;
 pub mod mech;
+pub mod memory;
 
 #[cfg(feature = "scirs2")]
 pub mod stochastic;
@@ -127,12 +158,16 @@ pub mod stochastic;
 pub mod texture;
 pub mod thermo;
 pub mod transport;
+pub mod units;
 pub mod validation;
 pub mod vector3;
 pub mod visualization;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
+
+#[cfg(feature = "python")]
+pub mod python;
 
 pub mod prelude;
 

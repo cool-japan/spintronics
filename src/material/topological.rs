@@ -30,10 +30,16 @@
 //!   magnetically doped topological insulator heterostructure",
 //!   Nat. Mater. 13, 699 (2014)
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Types of topological insulator materials
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TopologicalClass {
     /// 3D topological insulator (e.g., Bi₂Se₃, Bi₂Te₃)
     ThreeDimensional,
@@ -43,6 +49,7 @@ pub enum TopologicalClass {
 
 /// Topological insulator material properties
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TopologicalInsulator {
     /// Material name
     pub name: String,
@@ -71,6 +78,13 @@ pub struct TopologicalInsulator {
 
     /// Lattice constant \[nm\]
     pub lattice_constant: f64,
+}
+
+impl Default for TopologicalInsulator {
+    /// Default to Bi₂Se₃ parameters
+    fn default() -> Self {
+        Self::bi2se3()
+    }
 }
 
 impl TopologicalInsulator {
@@ -240,6 +254,48 @@ impl TopologicalInsulator {
 pub fn surface_spin_texture(momentum: Vector3<f64>) -> Vector3<f64> {
     let z_axis = Vector3::new(0.0, 0.0, 1.0);
     z_axis.cross(&momentum).normalize()
+}
+
+impl fmt::Display for TopologicalClass {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TopologicalClass::ThreeDimensional => write!(f, "3D TI"),
+            TopologicalClass::TwoDimensional => write!(f, "2D TI (QSHI)"),
+        }
+    }
+}
+
+impl fmt::Display for TopologicalInsulator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} [{}]: E_gap={:.2} eV, v_F={:.2e} m/s, λ_E={:.1} nm",
+            self.name, self.ti_class, self.bulk_gap, self.fermi_velocity, self.edelstein_length
+        )
+    }
+}
+
+impl super::traits::TopologicalMaterial for TopologicalInsulator {
+    fn bulk_gap(&self) -> f64 {
+        self.bulk_gap
+    }
+
+    fn surface_fermi_velocity(&self) -> f64 {
+        self.fermi_velocity
+    }
+}
+
+impl super::traits::SpinChargeConverter for TopologicalInsulator {
+    fn spin_hall_angle(&self) -> f64 {
+        // For TI surface states, the spin Hall angle can be estimated from
+        // the Edelstein effect: θ_SH ~ λ_E * k_F
+        // Using k_F ~ E_F / (ℏ * v_F) and typical Fermi energies
+        self.edelstein_length * 1e-9 * 1e9 // Simplified: order of λ_E in nm
+    }
+
+    fn spin_hall_conductivity(&self) -> f64 {
+        self.spin_hall_conductivity
+    }
 }
 
 #[cfg(test)]

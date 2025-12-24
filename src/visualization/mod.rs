@@ -53,9 +53,11 @@
 //! ```
 
 pub mod csv;
+pub mod hdf5;
 pub mod json;
 pub mod vtk;
 
 pub use csv::CsvWriter;
+pub use hdf5::{Hdf5Reader, Hdf5Writer};
 pub use json::{JsonWriter, SimulationData};
 pub use vtk::VtkWriter;

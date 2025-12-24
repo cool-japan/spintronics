@@ -69,6 +69,7 @@ use crate::vector3::Vector3;
 /// // dm/dt should be perpendicular to m (conserves |m|)
 /// assert!(dm_dt.dot(&m).abs() < 1e-10);
 /// ```
+#[inline]
 pub fn calc_dm_dt(m: Vector3<f64>, h_eff: Vector3<f64>, gamma: f64, alpha: f64) -> Vector3<f64> {
     // Precession term: -γ (m × H_eff)
     // Physical meaning: Magnetization precesses around the effective field direction
@@ -89,6 +90,62 @@ pub fn calc_dm_dt(m: Vector3<f64>, h_eff: Vector3<f64>, gamma: f64, alpha: f64) 
     // For typical materials (α ~ 0.01), this correction is ~1%. Only significant
     // for highly dissipative systems where α approaches 1.
     (precession + damping_term) * (1.0 / (1.0 + alpha * alpha))
+}
+
+/// Calculate Zeeman energy density \[J/m³\]
+///
+/// E_Z = -μ₀ M_s m · H
+///
+/// # Arguments
+/// * `m` - Normalized magnetization direction
+/// * `h` - Applied magnetic field \[T\]
+/// * `ms` - Saturation magnetization \[A/m\]
+///
+/// # Returns
+/// Zeeman energy density \[J/m³\] (negative when aligned with field)
+#[inline]
+pub fn zeeman_energy(m: Vector3<f64>, h: Vector3<f64>, ms: f64) -> f64 {
+    use crate::constants::MU_0;
+    -MU_0 * ms * m.dot(&h)
+}
+
+/// Calculate uniaxial anisotropy energy density \[J/m³\]
+///
+/// E_anis = -K (m · u)²
+///
+/// where K is the anisotropy constant and u is the easy axis.
+///
+/// # Arguments
+/// * `m` - Normalized magnetization direction
+/// * `easy_axis` - Easy axis direction (normalized)
+/// * `k` - Anisotropy constant \[J/m³\]
+///
+/// # Returns
+/// Anisotropy energy density \[J/m³\] (negative when aligned with easy axis)
+#[inline]
+pub fn anisotropy_energy(m: Vector3<f64>, easy_axis: Vector3<f64>, k: f64) -> f64 {
+    let projection = m.dot(&easy_axis);
+    -k * projection * projection
+}
+
+/// Calculate exchange energy for uniform magnetization \[J\]
+///
+/// E_ex = A ∫ (∇m)² dV
+///
+/// For small deviations from uniform state: E_ex ≈ A V θ² / L²
+/// where θ is the rotation angle and L is the characteristic length.
+///
+/// # Arguments
+/// * `a_ex` - Exchange stiffness \[J/m\]
+/// * `angle` - Angle of rotation \[radians\]
+/// * `volume` - Volume \[m³\]
+/// * `length_scale` - Characteristic length scale \[m\]
+///
+/// # Returns
+/// Exchange energy \[J\]
+#[inline]
+pub fn exchange_energy(a_ex: f64, angle: f64, volume: f64, length_scale: f64) -> f64 {
+    a_ex * volume * angle * angle / (length_scale * length_scale)
 }
 
 /// LLG equation solver with adaptive time stepping

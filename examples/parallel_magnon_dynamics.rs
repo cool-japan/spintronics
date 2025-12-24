@@ -19,9 +19,10 @@
 //!
 //! Run with: cargo run --release --example parallel_magnon_dynamics
 
+use std::time::Instant;
+
 use spintronics::magnon::chain::ChainParameters;
 use spintronics::prelude::*;
-use std::time::Instant;
 
 fn main() {
     println!("=== Parallel Multi-Domain Magnon Dynamics ===\n");

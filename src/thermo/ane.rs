@@ -8,6 +8,11 @@
 //!
 //! where α_ANE is the anomalous Nernst coefficient and m is magnetization direction.
 
+use std::fmt;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::vector3::Vector3;
 
 /// Anomalous Nernst Effect calculator
@@ -15,6 +20,7 @@ use crate::vector3::Vector3;
 /// The ANE is particularly strong in materials with large spin-orbit coupling
 /// and is being explored for thermoelectric energy harvesting.
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct AnomalousNernst {
     /// Anomalous Nernst coefficient [V/(K·m)]
     ///
@@ -74,6 +80,7 @@ impl AnomalousNernst {
     /// The ANE creates a transverse voltage perpendicular to both the
     /// temperature gradient and magnetization, enabling thermal energy
     /// harvesting without external magnetic fields.
+    #[inline]
     pub fn electric_field(&self, grad_t: Vector3<f64>) -> Vector3<f64> {
         // E_ANE = α_ANE × (∇T × m)
         let cross = grad_t.cross(&self.magnetization);
@@ -88,6 +95,7 @@ impl AnomalousNernst {
     ///
     /// # Returns
     /// Voltage \[V\]
+    #[inline]
     pub fn voltage(&self, grad_t: Vector3<f64>, width: f64) -> f64 {
         let e_field = self.electric_field(grad_t);
         e_field.magnitude() * width
@@ -99,6 +107,31 @@ impl AnomalousNernst {
     /// For ANE: PF = α_ANE² / ρ
     pub fn power_factor(&self, resistivity: f64) -> f64 {
         self.alpha_ane.powi(2) / resistivity
+    }
+
+    /// Builder method to set ANE coefficient
+    pub fn with_alpha_ane(mut self, alpha_ane: f64) -> Self {
+        self.alpha_ane = alpha_ane;
+        self
+    }
+
+    /// Builder method to set magnetization direction
+    pub fn with_magnetization(mut self, magnetization: Vector3<f64>) -> Self {
+        self.magnetization = magnetization.normalize();
+        self
+    }
+}
+
+impl fmt::Display for AnomalousNernst {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "AnomalousNernst: α_ANE={:.1} μV/K, m=[{:.2},{:.2},{:.2}]",
+            self.alpha_ane * 1e6,
+            self.magnetization.x,
+            self.magnetization.y,
+            self.magnetization.z
+        )
     }
 }
 
