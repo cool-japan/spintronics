@@ -1,6 +1,6 @@
 [package]
 name = "spintronics"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 rust-version = "1.70.0"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
@@ -21,6 +21,9 @@ exclude = [
     "*.json",           # Simulation output files
     "wasm-demo/pkg/",   # Precompiled WASM artifacts
     "pkg/",             # Build artifacts
+    "pkg-bundler/",     # wasm-pack bundler output
+    "pkg-web/",         # wasm-pack web output
+    "pkg-node/",        # wasm-pack node output
     ".cargo/",          # Cargo local config
     "TODO.md",          # Internal documentation
 ]
@@ -31,10 +34,13 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # Core system: RNG, statistical distributions, physical computing utilities, parallelization
 # Note: Optional for WASM builds (not needed for basic simulations)
-scirs2-core = { version = "0.1.0-rc.4", features = ["random", "parallel"], optional = true }
+scirs2-core = { version = "0.3.1", features = ["random", "parallel"], optional = true }
 
 # FEM (Finite Element Method) support - disabled for WASM
-scirs2-spatial = { version = "0.1.0-rc.4", optional = true }
+scirs2-spatial = { version = "0.3.1", optional = true }
+
+# Parallel computing support (v0.3.0)
+rayon = { version = "1.10", optional = true }
 
 # Serialization support (v0.2.0)
 serde = { version = "1.0", features = ["derive"], optional = true }
@@ -57,6 +63,7 @@ getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
+criterion = { version = "0.5", features = ["html_reports"] }
 
 [features]
 default = ["fem", "scirs2", "serde"]
@@ -65,6 +72,7 @@ scirs2 = ["scirs2-core"]
 serde = ["dep:serde", "dep:serde_json"]
 python = ["pyo3", "numpy"]
 hdf5 = ["dep:hdf5"]
+parallel = ["rayon"]
 wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook", "getrandom"]
 
 [[example]]
@@ -75,5 +83,23 @@ path = "examples/yig_pt_pumping.rs"
 name = "magnon_propagation"
 path = "examples/magnon_propagation.rs"
 
+[[bench]]
+name = "llg_benchmark"
+harness = false
+
+[[bench]]
+name = "spinchain_benchmark"
+harness = false
+
+[[bench]]
+name = "vector3_benchmark"
+harness = false
+
 [workspace]
-members = ["demo"]
+members = ["demo", "py"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2021"
+authors = ["COOLJAPAN OÜ (Team KitaSan)"]
+license = "MIT OR Apache-2.0"

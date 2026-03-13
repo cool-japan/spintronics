@@ -480,7 +480,7 @@ mod tests {
 
     #[test]
     fn test_micromagnetic_fem_creation() {
-        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -491,7 +491,7 @@ mod tests {
 
     #[test]
     fn test_average_magnetization() {
-        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 20e-9).unwrap();
+        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 20e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
         let ms = material.ms;
 
@@ -505,7 +505,7 @@ mod tests {
 
     #[test]
     fn test_energy_methods_exist() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::yig();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -521,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_uniaxial_anisotropy_energy() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -541,7 +541,7 @@ mod tests {
 
     #[test]
     fn test_cubic_anisotropy_energy() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -557,7 +557,7 @@ mod tests {
 
     #[test]
     fn test_total_energy_with_anisotropy() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 15e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 15e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -573,7 +573,7 @@ mod tests {
 
     #[test]
     fn test_demagnetization_energy() {
-        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -594,7 +594,7 @@ mod tests {
 
     #[test]
     fn test_total_energy_complete() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 15e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 15e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -611,7 +611,7 @@ mod tests {
 
     #[test]
     fn test_effective_field_calculation() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let fem = MicromagneticFEM::new(mesh, material);
@@ -631,7 +631,7 @@ mod tests {
 
     #[test]
     fn test_llg_single_step() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let mut fem = MicromagneticFEM::new(mesh, material);
@@ -659,7 +659,7 @@ mod tests {
 
     #[test]
     fn test_llg_dynamics_run() {
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
         let ms = material.ms; // Extract before move
 
@@ -684,7 +684,7 @@ mod tests {
     #[test]
     fn test_llg_dynamics_stability() {
         // Test that LLG dynamics doesn't blow up
-        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(50e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
         let material = Ferromagnet::permalloy();
 
         let mut fem = MicromagneticFEM::new(mesh, material);

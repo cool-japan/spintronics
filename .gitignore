@@ -6,6 +6,9 @@ Cargo.lock
 
 # WASM build artifacts
 /pkg/
+/pkg-bundler/
+/pkg-web/
+/pkg-node/
 /wasm-demo/pkg/
 
 # IDE

@@ -250,7 +250,8 @@ mod tests {
 
     #[test]
     fn test_assemble_stiffness() {
-        let mesh = Mesh2D::rectangle(1.0, 1.0, 0.5).unwrap();
+        let mesh =
+            Mesh2D::rectangle(1.0, 1.0, 0.5).expect("rectangle mesh creation should succeed");
         let k = assemble_stiffness_matrix(&mesh);
 
         assert_eq!(k.nrows, mesh.n_nodes());
@@ -260,7 +261,8 @@ mod tests {
 
     #[test]
     fn test_assemble_mass() {
-        let mesh = Mesh2D::rectangle(1.0, 1.0, 0.5).unwrap();
+        let mesh =
+            Mesh2D::rectangle(1.0, 1.0, 0.5).expect("rectangle mesh creation should succeed");
         let m = assemble_mass_matrix(&mesh);
 
         assert_eq!(m.nrows, mesh.n_nodes());
@@ -269,7 +271,8 @@ mod tests {
 
     #[test]
     fn test_parallel_stiffness_assembly() {
-        let mesh = Mesh2D::rectangle(1.0, 1.0, 0.25).unwrap();
+        let mesh =
+            Mesh2D::rectangle(1.0, 1.0, 0.25).expect("rectangle mesh creation should succeed");
 
         let k_serial = assemble_stiffness_matrix(&mesh);
         let k_parallel = assemble_stiffness_matrix_parallel(&mesh);
@@ -284,7 +287,8 @@ mod tests {
 
     #[test]
     fn test_parallel_mass_assembly() {
-        let mesh = Mesh2D::rectangle(1.0, 1.0, 0.25).unwrap();
+        let mesh =
+            Mesh2D::rectangle(1.0, 1.0, 0.25).expect("rectangle mesh creation should succeed");
 
         let m_serial = assemble_mass_matrix(&mesh);
         let m_parallel = assemble_mass_matrix_parallel(&mesh);
@@ -300,7 +304,8 @@ mod tests {
     #[test]
     fn test_parallel_assembly_works() {
         // Test that parallel assembly produces a valid matrix
-        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9)
+            .expect("nanoscale mesh creation should succeed");
 
         let k_parallel = assemble_stiffness_matrix_parallel(&mesh);
         let m_parallel = assemble_mass_matrix_parallel(&mesh);

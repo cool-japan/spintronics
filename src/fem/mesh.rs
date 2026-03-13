@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn test_mesh2d_rectangle() {
-        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).unwrap();
+        let mesh = Mesh2D::rectangle(100e-9, 50e-9, 10e-9).expect("mesh creation should succeed");
 
         assert!(mesh.n_nodes() > 0);
         assert!(mesh.n_elements() > 0);
@@ -245,7 +245,8 @@ mod tests {
 
     #[test]
     fn test_mesh3d_cuboid() {
-        let mesh = Mesh3D::cuboid(100e-9, 50e-9, 10e-9, 10e-9).unwrap();
+        let mesh =
+            Mesh3D::cuboid(100e-9, 50e-9, 10e-9, 10e-9).expect("mesh creation should succeed");
 
         assert!(mesh.n_nodes() > 0);
         assert!(mesh.n_elements() > 0);
@@ -253,7 +254,7 @@ mod tests {
 
     #[test]
     fn test_element_area() {
-        let mesh = Mesh2D::rectangle(10.0, 10.0, 2.0).unwrap();
+        let mesh = Mesh2D::rectangle(10.0, 10.0, 2.0).expect("mesh creation should succeed");
 
         if !mesh.elements.is_empty() {
             let area = mesh.element_area(0);

@@ -11,6 +11,10 @@
 pub use super::dmi::{DmiParameters, DmiType};
 // Domain walls
 pub use super::domain_wall::{DomainWall, WallType};
+// Hopfions (3D topological solitons)
+pub use super::hopfion::{
+    HopfFibration, HopfInvariant, Hopfion, HopfionEnergy, HopfionEnergyParams, HopfionStability,
+};
 pub use super::skyrmion::{Chirality, Helicity, LatticeType, Skyrmion, SkyrmionLattice};
 // Topological charge calculations
 pub use super::topology::{calculate_skyrmion_number, TopologicalCharge};

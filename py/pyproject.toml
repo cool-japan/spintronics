@@ -1,0 +1,82 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "spintronics"
+version = "0.3.0"
+description = "High-performance spintronics simulation library"
+authors = [
+    {name = "COOLJAPAN OU (Team Kitasan)", email = "contact@cooljapan.tech"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT OR Apache-2.0"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "numpy>=1.20.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/cool-japan/spintronics"
+Repository = "https://github.com/cool-japan/spintronics"
+Documentation = "https://docs.rs/spintronics"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0.0",
+    "black>=22.3.0",
+    "flake8>=5.0.0",
+    "isort>=5.10.0",
+]
+plot = [
+    "matplotlib>=3.3.0",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+binding = "pyo3"
+include = [
+    "LICENSE*",
+    "README.md",
+    "python/spintronics/*.pyi",
+    "python/spintronics/py.typed",
+]
+abi3 = true
+abi3-py38 = true
+manifest-path = "Cargo.toml"
+module-name = "spintronics"
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::FutureWarning",
+]

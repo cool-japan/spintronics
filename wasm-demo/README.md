@@ -2,6 +2,12 @@
 
 Interactive browser-based spintronics simulations powered by Rust and WebAssembly.
 
+**npm package**: [`@cooljapan/spintronics`](https://www.npmjs.com/package/@cooljapan/spintronics)
+
+```bash
+npm install @cooljapan/spintronics
+```
+
 ## Features
 
 ### 🎯 Single Spin Dynamics

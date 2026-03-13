@@ -1,6 +1,6 @@
 //! # spintronics
 //!
-//! **Version 0.2.0** - Python bindings, serialization, performance optimization
+//! **Version 0.3.0** - Advanced physics modules, higher-order integrators, SIMD optimization
 //!
 //! A pure Rust library for simulating spin dynamics, spin current generation,
 //! and conversion phenomena in magnetic materials and topological materials.
@@ -26,10 +26,12 @@
 //! - **Spin Nernst Effect**: Thermal gradient → transverse spin current
 //!
 //! ### Key Features
-//! - ✅ **448 tests passing** (431 library + 17 demo, all passing)
+//! - ✅ **718 tests passing** (718 library tests, v0.3.0)
+//! - ✅ **Advanced integrators** - Dormand-Prince RK5(4)/RK8(7), symplectic methods (v0.3.0)
+//! - ✅ **New physics modules** - Altermagnets, Orbitronics, Frustrated magnets, Hopfions, Magnon BEC, Magnetoelastics (v0.3.0)
+//! - ✅ **25 examples** organized by difficulty (v0.3.0)
 //! - ✅ **Interactive web demo** - Axum + HTMX subcrate with 4 physics simulations (v0.2.0)
 //! - ✅ **5 experimental validations** against landmark papers
-//! - ✅ **17 examples** organized by difficulty (Basic/Intermediate/Advanced)
 //! - ✅ **WebAssembly support** for browser-based simulations
 //! - ✅ **FEM solver** with advanced iterative methods
 //! - ✅ **Performance optimized** - 21 inline attributes on hot-path functions (v0.2.0)
@@ -53,7 +55,7 @@
 //!
 //! ## Architecture
 //!
-//! The library is organized into 18 physics-focused modules:
+//! The library is organized into ~28 physics-focused modules:
 //!
 //! ### Core Infrastructure
 //! - [`constants`]: Physical constants (ℏ, γ, e, μ_B, k_B, 20+ NIST-validated values)
@@ -73,11 +75,15 @@
 //! - [`magnon`]: Magnon propagation and spin wave dynamics
 //! - [`thermo`]: Thermoelectric effects (ANE, thermal magnon transport, multilayers)
 //! - [`texture`]: Magnetic textures (skyrmions, domain walls, DMI, topological charge)
+//! - [`spinwave`]: Spin wave theory (dispersion, modes, quantization)
 //!
 //! ### Specialized Physics
 //! - [`afm`]: Antiferromagnetic dynamics for THz spintronics
 //! - [`stochastic`]: Thermal fluctuations and finite-temperature effects
 //! - [`cavity`]: Cavity magnonics - Hybrid magnon-photon quantum systems
+//! - [`altermagnet`]: Altermagnetic materials (RuO2, CrSb, MnTe; spin-splitter effect, v0.3.0)
+//! - [`orbitronics`]: Orbital Hall effect, orbital torques (v0.3.0)
+//! - [`frustrated`]: Frustrated magnets, spin ice, kagome (v0.3.0)
 //!
 //! ### Coupled Systems
 //! - [`circuit`]: Spin circuit elements (resistors, networks, spin accumulation)
@@ -88,6 +94,9 @@
 //! ### Computational Tools
 //! - [`fem`]: Finite element method (Delaunay mesh, iterative solvers, micromagnetics)
 //! - [`memory`]: Memory pool allocator for high-performance simulations (v0.2.0)
+//! - [`simd`]: SIMD-friendly batch processing for vector operations (v0.3.0)
+//! - [`parallel`]: Domain decomposition and parallel sweeps (v0.3.0, feature-gated)
+//! - [`builder`]: Type-state SimulationBuilder for validated construction (v0.3.0)
 //!
 //! ### Data & Validation
 //! - [`visualization`]: Data export (VTK, CSV, JSON, HDF5)
@@ -124,13 +133,18 @@
 
 #![warn(missing_docs)]
 #![warn(clippy::all)]
+#![allow(clippy::doc_lazy_continuation)]
+#![allow(clippy::doc_markdown)]
 
 pub mod afm;
+pub mod altermagnet;
+pub mod caloritronics;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod ai;
 
 pub mod benchmark;
+pub mod builder;
 pub mod cavity;
 pub mod circuit;
 pub mod constants;
@@ -142,6 +156,7 @@ pub mod error;
 pub mod fem;
 
 pub mod fluid;
+pub mod frustrated;
 pub mod io;
 pub mod llg;
 
@@ -151,6 +166,13 @@ pub mod magnon;
 pub mod material;
 pub mod mech;
 pub mod memory;
+
+#[cfg(feature = "parallel")]
+pub mod parallel;
+
+pub mod orbitronics;
+pub mod simd;
+pub mod spinwave;
 
 #[cfg(feature = "scirs2")]
 pub mod stochastic;

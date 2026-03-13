@@ -36,7 +36,7 @@
 //! ];
 //!
 //! // Export snapshot
-//! writer.write_snapshot(&spins, (3, 1, 1)).unwrap();
+//! writer.write_snapshot(&spins, (3, 1, 1)).expect("VTK snapshot write should succeed");
 //! ```
 
 use std::fs::File;
@@ -435,7 +435,9 @@ mod tests {
         let spins = vec![Vector3::new(1.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0)];
 
         for _ in 0..3 {
-            writer.write_snapshot(&spins, (2, 1, 1)).unwrap();
+            writer
+                .write_snapshot(&spins, (2, 1, 1))
+                .expect("VTK snapshot write should succeed");
         }
 
         assert_eq!(writer.step_counter, 3);
@@ -470,7 +472,9 @@ mod tests {
 
         let spins = vec![Vector3::new(1.0, 0.0, 0.0)];
 
-        writer.write_snapshot(&spins, (1, 1, 1)).unwrap();
+        writer
+            .write_snapshot(&spins, (1, 1, 1))
+            .expect("VTK snapshot write should succeed");
         assert_eq!(writer.step_counter, 1);
 
         writer.reset_counter();

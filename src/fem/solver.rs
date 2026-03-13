@@ -374,7 +374,8 @@ mod tests {
         a.add_entry(2, 2, 2.0);
 
         let b = vec![2.0, 4.0, 6.0];
-        let x = solve_linear_system(&a, &b, SolverType::Jacobi).unwrap();
+        let x = solve_linear_system(&a, &b, SolverType::Jacobi)
+            .expect("linear system solve should succeed");
 
         // Solution should be [1.0, 2.0, 3.0]
         assert!((x[0] - 1.0).abs() < 0.01);
@@ -395,7 +396,8 @@ mod tests {
         a.add_entry(2, 2, 2.0);
 
         let b = vec![5.0, 5.0, 3.0];
-        let x = solve_linear_system(&a, &b, SolverType::CG).unwrap();
+        let x = solve_linear_system(&a, &b, SolverType::CG)
+            .expect("linear system solve should succeed");
 
         // Verify Ax = b
         let ax = a.matvec(&x);
@@ -417,7 +419,8 @@ mod tests {
         a.add_entry(2, 2, 2.0);
 
         let b = vec![4.0, 7.0, 3.0];
-        let x = solve_linear_system(&a, &b, SolverType::BiCGSTAB).unwrap();
+        let x = solve_linear_system(&a, &b, SolverType::BiCGSTAB)
+            .expect("linear system solve should succeed");
 
         // Verify Ax = b
         let ax = a.matvec(&x);
@@ -442,7 +445,8 @@ mod tests {
         a.add_entry(2, 2, 4.0);
 
         let b = vec![3.0, 2.0, 3.0];
-        let x = solve_linear_system(&a, &b, SolverType::SOR).unwrap();
+        let x = solve_linear_system(&a, &b, SolverType::SOR)
+            .expect("linear system solve should succeed");
 
         // Verify Ax ≈ b
         let ax = a.matvec(&x);
@@ -466,7 +470,8 @@ mod tests {
         a.add_entry(1, 1, 2.0);
 
         let b = vec![4.0, 6.0];
-        let x = solve_linear_system_with_params(&a, &b, SolverType::Jacobi, params).unwrap();
+        let x = solve_linear_system_with_params(&a, &b, SolverType::Jacobi, params)
+            .expect("linear system solve should succeed");
 
         assert!((x[0] - 2.0).abs() < 1e-6);
         assert!((x[1] - 3.0).abs() < 1e-6);
@@ -493,7 +498,8 @@ mod tests {
             preconditioner: Preconditioner::Jacobi,
         };
 
-        let x = solve_linear_system_with_params(&a, &b, SolverType::CG, params_jacobi).unwrap();
+        let x = solve_linear_system_with_params(&a, &b, SolverType::CG, params_jacobi)
+            .expect("linear system solve should succeed");
 
         // Verify Ax = b
         let ax = a.matvec(&x);
@@ -526,7 +532,8 @@ mod tests {
             preconditioner: Preconditioner::SSOR,
         };
 
-        let x = solve_linear_system_with_params(&a, &b, SolverType::CG, params_ssor).unwrap();
+        let x = solve_linear_system_with_params(&a, &b, SolverType::CG, params_ssor)
+            .expect("linear system solve should succeed");
 
         // Verify Ax ≈ b
         let ax = a.matvec(&x);

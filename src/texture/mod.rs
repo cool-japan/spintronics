@@ -2,6 +2,7 @@
 //!
 //! This module implements:
 //! - **Skyrmions**: Topologically protected spin textures (Néel and Bloch types)
+//! - **Hopfions**: 3D topological solitons characterized by the Hopf invariant
 //! - **Domain walls**: Interfaces between magnetic domains
 //! - **Vortices**: Circular spin configurations
 //! - **DMI**: Dzyaloshinskii-Moriya Interaction (interface and bulk)
@@ -23,11 +24,17 @@
 
 pub mod dmi;
 pub mod domain_wall;
+pub mod hopfion;
+pub mod hopfion_dynamics;
 pub mod prelude;
 pub mod skyrmion;
 pub mod topology;
 
 pub use dmi::{DmiParameters, DmiType};
 pub use domain_wall::{DomainWall, WallType};
+pub use hopfion::{
+    HopfFibration, HopfInvariant, Hopfion, HopfionEnergy, HopfionEnergyParams, HopfionStability,
+};
+pub use hopfion_dynamics::{HopfionDynamicsConfig, HopfionDynamicsResult, HopfionDynamicsSolver};
 pub use skyrmion::{Chirality, Helicity, Skyrmion, SkyrmionLattice};
 pub use topology::{calculate_skyrmion_number, TopologicalCharge};

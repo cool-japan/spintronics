@@ -1,6 +1,6 @@
 # Examples
 
-This directory contains example programs demonstrating various features of the spintronics library, organized by difficulty level.
+This directory contains **25 example programs** demonstrating various features of the spintronics library, organized by difficulty level.
 
 ## 📚 Basic Examples (Beginner-friendly)
 
@@ -65,6 +65,13 @@ These examples introduce more complex physics and multi-component systems.
   - Physics: 2D magnetism and spintronics
   - Difficulty: ⭐⭐ Intermediate
   - Run: `cargo run --example 2d_material_spintronics`
+
+### New in v0.3.0
+- **`simulation_builder.rs`** - SimulationBuilder fluent API
+  - Demonstrates: Builder pattern for setting up complex simulations
+  - Physics: Comprehensive spin dynamics configuration
+  - Difficulty: ⭐⭐ Intermediate
+  - Run: `cargo run --example simulation_builder`
 
 ---
 
@@ -133,6 +140,49 @@ Complex simulations requiring understanding of multiple physics domains.
   - Difficulty: ⭐⭐⭐ Advanced
   - Run: `cargo run --example fluid_barnett`
 
+### New in v0.3.0
+- **`altermagnet_ruo2.rs`** - Altermagnetism in RuO₂
+  - Demonstrates: Time-reversal symmetry breaking without net moment, anomalous Hall response
+  - Physics: Altermagnetism, RuO₂ material model
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example altermagnet_ruo2`
+
+- **`orbital_hall_effect.rs`** - Orbital Hall effect and orbital currents
+  - Demonstrates: Orbital current generation, orbital Hall conductivity
+  - Physics: Orbitronics, spin-orbit coupling
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example orbital_hall_effect`
+
+- **`spin_ice_monopoles.rs`** - Frustrated spin ice and magnetic monopoles
+  - Demonstrates: Kagome and pyrochlore spin ice, monopole excitations
+  - Physics: Frustrated magnets, emergent magnetic monopoles
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example spin_ice_monopoles`
+
+- **`spin_wave_dispersion.rs`** - Spin wave dispersion and magnon dynamics
+  - Demonstrates: Dispersion relations, magnon group velocity, band structure
+  - Physics: Linear spin wave theory, exchange and dipolar contributions
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example spin_wave_dispersion`
+
+- **`hopfion_3d.rs`** - Hopfion topology in 3D
+  - Demonstrates: Hopfion creation, Hopf invariant calculation, 3D topology
+  - Physics: Three-dimensional topological solitons
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example hopfion_3d`
+
+- **`magnon_bec.rs`** - Magnon Bose-Einstein condensation
+  - Demonstrates: Magnon condensation, coherent magnon states, critical temperature
+  - Physics: Quantum magnon statistics, BEC in driven magnetic systems
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example magnon_bec`
+
+- **`magnetoelastic_switching.rs`** - Magnetoelastic coupling and magnetostriction
+  - Demonstrates: Strain-induced switching, magnetoelastic energy, magnetostriction
+  - Physics: Magnetoelastic coupling, coupled spin-lattice dynamics
+  - Difficulty: ⭐⭐⭐ Advanced
+  - Run: `cargo run --example magnetoelastic_switching`
+
 ---
 
 ## 🎯 Learning Path
@@ -160,6 +210,18 @@ Complex simulations requiring understanding of multiple physics domains.
 2. `magnon_propagation.rs` - 1D simulations
 3. `fem_micromagnetics.rs` - Advanced numerical techniques
 4. `parallel_magnon_dynamics.rs` - High-performance computing
+
+### Path 5: New in v0.3.0 - Emerging Quantum Materials
+1. `altermagnet_ruo2.rs` - Altermagnetism without net moment
+2. `orbital_hall_effect.rs` - Orbital currents and orbitronics
+3. `magnon_bec.rs` - Quantum magnon condensation
+4. `hopfion_3d.rs` - Three-dimensional topological solitons
+
+### Path 6: Frustrated Magnetism and Complex Textures
+1. `spin_ice_monopoles.rs` - Frustrated lattices and emergent monopoles
+2. `spin_wave_dispersion.rs` - Magnon dispersion in frustrated systems
+3. `magnetoelastic_switching.rs` - Coupled spin-lattice dynamics
+4. `hopfion_3d.rs` - 3D topological spin structures
 
 ---
 

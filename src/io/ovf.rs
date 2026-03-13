@@ -286,53 +286,55 @@ impl OvfReader {
             let line = line.trim();
 
             if line.starts_with("# Title:") {
-                title = line.strip_prefix("# Title:").unwrap().trim().to_string();
+                if let Some(rest) = line.strip_prefix("# Title:") {
+                    title = rest.trim().to_string();
+                }
             } else if line.starts_with("# xnodes:") {
                 nx = line
                     .strip_prefix("# xnodes:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0);
             } else if line.starts_with("# ynodes:") {
                 ny = line
                     .strip_prefix("# ynodes:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0);
             } else if line.starts_with("# znodes:") {
                 nz = line
                     .strip_prefix("# znodes:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0);
             } else if line.starts_with("# xmax:") {
                 xmax = line
                     .strip_prefix("# xmax:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0.0);
             } else if line.starts_with("# ymax:") {
                 ymax = line
                     .strip_prefix("# ymax:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0.0);
             } else if line.starts_with("# zmax:") {
                 zmax = line
                     .strip_prefix("# zmax:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0.0);
             } else if line.starts_with("# valuedim:") {
                 value_dim = line
                     .strip_prefix("# valuedim:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(3);
@@ -379,46 +381,48 @@ impl OvfReader {
             let line = line.trim();
 
             if line.starts_with("# Title:") {
-                title = line.strip_prefix("# Title:").unwrap().trim().to_string();
+                if let Some(rest) = line.strip_prefix("# Title:") {
+                    title = rest.trim().to_string();
+                }
             } else if line.starts_with("# xnodes:") {
                 nx = line
                     .strip_prefix("# xnodes:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0);
             } else if line.starts_with("# ynodes:") {
                 ny = line
                     .strip_prefix("# ynodes:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0);
             } else if line.starts_with("# znodes:") {
                 nz = line
                     .strip_prefix("# znodes:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0);
             } else if line.starts_with("# xmax:") {
                 xmax = line
                     .strip_prefix("# xmax:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0.0);
             } else if line.starts_with("# ymax:") {
                 ymax = line
                     .strip_prefix("# ymax:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0.0);
             } else if line.starts_with("# zmax:") {
                 zmax = line
                     .strip_prefix("# zmax:")
-                    .unwrap()
+                    .unwrap_or("")
                     .trim()
                     .parse()
                     .unwrap_or(0.0);
@@ -467,7 +471,9 @@ mod tests {
         let v = Vector3::new(1.0, 0.0, 0.0);
         ovf.set_vector(2, 3, 0, v);
 
-        let retrieved = ovf.get_vector(2, 3, 0).unwrap();
+        let retrieved = ovf
+            .get_vector(2, 3, 0)
+            .expect("vector at (2,3,0) should exist");
         assert_eq!(retrieved.x, 1.0);
         assert_eq!(retrieved.y, 0.0);
         assert_eq!(retrieved.z, 0.0);
@@ -490,10 +496,12 @@ mod tests {
         // Write to file
         let writer = OvfWriter::new(OvfFormat::Text2_0);
         let path = "/tmp/test_ovf_2_0.ovf";
-        writer.write(path, &ovf).unwrap();
+        writer
+            .write(path, &ovf)
+            .expect("OVF 2.0 write should succeed");
 
         // Read back
-        let ovf_read = OvfReader::read(path).unwrap();
+        let ovf_read = OvfReader::read(path).expect("OVF 2.0 read should succeed");
 
         assert_eq!(ovf_read.mesh_size, (3, 3, 1));
         assert_eq!(ovf_read.data.len(), 9);
@@ -510,9 +518,11 @@ mod tests {
 
         let writer = OvfWriter::new(OvfFormat::Text1_0);
         let path = "/tmp/test_ovf_1_0.ovf";
-        writer.write(path, &ovf).unwrap();
+        writer
+            .write(path, &ovf)
+            .expect("OVF 1.0 write should succeed");
 
-        let ovf_read = OvfReader::read(path).unwrap();
+        let ovf_read = OvfReader::read(path).expect("OVF 1.0 read should succeed");
         assert_eq!(ovf_read.mesh_size, (2, 2, 1));
     }
 }

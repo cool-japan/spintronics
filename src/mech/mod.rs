@@ -24,8 +24,14 @@ pub mod barnett_effect;
 pub mod cantilever;
 pub mod coupled_dynamics;
 pub mod einstein_de_haas;
+pub mod magnetoelastic;
+pub mod straintronics;
 
 pub use barnett_effect::BarnettMagnetization;
 pub use cantilever::{Cantilever, CantileverMode};
 pub use coupled_dynamics::SpinMechanicalCoupling;
 pub use einstein_de_haas::EinsteinDeHaas;
+pub use magnetoelastic::{
+    MagnetoelasticMaterial, PiezoelectricSubstrate, StrainTensor, StressTensor,
+};
+pub use straintronics::{MultiferroicSwitchingResult, StraintronicDevice, VcmaParameters};

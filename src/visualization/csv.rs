@@ -17,16 +17,16 @@
 //! use spintronics::visualization::csv::CsvWriter;
 //! use spintronics::Vector3;
 //!
-//! let mut writer = CsvWriter::new("magnetization_dynamics.csv").unwrap();
+//! let mut writer = CsvWriter::new("magnetization_dynamics.csv").expect("CSV operation should succeed");
 //!
 //! // Write header
-//! writer.write_header(&["time", "mx", "my", "mz"]).unwrap();
+//! writer.write_header(&["time", "mx", "my", "mz"]).expect("CSV operation should succeed");
 //!
 //! // Write time series data
 //! for t in 0..100 {
 //!     let time = t as f64 * 0.01;
 //!     let m = Vector3::new(time.cos(), time.sin(), 0.0);
-//!     writer.write_row(&[time, m.x, m.y, m.z]).unwrap();
+//!     writer.write_row(&[time, m.x, m.y, m.z]).expect("CSV operation should succeed");
 //! }
 //! ```
 
@@ -227,22 +227,26 @@ mod tests {
 
     #[test]
     fn test_write_header() {
-        let mut writer = CsvWriter::new("/tmp/test_header.csv").unwrap();
+        let mut writer =
+            CsvWriter::new("/tmp/test_header.csv").expect("CSV operation should succeed");
         let result = writer.write_header(&["time", "mx", "my", "mz"]);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_write_row() {
-        let mut writer = CsvWriter::new("/tmp/test_row.csv").unwrap();
-        writer.write_header(&["x", "y", "z"]).unwrap();
+        let mut writer = CsvWriter::new("/tmp/test_row.csv").expect("CSV operation should succeed");
+        writer
+            .write_header(&["x", "y", "z"])
+            .expect("CSV operation should succeed");
         let result = writer.write_row(&[1.0, 2.0, 3.0]);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_write_vectors() {
-        let mut writer = CsvWriter::new("/tmp/test_vectors.csv").unwrap();
+        let mut writer =
+            CsvWriter::new("/tmp/test_vectors.csv").expect("CSV operation should succeed");
         let vectors = vec![
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),

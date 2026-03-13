@@ -7,6 +7,8 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)]()
 [![Rust Version](https://img.shields.io/badge/rust-2021-orange)]()
+[![npm](https://img.shields.io/npm/v/@cooljapan/spintronics)](https://www.npmjs.com/package/@cooljapan/spintronics)
+[![crates.io](https://img.shields.io/crates/v/spintronics)](https://crates.io/crates/spintronics)
 
 ## 🚀 Overview
 
@@ -24,29 +26,29 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📊 Development Status
 
-**Current Version**: 0.2.0 ✅ **PRODUCTION READY**
+**Current Version**: 0.3.0 ✅ **PRODUCTION READY**
 
-**Latest Release**: December 2025
+**Latest Release**: March 2026
 
-### Version 0.2.0 Highlights
+### Version 0.3.0 Highlights
 - ✅ **Interactive Web Demo**: HTMX + Axum demonstration subcrate with 4 physics simulations
 - ✅ **Python Bindings (PyO3)**: Use from Python with native performance
 - ✅ **HDF5 Export**: Large-scale data storage for simulation results
 - ✅ **Memory Pool Allocator**: 99% allocation reduction in hot paths
 - ✅ **Serde Serialization**: JSON/binary data interchange
 - ✅ **Unit Validation**: Runtime checks for physical quantity sanity
-- ✅ **Performance**: 21 inline attributes on hot-path functions
-- ✅ **17 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
-- ✅ **448 Tests Passing**: 431 library (381 unit + 50 doc) + 17 demo, zero warnings
+- ✅ **Performance**: SIMD-accelerated spin operations and parallel lattice evolution
+- ✅ **25 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
+- ✅ **718 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
 
 ### Core Capabilities
-- ✅ **18 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
-- ✅ **60+ Source Files**: Well-organized, modular codebase
+- ✅ **32 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
+- ✅ **130+ Source Files**: Well-organized, modular codebase
 - ✅ **5 Experimental Validations**: Against landmark papers (Saitoh 2006, Woo 2016, etc.)
 - ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
 - ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
-- ✅ **Production Quality**: Zero warnings, 448 tests passing
+- ✅ **Production Quality**: Zero warnings, 718 tests passing
 
 ## ✨ Key Features
 
@@ -78,7 +80,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📦 Implemented Modules
 
-The library is organized into 18 physics-focused modules:
+The library is organized into 32 physics-focused modules:
 
 | Module | Physics Concept | Key Papers / Concepts |
 |--------|----------------|----------------------|
@@ -102,6 +104,18 @@ The library is organized into 18 physics-focused modules:
 | **units** | Unit Validation | 14 validators for physical quantities (v0.2.0) |
 | **visualization** | Data Export | HDF5, JSON, CSV, VTK formats (v0.2.0) |
 | **python** | Python Bindings | PyO3 integration for Python users (v0.2.0) |
+| **altermagnet** | Altermagnetism | Time-reversal symmetry breaking without net moment (v0.3.0) |
+| **orbitronics** | Orbital Hall Effect | Orbital current generation and orbital Hall effect (v0.3.0) |
+| **frustrated** | Frustrated Magnets | Kagome and triangular lattice antiferromagnets, spin ice (v0.3.0) |
+| **spinwave** | Spin Wave Dynamics | Spin wave dispersion and magnon dynamics (v0.3.0) |
+| **texture/hopfion** | Hopfion Topology | Hopfion topology and invariant calculation (v0.3.0) |
+| **magnon/bec** | Magnon BEC | Magnon Bose-Einstein condensation (v0.3.0) |
+| **mech/magnetoelastic** | Magnetoelastic Coupling | Magnetoelastic coupling and magnetostriction (v0.3.0) |
+| **caloritronics** | Spin Caloritronics | Onsager transport, heat currents, spin Peltier (v0.3.0) |
+| **dynamics/llb** | LLB Equation | Landau-Lifshitz-Bloch solver for finite-temperature dynamics (v0.3.0) |
+| **simd** | SIMD Operations | SIMD-accelerated spin operations (v0.3.0) |
+| **parallel** | Parallel Lattice | Parallel spin lattice evolution (v0.3.0) |
+| **builder** | Simulation Builder | SimulationBuilder fluent API (v0.3.0) |
 
 ### Module Architecture
 
@@ -198,14 +212,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spintronics = "0.2.0"
+spintronics = "0.3.0"
 ```
 
 ### Optional Features
 
 ```toml
 [dependencies]
-spintronics = { version = "0.2.0", features = ["python", "hdf5", "serde"] }
+spintronics = { version = "0.3.0", features = ["python", "hdf5", "serde"] }
 ```
 
 Available features:
@@ -226,7 +240,7 @@ cargo build --release
 
 ## 💡 Examples
 
-The library includes **17 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
+The library includes **25 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
 
 ### 📚 Quick Start Examples (Beginner)
 
@@ -254,7 +268,7 @@ Reproduces the landmark Saitoh et al. (2006) experiment:
 - **Reservoir Computing** - Neuromorphic computing with magnons
 
 **See [`examples/README.md`](examples/README.md) for:**
-- Detailed descriptions of all 17 examples
+- Detailed descriptions of all 25 examples
 - Learning paths for different backgrounds
 - Difficulty ratings and prerequisites
 - Feature requirements and build commands
@@ -271,7 +285,7 @@ done
 
 ## 🌐 Interactive Web Demo
 
-**NEW in v0.2.0!** Try the interactive web demonstrations:
+**NEW in v0.3.0!** Try the interactive web demonstrations:
 
 ```bash
 cd demo
@@ -333,10 +347,11 @@ cargo test        # Unit tests
 
 ### Test Coverage
 
-**Total: 448 tests passing** (431 library + 17 demo)
-- ✅ **381 Unit Tests**: Core physics calculations
-- ✅ **50 Doc Tests**: Documentation examples
-- ✅ **17 Demo Tests**: Web endpoints and physics validation
+**Total: 718 tests passing**
+- ✅ **Unit Tests**: Core physics calculations
+- ✅ **Doc Tests**: Documentation examples
+- ✅ **Integration Tests**: Multi-module physics workflows
+- ✅ **Demo Tests**: Web endpoints and physics validation
 
 All modules include comprehensive tests covering:
 - ✅ **Physical Correctness**: Conservation laws, symmetries, gauge invariance
@@ -466,19 +481,25 @@ cargo fmt && cargo clippy && cargo test
 
 ## 🌐 WebAssembly Support
 
-Run spintronics simulations in your browser! The library compiles to WebAssembly for interactive browser-based physics simulations.
+Run spintronics simulations in your browser! The library is published to npm as [`@cooljapan/spintronics`](https://www.npmjs.com/package/@cooljapan/spintronics) for easy integration into web projects.
 
-### Building for WASM
+### npm Install
+
+```bash
+npm install @cooljapan/spintronics
+```
+
+### Building from Source
 
 ```bash
 # Install wasm-pack (one-time setup)
 cargo install wasm-pack
 
-# Build the WASM package
-wasm-pack build --features wasm --target web
-
-# Or use the convenience script
+# Build all targets (web, node, bundler)
 ./build-wasm.sh
+
+# Or build a specific target manually
+wasm-pack build --scope cooljapan --target web --out-dir pkg-web --release -- --features wasm --no-default-features
 ```
 
 ### Running the Demo
@@ -500,7 +521,11 @@ python3 -m http.server 8080
 ### JavaScript Usage
 
 ```javascript
-import init, { SpinSimulator } from './pkg/spintronics.js';
+// Using npm package
+import init, { SpinSimulator } from '@cooljapan/spintronics';
+
+// Or using local build
+// import init, { SpinSimulator } from './pkg/spintronics.js';
 
 async function run() {
     await init();
@@ -538,6 +563,13 @@ See `wasm-demo/` directory for complete interactive examples.
 - ✅ Implicit methods for stiff equations
 - ✅ SIMD-optimized spin chain solver
 - ✅ Parallel multi-domain solver
+- ✅ **DormandPrince45** (DP5(4)) - 5th-order Runge-Kutta with 4th-order error estimate
+- ✅ **DormandPrince87** (DP8(7)) - 8th-order method for high-accuracy integrations
+- ✅ **Yoshida4** - 4th-order symplectic integrator for conservative systems
+- ✅ **ForestRuth** - Symplectic Forest-Ruth integrator
+- ✅ **VelocityVerlet** - Symplectic velocity Verlet for coupled spin-lattice dynamics
+- ✅ **SemiImplicit** - Semi-implicit integrator for stiff spin dynamics
+- ✅ **AdaptiveIntegrator** - Adaptive wrapper with automatic step-size control
 
 **Advanced Materials** ✅ **COMPLETE**
 - ✅ Topological insulators (Bi₂Se₃, Bi₂Te₃, Bi₂Te₄)
@@ -601,19 +633,36 @@ See `wasm-demo/` directory for complete interactive examples.
 - ✅ Interactive web demo with real-time visualization
 - ✅ Build script and documentation
 
-### Version 0.2.0+ (Future Enhancements)
+### Version 0.3.0 ✅ **COMPLETE**
+
+**New Physics Modules**
+- ✅ Altermagnetism: time-reversal symmetry breaking without net magnetization
+- ✅ Orbitronics: orbital Hall effect and orbital current generation
+- ✅ Frustrated magnets: kagome and triangular lattice antiferromagnets, spin ice with monopole excitations
+- ✅ Spin wave dispersion and magnon dynamics (`spinwave` module)
+- ✅ Hopfion topology and invariant calculation (`texture/hopfion`)
+- ✅ Magnon Bose-Einstein condensation (`magnon/bec`)
+- ✅ Magnetoelastic coupling and magnetostriction (`mech/magnetoelastic`)
+
+**Performance**
+- ✅ SIMD-accelerated spin operations (`simd` module)
+- ✅ Parallel spin lattice evolution (`parallel` module)
+
+**Developer Experience**
+- ✅ SimulationBuilder fluent API (`builder` module)
+- ✅ 25 examples (8 new examples added)
+- ✅ 718 tests passing
+
+### Version 0.4.0+ (Future Enhancements)
 
 **Performance Optimization**
 - [ ] GPU acceleration (CUDA/ROCm)
-- [ ] Advanced SIMD optimization
-- [ ] Multi-threading for large-scale systems
 - [ ] Profile-guided optimization (PGO)
 - [ ] MPI support for distributed computing
 
 **Integration & Interoperability**
-- [ ] Python bindings (PyO3)
 - [ ] Julia bindings
-- [ ] HDF5/NetCDF export
+- [ ] NetCDF export
 - [ ] Advanced visualization (ParaView, Mayavi)
 
 **Research-Grade Features**
@@ -621,7 +670,6 @@ See `wasm-demo/` directory for complete interactive examples.
 - [ ] Machine learning-assisted parameter fitting
 - [ ] Quantum effects (magnon quantization)
 - [ ] Non-equilibrium Green's function (NEGF) transport
-- [ ] Frustrated magnets and spin ice
 - [ ] Integration with experimental control systems
 
 ## 📖 Documentation

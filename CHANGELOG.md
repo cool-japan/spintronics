@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-13
+
+### Added
+
+#### Higher-Order Integrators (`src/dynamics/integrators/`)
+- Refactored `integrators.rs` into a multi-file module (`mod.rs`, `rhs_fn.rs`, `dormand_prince.rs`, `symplectic.rs`, `semi_implicit.rs`, `adaptive.rs`, `tests.rs`)
+- `DormandPrince45`: Embedded 5(4) adaptive Runge-Kutta integrator
+- `DormandPrince87`: Embedded 8(7) high-accuracy Runge-Kutta integrator
+- `Yoshida4`: Fourth-order symplectic Yoshida integrator for energy-conserving problems
+- `ForestRuth`: Forest-Ruth symplectic integrator
+- `SemiImplicit`: Semi-implicit integrator for stiff spin systems
+- `AdaptiveIntegrator`: Automatic step-size control wrapper for any error-estimating integrator
+
+#### SimulationBuilder Enhancements (`src/builder/mod.rs`)
+- `SolverKind` expanded from 3 to 8 variants: `Rk4`, `Euler`, `Heun`, `Dp45`, `Dp87`, `Yoshida4`, `ForestRuth`, `SemiImplicit`
+- New builder methods: `solver_dp45()`, `solver_dp87()`, `solver_yoshida4()`, `solver_forest_ruth()`, `solver_semi_implicit()`
+
+#### LLB Equation (`src/dynamics/llb.rs`)
+- `LlbMaterial` with `iron()`, `nickel()`, `cofeb()` presets (Curie temperature, exchange stiffness, damping)
+- `LlbSolver` with RK4 integration step and full trajectory `run()`
+- `LlbResult` trajectory container with time/magnetization history
+- Brillouin function and `equilibrium_magnetization(T)` for finite-temperature physics
+- Temperature-dependent damping via longitudinal and transverse coefficients
+
+#### Hopfion Dynamics (`src/texture/hopfion_dynamics.rs`)
+- `HopfionDynamicsConfig` with physical parameter validation
+- `HopfionDynamicsSolver` with 6-point Laplacian exchange, bulk DMI curl, periodic boundary conditions
+- Per-site LLG RK4 integration on 3D spin grid
+- Hopf invariant calculation via Berry-connection (Whitehead) integral method
+- `HopfionDynamicsResult` with trajectory of Hopf invariant, total energy, and magnetization
+
+#### Caloritronics Module (`src/caloritronics/`)
+- `OnsagerMatrix` with `yig_pt()`, `fe_pt()`, `cofeb_pt()` material presets
+- `HeatCurrentCalculator` computing Fourier, Peltier, and spin-Peltier contributions
+- `SpinCaloritronicsMaterial` with unified `compute_all()` entry point
+- `CaloritronicsResult` combining all current contributions
+- `AllCurrents` struct for structured output
+
+#### SIMD Batch LLG (`src/simd.rs`)
+- `batch_add_scaled()`: SIMD-friendly vector accumulation
+- `batch_calc_dm_dt()`: Vectorised LLG right-hand side for N spins
+- `batch_evolve_rk4()`: Single RK4 step over a batch of N spins
+- `batch_evolve_multi_step()`: Multi-step batch evolution with optional normalisation
+- Benchmark: `scalar_rk4_N1024` vs `simd_rk4_N1024` in `benches/llg_benchmark.rs`
+
+### Changed
+- `src/dynamics/mod.rs` updated to re-export new integrator types and LLB solver
+- `src/lib.rs` doc comments updated; test count corrected to 718
+- `src/prelude.rs` extended with `LlbMaterial`, `LlbSolver`, `LlbResult`, `HopfionDynamicsConfig`, `HopfionDynamicsSolver`, `HopfionDynamicsResult`, `OnsagerMatrix`, `AllCurrents`, `HeatCurrentCalculator`, `SpinCaloritronicsMaterial`, `CaloritronicsResult`
+
+### Fixed
+- Clippy: removed unnecessary `as f64` casts in integrator tests
+- Clippy: replaced `for i in 0..len` with `enumerate()` in SIMD tests
+- Clippy: replaced `vec![false; N]` with `[false; N]` in parallel sweep tests
+- Clippy: added `#[allow(clippy::needless_range_loop)]` where 3-D indices are genuinely required
+
 ### Added
 - **Interactive Web Demonstration Subcrate (`spintronics-demo`)** (v0.2.0):
   - Modern HTMX + Axum + Askama stack for server-side rendering

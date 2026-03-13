@@ -327,7 +327,7 @@ mod tests {
         let result = reservoir.train(&inputs, &targets, h_ext, 5, 1.0e-13);
 
         assert!(result.is_ok());
-        let mse = result.unwrap();
+        let mse = result.expect("reservoir training should succeed");
         assert!(mse >= 0.0);
     }
 

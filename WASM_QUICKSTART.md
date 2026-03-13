@@ -14,7 +14,25 @@ cargo install wasm-pack
 
 ## Build & Run
 
-### Option 1: Use the build script (recommended)
+### npm Install (recommended for web projects)
+
+```bash
+npm install @cooljapan/spintronics
+```
+
+```javascript
+import init, { SpinSimulator, SpinChain, SpinHallCalculator } from '@cooljapan/spintronics';
+
+async function run() {
+    await init();
+    const sim = new SpinSimulator();
+    sim.set_field(1000, 0, 10000);
+    sim.step(0.01);
+    console.log(`mx=${sim.get_mx()}, my=${sim.get_my()}, mz=${sim.get_mz()}`);
+}
+```
+
+### Option 1: Use the build script (recommended for local development)
 
 ```bash
 # Build WASM package
@@ -82,7 +100,11 @@ Calculate spin current generation from charge current.
 ### JavaScript Example
 
 ```javascript
-import init, { SpinSimulator } from './pkg/spintronics.js';
+// Using npm package
+import init, { SpinSimulator } from '@cooljapan/spintronics';
+
+// Or using local build
+// import init, { SpinSimulator } from './pkg/spintronics.js';
 
 async function runSimulation() {
     // Initialize WASM module
@@ -113,7 +135,11 @@ runSimulation();
 ### TypeScript Example
 
 ```typescript
-import init, { SpinSimulator, SpinChain } from './pkg/spintronics';
+// Using npm package
+import init, { SpinSimulator, SpinChain } from '@cooljapan/spintronics';
+
+// Or using local build
+// import init, { SpinSimulator, SpinChain } from './pkg/spintronics';
 
 async function magnonDemo() {
     await init();

@@ -145,7 +145,11 @@ impl MultilayerStack {
         if !self.layers.is_empty() {
             let boundary = boundary.unwrap_or_else(|| {
                 // Auto-detect boundary type
-                let prev_layer = self.layers.last().unwrap();
+                // Safety: we only enter this block when self.layers is non-empty
+                let prev_layer = match self.layers.last() {
+                    Some(layer) => layer,
+                    None => return ThermalBoundary::metal_metal(), // unreachable due to outer if-check
+                };
                 if prev_layer.is_magnetic != layer.is_magnetic {
                     ThermalBoundary::metal_insulator()
                 } else {
@@ -313,6 +317,6 @@ mod tests {
         }
 
         // Last temperature is top
-        assert!((profile.last().unwrap() - 310.0).abs() < 1e-6);
+        assert!((profile.last().expect("profile should not be empty") - 310.0).abs() < 1e-6);
     }
 }

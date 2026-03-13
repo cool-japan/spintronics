@@ -396,6 +396,32 @@ impl LlgSolver {
         self.gamma = gamma;
         self
     }
+
+    /// Return the integration time step \[s\]
+    ///
+    /// Accessor provided for compatibility with integrator dispatch code
+    /// that calls `.dt()` as a method rather than accessing the field directly.
+    #[inline]
+    pub fn dt(&self) -> f64 {
+        self.dt
+    }
+
+    /// Compute the LLG time derivative dm/dt given m and H_eff
+    ///
+    /// This is a thin wrapper around [`calc_dm_dt`] using the solver's stored
+    /// γ and α parameters, intended for use with the generic integrator interface
+    /// in the simulation builder.
+    ///
+    /// # Arguments
+    /// * `m`     - Current magnetization (normalized)
+    /// * `h_eff` - Effective magnetic field \[T\]
+    ///
+    /// # Returns
+    /// dm/dt [1/s]
+    #[inline]
+    pub fn llg_derivative(&self, m: Vector3<f64>, h_eff: Vector3<f64>) -> Vector3<f64> {
+        calc_dm_dt(m, h_eff, self.gamma, self.alpha)
+    }
 }
 
 #[cfg(test)]

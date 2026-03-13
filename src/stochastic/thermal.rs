@@ -67,7 +67,8 @@ impl ThermalField {
             alpha,
             gamma: GAMMA,
             rng: thread_rng(),
-            normal: Normal::new(0.0, 1.0).unwrap(),
+            normal: Normal::new(0.0, 1.0)
+                .expect("standard normal distribution parameters are valid"),
         }
     }
 

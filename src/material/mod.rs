@@ -20,6 +20,8 @@
 //! ```
 
 pub mod antiferromagnet;
+pub mod defects;
+pub mod disorder;
 pub mod ferromagnet;
 pub mod interface;
 pub mod magnetic_2d;
@@ -31,6 +33,11 @@ pub mod traits;
 pub mod weyl;
 
 pub use antiferromagnet::{AfmStructure, Antiferromagnet};
+pub use defects::{DefectCollection, DefectSite, DefectType, DepinningParams, GrainBoundary};
+pub use disorder::{
+    DisorderConfig, DisorderType, GrainStructure, RandomAnisotropyModel, RandomFieldDisorder,
+    SurfaceRoughness, Xorshift64,
+};
 pub use ferromagnet::Ferromagnet;
 pub use interface::SpinInterface;
 pub use magnetic_2d::{Magnetic2D, MagneticOrdering};

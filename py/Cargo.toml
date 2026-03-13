@@ -1,0 +1,25 @@
+[package]
+name = "spintronics-py"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Python bindings for the spintronics library"
+keywords = ["spintronics", "magnetism", "physics", "python", "pyo3"]
+categories = ["science", "api-bindings"]
+publish = false
+
+[lib]
+name = "spintronics"
+crate-type = ["cdylib"]
+doc = false
+
+[dependencies]
+spintronics = { path = "..", features = ["python"] }
+pyo3 = { version = "0.25", features = ["extension-module", "abi3-py38"] }
+numpy = { version = "0.25" }
+
+[package.metadata.maturin]
+python-source = "python"
+module-name = "spintronics"
+
