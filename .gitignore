@@ -38,3 +38,5 @@ performance_*
 
 # Rustc ICE dumps
 rustc-ice-*.txt
+
+target
