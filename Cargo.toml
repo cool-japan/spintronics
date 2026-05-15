@@ -34,10 +34,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # Core system: RNG, statistical distributions, physical computing utilities, parallelization
 # Note: Optional for WASM builds (not needed for basic simulations)
-scirs2-core = { version = "0.4.3", features = ["random", "parallel"], optional = true }
+scirs2-core = { version = "0.4.4", features = ["random", "parallel"], optional = true }
 
 # FEM (Finite Element Method) support - disabled for WASM
-scirs2-spatial = { version = "0.4.3", optional = true }
+scirs2-spatial = { version = "0.4.4", optional = true }
 
 # Parallel computing support (v0.3.0)
 rayon = { version = "1.10", optional = true }
