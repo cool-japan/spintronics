@@ -27,6 +27,7 @@ pub mod interface;
 pub mod magnetic_2d;
 pub mod multilayer;
 pub mod prelude;
+pub mod random_anisotropy;
 pub mod temperature;
 pub mod topological;
 pub mod traits;
@@ -42,6 +43,7 @@ pub use ferromagnet::Ferromagnet;
 pub use interface::SpinInterface;
 pub use magnetic_2d::{Magnetic2D, MagneticOrdering};
 pub use multilayer::{MagneticMultilayer, MultilayerType, SpacerLayer};
+pub use random_anisotropy::{RandomAnisotropy, RandomAnisotropyDistribution};
 pub use temperature::ThermalFerromagnet;
 pub use topological::{surface_spin_texture, TopologicalClass, TopologicalInsulator};
 pub use traits::{

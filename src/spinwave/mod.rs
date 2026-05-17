@@ -39,10 +39,16 @@
 //!   spectrum for ferromagnetic films with mixed exchange boundary conditions",
 //!   J. Phys. C 19, 7013 (1986)
 
+pub mod bvmsw;
+pub mod damon_eshbach;
 pub mod dispersion;
 pub mod modes;
 pub mod quantization;
+pub mod surface;
 
+pub use bvmsw::BackwardVolumeMSW;
+pub use damon_eshbach::DamonEshbachDetailed;
 pub use dispersion::SpinWaveDispersion;
 pub use modes::{SpinWaveMode, SpinWaveModeCalculator};
 pub use quantization::{NanostructureGeometry, QuantizedModes};
+pub use surface::SurfaceSpinWave;

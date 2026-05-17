@@ -51,6 +51,26 @@
 //! - Y. Tabuchi et al., "Coherent coupling between a ferromagnetic magnon
 //!   and a superconducting qubit", Science 349, 405 (2015)
 //!
+//! ## Extended Models
+//!
+//! Beyond the two-mode Jaynes-Cummings picture this module also contains:
+//!
+//! - **Tavis-Cummings / Dicke model** ([`TavisCummings`]): N spin-1/2 emitters
+//!   coupled collectively to one cavity mode.  The collective coupling g_N = g·√N
+//!   gives access to superradiance and large cooperativity with macroscopic spin
+//!   ensembles such as YIG spheres.
+//!
+//! - **Magnon-polariton diagonalisation** ([`MagnonPolariton`], [`MultiModePolariton`]):
+//!   analytic 2×2 Hopfield transformation and full (N+1)×(N+1) matrix diagonalisation
+//!   for multi-mode photon-magnon hybridisation, Hopfield coefficients, photon/magnon
+//!   fractions, and vacuum Rabi splitting.
+//!
+//! - **Optomagnonics** ([`BrillouinScattering`], [`OptomagnonicCoupling`],
+//!   [`MicrowaveToOptical`], [`MagnonicFrequencyComb`]): Brillouin light-scattering
+//!   rates and cross-sections, enhanced optomagnonic coupling via intra-cavity field,
+//!   three-mode microwave-to-optical quantum transducer efficiency (Hashemi-Mahmoodian
+//!   formula), and magnonic frequency-comb spectral properties.
+//!
 //! ## References
 //!
 //! Based on research by:
@@ -59,5 +79,13 @@
 //! - Prof. Y. Otani (RIKEN) - Spin-wave devices
 
 pub mod hybrid;
+pub mod optomagnonic;
+pub mod polariton;
+pub mod tavis_cummings;
 
 pub use hybrid::HybridSystem;
+pub use optomagnonic::{
+    BrillouinScattering, MagnonicFrequencyComb, MicrowaveToOptical, OptomagnonicCoupling,
+};
+pub use polariton::{Branch, MagnonPolariton, MultiModePolariton};
+pub use tavis_cummings::TavisCummings;

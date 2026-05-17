@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.3.0 COMPLETE
-**Last Updated**: 2026-03-13 - v0.3.0 released
-**Status**: 718 tests passing, ~40K lines (Rust code: 30K+)
+**Version**: 0.6.0 COMPLETE
+**Last Updated**: 2026-05-17 - v0.6.0 released
+**Status**: 1200 tests passing, ~65K lines (Rust code: ~53K+)
 
 ---
 
@@ -155,61 +155,169 @@
 - [x] Brillouin function and equilibrium_magnetization(T)
 - [x] Temperature-dependent longitudinal and transverse damping
 
-### Quantum Effects (Stretch Goals — deferred to v0.4.0)
-- [ ] Magnon quantization in confined geometries
-- [ ] Zero-point fluctuations at T=0
-- [ ] Quantum spin Hall effect in 2D TIs
-- [ ] Magnon-photon coupling strength (cavity QED regime)
+### Quantum Effects (v0.4.0 — COMPLETE)
+- [x] Magnon quantization in confined geometries — `quantum::ZeroPointFluctuations`
+- [x] Zero-point fluctuations at T=0 — `ZeroPointFluctuations::zero_point_amplitude`
+- [x] Quantum spin Hall effect in 2D TIs (Kane-Mele model — completed in v0.5.0)
+- [x] Magnon-photon coupling strength (cavity QED regime) — `TavisCummings`, `MagnonPolariton`
 
-### Non-Equilibrium Transport (Stretch Goals — deferred to v0.4.0)
-- [ ] Non-equilibrium Green's function (NEGF) formalism
-- [ ] Keldysh formalism for time-dependent transport
-- [ ] Shot noise in spin transport
-- [ ] Spin accumulation dynamics with diffusion-drift equations
+### Non-Equilibrium Transport (v0.4.0 — COMPLETE)
+- [x] Non-equilibrium Green's function (NEGF) formalism — `negf::GreenFunction`
+- [x] Keldysh formalism for time-dependent transport — `negf::KeldyshSolver`
+- [x] Shot noise in spin transport — `negf::ShotNoise`, Fano factor
+- [x] Spin accumulation dynamics with diffusion-drift equations — `negf::SpinAccumulation1D`
 
 ---
 
-## v0.4.0 - ROADMAP
+## v0.4.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Quantum Magnonics, NEGF Transport, Topological Bands, Cavity Extensions
+**Tests**: 917 passing, 0 failures, 0 warnings
+**Code Size**: ~46K total lines (~36K Rust code)
+
+### Math Primitives
+- [x] `Complex` — canonical complex number type promoted from `magnon::bec` — `math::complex`
+- [x] `CMatrix` — N×N dense complex matrix, Gauss-Jordan inverse, TQLI eigendecomposition — `math::matrix`
+
+### Quantum Magnonics
+- [x] `HolsteinPrimakoff` — linear/quadratic HP transform, YIG/AFM presets — `quantum::holstein_primakoff`
+- [x] `BogoliubovTransform` — analytical Bogoliubov diagonalization, vacuum occupation — `quantum::bogoliubov`
+- [x] `ZeroPointFluctuations` — zero-point amplitude, Casimir free energy — `quantum::zero_point`
+
+### NEGF Non-Equilibrium Transport
+- [x] `Hamiltonian1D`, `LeadSelfEnergy`, `SanchoRubio` — tight-binding + leads — `negf::green_function`
+- [x] `GreenFunction`, `TransportCalculator` — Landauer transmission, I-V, DOS — `negf::green_function`
+- [x] `KeldyshSolver` — Keldysh lesser/greater GFs, non-equilibrium density — `negf::keldysh`
+- [x] `ShotNoise` — zero-freq noise, Fano factor, Johnson-Nyquist — `negf::shot_noise`
+- [x] `SpinAccumulation1D` — FTCS + implicit (Thomas) spin diffusion — `negf::accumulation`
+
+### Topological Magnon Bands
+- [x] `MagnonBandModel` — Haldane honeycomb, Kagome, square-DMI — `topomagnon::band_model`
+- [x] `BerryCurvature` — sum-over-states + finite-diff curvature, BZ integration — `topomagnon::berry_curvature`
+- [x] `ChernNumber` — Fukui-Hatsugai-Suzuki discrete method, Wilson loop — `topomagnon::chern_number`
+- [x] `EdgeModes` — strip diagonalization, IPR localization, chiral velocity — `topomagnon::edge_modes`
+- [x] `MagnonHallConductivity` — Matsumoto-Murakami thermal Hall σ_xy — `topomagnon::magnon_hall`
+
+### Cavity Extensions
+- [x] `TavisCummings` — g√N collective coupling, Dicke superradiance — `cavity::tavis_cummings`
+- [x] `MagnonPolariton` + `MultiModePolariton` — Hopfield diagonalization — `cavity::polariton`
+- [x] `BrillouinScattering`, `MicrowaveToOptical`, `MagnonicFrequencyComb` — `cavity::optomagnonic`
+
+### Random Anisotropy
+- [x] `RandomAnisotropy` — Imry-Ma, Harris, Marsaglia axes, LLG field — `material::random_anisotropy`
+
+### Examples (6 new)
+- [x] `magnon_zero_point`, `negf_transport`, `tavis_cummings_dicke`
+- [x] `magnon_polariton`, `topological_magnon_haldane`, `random_anisotropy_disorder`
+
+## v0.5.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Non-Collinear Magnetism, Multiferroics, Topological QSH, Nonlinear Magnons
+**Tests**: 996 passing, 0 failures, 0 warnings
+**Code Size**: ~52K total lines (~42K Rust code)
+
+### Non-Collinear Magnetism (`src/noncollinear/`)
+- [x] Spin spirals: cycloidal, helical, conical, fan structure — `SpinSpiral`
+- [x] Luttinger-Tisza ground-state search — `LuttingerTisza`
+- [x] Exchange Fourier transform J(q), frustration ratio, ordering temperature
+- [x] TbMnO₃ preset, J1-J2 chain, ferromagnet, antiferromagnet presets
+
+### Multiferroics / Magnetoelectric Coupling (`src/multiferroic/`)
+- [x] Linear ME tensor α_ij with Dzyaloshinskii bound — `MagnetoelectricTensor`
+- [x] Presets: BiFeO₃, TbMnO₃, Cr₂O₃
+- [x] KNB mechanism P ∝ e_ij × (S_i × S_j) — `KnbMechanism`
+- [x] Inverse ME: E-field control of magnetisation — `InverseMagnetoelectric`
+- [x] Free functions: DM polarization, exchange striction, toroidal moment
+
+### Quantum Spin Hall / Kane-Mele (`src/topomagnon/qsh.rs`)
+- [x] Full 4-band Bloch Hamiltonian — `KaneMeleModel`
+- [x] Z2 invariant via Fukui-Hatsugai on honeycomb BZ parallelogram
+- [x] Rashba and staggered potential phase boundaries
+- [x] Helical edge states in strip geometry
+
+### Nonlinear Magnon Physics (`src/magnon/nonlinear.rs`)
+- [x] Four-magnon scattering vertex T_kk — `FourMagnonScattering`
+- [x] Suhl instability threshold and parametric growth rate
+- [x] Parametric amplification gain — `ParametricAmplification`
+- [x] Nonlinear FMR linewidth and bistability — `NonlinearFmrLinewidth`
+
+### Examples (4 new)
+- [x] `spin_spiral_tbmno3.rs` — LT ground-state + KNB polarization
+- [x] `bife_o3_multiferroic.rs` — ME coupling + DM + toroidal moments
+- [x] `kane_mele_qsh.rs` — Z2 phase diagram + edge states
+- [x] `nonlinear_magnon_suhl.rs` — Suhl instability + parametric amp
+
+---
+
+## v0.6.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Spin Wave Extensions, HOTI, Axion Electrodynamics, Data Formats, ML Autodiff
+**Tests**: 1200 passing, 0 failures, 0 warnings
+**Code Size**: ~65K total lines (~53K Rust code)
+
+### Spin Wave Theory Extensions
+- [x] `DamonEshbachDetailed` — full DE dispersion, non-reciprocity, surface localization (src/spinwave/damon_eshbach.rs)
+- [x] `BackwardVolumeMSW` — BVMSW dispersion, negative group velocity, crossover wavevector (src/spinwave/bvmsw.rs)
+- [x] `SurfaceSpinWave` — semi-infinite medium, Rado-Weertman boundary condition (src/spinwave/surface.rs)
+- [x] `SpectralMagnonSolver` — FFT/CMatrix eigenmodes, DOS, spectral weight, mode decomposition (src/magnon/spectral.rs)
+
+### Advanced Topological Phenomena
+- [x] `WilsonLoop` — multi-band Wilson loop, link matrices, Wannier centers, nested polarization
+- [x] `BbhModel` — BBH 4-band HOTI, quadrupole moment, topological corner states
+- [x] `BreathingKagomeModel` — 3-band kagome, corner Z₃ polarization
+- [x] `CornerStateSolver` — OBC×OBC finite-cluster corner state spectrum + IPR localization
+- [x] `MagnonBandModel3D` — 3D cubic Haldane + pyrochlore presets
+- [x] `AxionElectrodynamics` — 3D Berry-curvature θ-term (Chern-Simons form), α_TME, axion response
+- [x] `AxionMagnonPhoton` — axion-mediated magnon-photon coupling, Faraday rotation, cooperativity
+
+### Data Export Formats
+- [x] `VtiWriter` — VTK ImageData (XML + base64 binary), feature `vti` (src/visualization/vti.rs)
+- [x] `XdmfWriter` — XDMF v3.0 (XML + raw f64 binary), feature `xdmf` (src/visualization/xdmf.rs)
+- [x] `NetCdfWriter`/`NetCdfReader` — pure-Rust NetCDF3 Classic (XDR binary), feature `netcdf` (src/visualization/netcdf.rs)
+- [x] `ZarrStore`/`ZarrArray` — pure-Rust Zarr v2 (JSON+binary chunks), feature `zarr` (src/visualization/zarr.rs)
+
+### ML Autodiff (`#[cfg(feature = "autodiff")]`)
+- [x] `Tape` / `Var<'t>` — reverse-mode AD tape; arithmetic ops + sin/cos/exp/ln/sqrt/tanh/powi/powf
+- [x] `Sgd` (with momentum), `Adam` (Kingma & Ba 2014), `LBfgs` (two-loop BFGS)
+- [x] `ParameterFitter` — closure-based gradient fitting; `FitResult`
+- [x] Differentiable physics: `kittel_frequency_diff`, `zeeman_energy_diff`, `exchange_energy_diff`, `dmi_energy_diff`, `anisotropy_energy_diff`
+
+### Examples (6 new, total 41)
+- [x] `damon_eshbach_nonreciprocity.rs`, `backward_volume_magnons.rs`, `hoti_corner_states.rs`
+- [x] `axion_magnon_photon.rs`, `data_export_formats.rs`, `autodiff_parameter_fitting.rs`
+
+## v0.7.0 - ROADMAP
 
 **Target**: Q4 2026
-**Theme**: Research Features, ML Integration, Ecosystem Expansion
-
-### Machine Learning Integration
-- [ ] Automatic differentiation for parameter optimization
-- [ ] Gradient-based parameter fitting from experimental data
-- [ ] Neural network potentials for exchange interactions
-- [ ] ML-based surrogate models for fast parameter exploration
+**Theme**: Language Bindings, Neural Network Potentials, Extended ML, Experimental Validation
 
 ### Language Bindings
 - [ ] Julia bindings via julia-rs
 - [ ] C/C++ bindings via cbindgen
 - [ ] R bindings for statistical analysis
 
-### Data Export Formats
-- [ ] NetCDF export (CF conventions)
-- [ ] XDMF for ParaView integration
-- [ ] VTI (VTK ImageData) for uniform grids
-- [ ] Zarr format for cloud-native storage
+### ML Enhancements (Phase 2)
+- [ ] Neural network potentials for exchange interactions (trainable Heisenberg/DMI)
+- [ ] ML-based surrogate models for fast parameter space exploration
+- [ ] Gradient-based structure optimization (LLG + autodiff)
+- [ ] Physics-informed neural networks for spin dynamics
 
-### Magnonics & Photonics
-- [ ] Magnon-photon hybridization (polaritons)
-- [ ] Brillouin light scattering simulation
-- [ ] Microwave-to-optical conversion
-- [ ] Magnonic frequency combs
+### Advanced Spin Wave Theory
+- [ ] Damon-Eshbach in semi-infinite ferromagnets (single-surface non-reciprocity)
+- [ ] Experimental validation against Demidov et al. 2006 BLS data
+- [ ] Spin wave quantization in nanodisks (combined Bessel + Kalinikos-Slavin)
+- [ ] Magnonic crystal band gaps
 
-### Advanced Topological Phenomena
-- [ ] Magnetic monopoles in spin ice
-- [ ] Emergent electrodynamics from Berry curvature
-- [ ] Topological magnon bands
-- [ ] Chiral edge modes in magnonic systems
-
-### Workspace Restructuring
+### Workspace Restructuring (candidate for v1.0.0)
 - [ ] Split into workspace with multiple crates:
-  - `spintronics-core` - Core physics and materials
-  - `spintronics-solver` - Numerical solvers
-  - `spintronics-io` - I/O and visualization
-  - `spintronics-python` - Python bindings
-  - `spintronics-cli` - Command-line tools
+  - `spintronics-core` — Core physics and materials
+  - `spintronics-solver` — Numerical solvers
+  - `spintronics-io` — I/O and visualization
+  - `spintronics-python` — Python bindings
+  - `spintronics-cli` — Command-line tools
 
 ---
 

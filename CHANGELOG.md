@@ -7,6 +7,171 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-17
+
+### Added
+
+#### Spin Wave Theory Extensions
+
+- `DamonEshbachDetailed` — full Kalinikos-Slavin in-plane thin-film dispersion with chiral surface localization, non-reciprocity Δω=ω(+k)−ω(−k), surface localization length, propagation length; presets `yig_film_micron()`, `permalloy_thin()`, `cofeb_strip()` (`src/spinwave/damon_eshbach.rs`)
+- `BackwardVolumeMSW` — perpendicular-magnetization BVMSW dispersion, **negative group velocity** below crossover k*, bisection-based `crossover_wavevector()`, cosine thickness mode profiles; presets `yig_yagi(h_perp)`, `permalloy_perp(h_perp)` (`src/spinwave/bvmsw.rs`)
+- `SurfaceSpinWave` — semi-infinite medium spin wave: `dispersion_omega(k)`, exchange-corrected penetration depth, Rado-Weertman surface anisotropy shift, exponential field amplitude; presets `bulk_yig()`, `bulk_iron()` (`src/spinwave/surface.rs`)
+- `SpectralMagnonSolver` — FFT-based magnon eigenmodes via `CMatrix::hermitian_eigendecomposition`; Bloch-resolved bands for square FM and honeycomb AFM; Lorentzian DOS, spectral weight A(ω,k), mode decomposition (`src/magnon/spectral.rs`, `#[cfg(feature = "scirs2")]`)
+- Extended `SpinWaveMode` enum with `SurfaceLocalized` variant and corresponding `mode_profile` dispatch
+
+#### Advanced Topological Physics
+
+- `WilsonLoop` — multi-band Wilson loop operator W_y(kx): `link_matrix` (overlap matrix M_mn=⟨u_m^a|u_n^b⟩), `wilson_unitary_y`, `wannier_centers` (eigenphases of W_y), `nested_polarization`, `polarization_p_x/y`; foundation for HOTI Z₂ invariant (`src/topomagnon/wilson.rs`)
+- `BbhModel` — 4-band Benalcazar-Bernevig-Hughes model: `hamiltonian_at(kx,ky)` with anticommuting Γ matrices, `energy_bands`, `band_gap`, `is_higher_order_topological`, `quadrupole_moment` via nested Wilson loop; presets `topological_phase()`, `trivial_phase()` (`src/topomagnon/hoti.rs`)
+- `BreathingKagomeModel` — 3-band kagome with topological corner Z₃: `hamiltonian_at`, `corner_polarization` via Wannier centers; presets `topological_kagome()`, `trivial_kagome()`
+- `CornerStateSolver` — OBC×OBC finite-cluster diagonalization: `build_cluster_hamiltonian`, `solve_finite_cluster`, `corner_localization` (IPR per corner), `count_corner_states`; MAX cluster lx×ly×4≤64
+- `MagnonBandModel3D` — 3D band model with kz extension: `cubic_haldane(j_nn,j_nnn,dmi,h_ext)` and `pyrochlore_topological(j,d)` presets (`src/topomagnon/band_model_3d.rs`)
+- `AxionElectrodynamics` — Chern-Simons 3-form integral θ = (1/4π)∫_BZ tr(F−(2/3)A³); `axion_angle()` (0 or π), `topological_magnetoelectric_polarizability()`, `axion_response(E,B)` → emergent (P, M) (`src/topomagnon/axion.rs`)
+- `AxionMagnonPhoton` — axion-mediated magnon-photon coupling: `magnon_photon_conversion_efficiency()`, `parity_violation_angle()` (Faraday/Kerr), `cooperativity()`
+
+#### Data Export Formats (v0.6.0)
+
+- `VtiWriter` — VTK ImageData (XML + base64-encoded f32 LE binary appended data); `write_vector_field`, `write_scalar_field`, `write_multi_field`; ParaView-compatible (`src/visualization/vti.rs`, feature `vti`)
+- `XdmfWriter` — XDMF v3.0 temporal collection: `add_time_step`, `write(xmf_path, bin_path)`; raw f64 LE binary with seek offsets; ParaView-compatible (`src/visualization/xdmf.rs`, feature `xdmf`)
+- `NetCdfWriter` / `NetCdfReader` — pure-Rust NetCDF3 Classic (CDF-1) binary: complete XDR big-endian encoding, dim_list, att_list, var_list, data section; `write_vector_field_cf` for CF-1.10 convention; round-trip reader (`src/visualization/netcdf.rs`, feature `netcdf`)
+- `ZarrStore` / `ZarrArray` / `ZarrDtype` — pure-Rust Zarr v2 on-disk store: hand-written `.zarray` JSON metadata, C-order LE binary chunks, N-dimensional chunked I/O, round-trip reader (`src/visualization/zarr.rs`, feature `zarr`)
+
+#### ML Autodiff (`src/autodiff/`, feature `autodiff`)
+
+- `Tape` — reverse-mode AD tape with `push_leaf`, `push_op`, `backward(loss)`, `reset`; fixed-size arrays (no per-op allocation)
+- `Var<'t>` — tape-bound variable: `leaf(tape, value)`, `value()`, `grad()`; arithmetic via `std::ops` traits (Add, Sub, Mul, Div, Neg); transcendentals: `sin`, `cos`, `exp`, `ln`, `sqrt`, `tanh`, `powi`, `powf`, `abs`, `recip`; also Var op f64 for constant arithmetic
+- `Sgd` — SGD with momentum; `Adam` — Kingma & Ba 2014; `LBfgs` — limited-memory BFGS two-loop recursion (Nocedal 1980)
+- `ParameterFitter` — closure-based fitting loop (`fit`); returns `FitResult { final_params, final_loss, n_iterations, converged, loss_history }`
+- `kittel_frequency_diff`, `zeeman_energy_diff`, `exchange_energy_diff`, `dmi_energy_diff`, `anisotropy_energy_diff`, `llg_torque_norm_diff` — differentiable physics functions
+
+#### Examples (6 new)
+
+- `damon_eshbach_nonreciprocity.rs` — DE non-reciprocity sweep in YIG/Py/CoFeB thin films
+- `backward_volume_magnons.rs` — BVMSW dispersion with negative v_g and thickness mode quantization
+- `hoti_corner_states.rs` — BBH phase diagram, quadrupole moment, corner state spectrum, breathing kagome
+- `axion_magnon_photon.rs` — 3D axion angle, topological ME polarizability, Faraday rotation
+- `data_export_formats.rs` — 3D skyrmion texture export to VTK/VTI/NetCDF/Zarr with round-trip verification
+- `autodiff_parameter_fitting.rs` — reverse-mode AD demonstration, YIG α-fitting with Adam, SGD/Adam/L-BFGS comparison
+
+### Changed
+
+- Version bumped `0.5.0` → `0.6.0`
+- Test count: 996 → 1200 (+204 new tests)
+- Examples count: 35 → 41 (+6 new)
+- `src/spinwave/mod.rs` — added `damon_eshbach`, `bvmsw`, `surface` submodules
+- `src/magnon/mod.rs` — added `spectral` submodule (behind `scirs2` feature)
+- `src/topomagnon/mod.rs` — added `wilson`, `hoti`, `axion`, `band_model_3d` submodules
+- `src/visualization/mod.rs` — added feature-gated `vti`, `xdmf`, `netcdf`, `zarr` submodules
+- `src/lib.rs` — added `#[cfg(feature = "autodiff")] pub mod autodiff`
+- `Cargo.toml` — added `base64 = "0.22"` (optional); added features `vti`, `xdmf`, `netcdf`, `zarr`, `autodiff`
+
+## [0.5.0] - 2026-05-17
+
+### Added
+
+#### Non-Collinear Magnetism (`src/noncollinear/`)
+- `SpinSpiral` — cycloidal, helical, conical, and fan-structure spiral types; magnetization profile `M(r)`; spin structure factor; Landau-Lifshitz exchange energy
+- `SpiralType` / `SpiralChirality` — enums for classifying spiral order and handedness
+- `LuttingerTisza` — exchange Fourier transform J(q); ground-state wavevector search; spiral vs. ferromagnetic classification; frustration ratio; ordering temperature estimate
+- `ExchangeInteraction` — bond vector + exchange coupling building block for LT models
+- Presets: `SpinSpiral::terbium_manganese_oxide()`, `LuttingerTisza::j1j2_chain()`, `LuttingerTisza::antiferromagnet()`
+
+#### Multiferroic / Magnetoelectric Coupling (`src/multiferroic/`)
+- `MagnetoelectricTensor` — linear ME tensor α_ij; presets for BiFeO₃, TbMnO₃, Cr₂O₃; `electric_polarization_from_field`, `magnetization_from_efield`, Dzyaloshinskii bound
+- `MultiferroicType` — Type-I, Type-II, Type-III classification
+- `KnbMechanism` — KNB formula P ∝ e_ij × (S_i × S_j) with `tbmno3()` preset; chain polarization sum
+- `InverseMagnetoelectric` — E-field-induced magnetisation change; energy density
+- Free functions: `dzyaloshinskii_moriya_polarization`, `exchange_striction_polarization`, `toroidal_moment`
+- Free functions: `spin_current_from_spiral`, `magnon_drag_contribution`
+
+#### Quantum Spin Hall / Kane-Mele (`src/topomagnon/qsh.rs`)
+- `KaneMeleModel` — 4-band Bloch Hamiltonian on honeycomb lattice in (A↑,B↑,A↓,B↓) basis; intrinsic SOC λ_SO, Rashba λ_R, staggered potential λ_V
+- `z2_invariant()` — Fukui-Hatsugai discrete Chern method on honeycomb BZ parallelogram; TRIM Pfaffian fallback for λ_R≠0
+- `band_gap()`, `is_topological()`, `energy_bands(kx,ky)`, `edge_spectrum(n_cells, kx_min, kx_max, n_kx)`
+- Presets: `graphene_with_soc`, `topological_phase`, `trivial_phase`
+
+#### Nonlinear Magnon Physics (`src/magnon/nonlinear.rs`)
+- `FourMagnonScattering` — Kalinikos-Slavin dispersion; four-magnon coupling T_kk; Suhl first-order instability threshold; parametric growth rate σ = √[(|T|h)² − Δω²]; `yig()` preset
+- `ParametricAmplification` — degenerate signal-idler amplifier; threshold field, gain coefficient, signal gain (dB), pump depletion; `degenerate_from_yig()` preset
+- `NonlinearFmrLinewidth` — nonlinear linewidth broadening, foldover field, bistability threshold power, power saturation factor; `from_yig()` preset
+- Free functions: `magnon_magnon_interaction_energy`, `four_magnon_relaxation_rate`, `suhl_spin_wave_instability_power`
+
+#### Examples (4 new)
+- `spin_spiral_tbmno3.rs` (⭐⭐⭐) — TbMnO₃ ground-state search via Luttinger-Tisza; KNB electric polarization; cycloidal vs. helical comparison; spin structure factor
+- `bife_o3_multiferroic.rs` (⭐⭐⭐) — BiFeO₃/TbMnO₃/Cr₂O₃ ME database; linear ME effect; DM polarization; exchange striction; toroidal moment; switching energy
+- `kane_mele_qsh.rs` (⭐⭐⭐⭐) — Z2 phase diagram; Rashba-driven topological transition; band structure; helical edge states in strip geometry
+- `nonlinear_magnon_suhl.rs` (⭐⭐⭐⭐) — YIG Suhl instability threshold; parametric growth rate; nonlinear FMR linewidth; bistability; parametric amplifier gain
+
+### Changed
+- Version bumped 0.4.0 → 0.5.0
+- `src/prelude.rs`: added exports for all new v0.5.0 types and free functions
+- `src/magnon/mod.rs`: extended nonlinear re-exports to include free functions
+- Test count 917 → 996 (79 new tests)
+- Example count 31 → 35
+- lib.rs banner and architecture section updated
+
+## [0.4.0] - 2026-05-17
+
+### Added
+
+#### Math Primitives (`src/math/`)
+- `Complex` — lightweight complex number with constants `ZERO`, `ONE`, `I`; methods `new`, `from_real`, `from_polar`, `add`, `sub`, `mul`, `div`, `scale`, `conj`, `neg`, `exp`, `pow_n`, `mul_i`
+- `CMatrix` — dense N×N complex matrix (N ≤ 64); Gauss-Jordan inverse with partial pivoting; Householder tridiagonalization + TQLI QL eigendecomposition for Hermitian matrices
+
+#### Quantum Magnonics (`src/quantum/`)
+- `HolsteinPrimakoff` — Holstein-Primakoff boson mapping for spin-S systems; linear and quadratic expansion orders; YIG/AFM presets
+- `BogoliubovTransform` — analytical diagonalization via `tanh(2θ)=-B/A`; vacuum occupation |v_k|²; ground-state energy; AFM square-lattice preset
+- `ZeroPointFluctuations` — zero-point amplitude `√(ℏ/2mω)`, ground-state energy ½Σℏω, Casimir free energy; bridge from `spinwave::QuantizedModes`
+
+#### NEGF Non-Equilibrium Transport (`src/negf/`)
+- `Hamiltonian1D` — 1D tight-binding chain with uniform or disordered onsite energies
+- `LeadSelfEnergy` / `SanchoRubio` — wide-band and iterative surface Green's function leads
+- `GreenFunction` — retarded/advanced/lesser Green's functions, spectral function, DOS, LDOS
+- `TransportCalculator` — Landauer transmission T(E), I-V curve, differential conductance
+- `KeldyshSolver` — Keldysh Σ<, Σ>, G<, G>, non-equilibrium density
+- `ShotNoise` — zero-frequency noise, Fano factor, Johnson-Nyquist thermal noise
+- `SpinAccumulation1D` — FTCS and implicit backward-Euler spin diffusion, steady-state, Thomas algorithm
+
+#### Topological Magnon Bands (`src/topomagnon/`)
+- `MagnonBandModel` — Haldane honeycomb (2-band), Kagome (3-band), square-DMI; `hamiltonian_at(k)`, `bands()`, `band_gap()`
+- `BerryCurvature` — sum-over-states and link-variable curvature; 2D BZ grid integration
+- `ChernNumber` — Fukui-Hatsugai-Suzuki discrete method; Wilson loop; total Chern sum validation
+- `EdgeModes` — block-tridiagonal strip diagonalization; IPR-based edge localization; chiral velocity
+- `MagnonHallConductivity` — Matsumoto-Murakami thermal Hall conductivity; dilogarithm; temperature sweep
+
+#### Cavity Extensions (`src/cavity/`)
+- `TavisCummings` — collective coupling g√N, polariton frequencies, mean-field Rabi dynamics, superradiant threshold, cooperativity; `yig_ensemble` preset
+- `MagnonPolariton` — Hopfield diagonalization, photon/magnon fractions, vacuum Rabi splitting, strong-coupling detection; `from_yig_cavity` preset
+- `MultiModePolariton` — multi-mode Jaynes-Cummings, real-symmetric Jacobi eigendecomposition
+- `BrillouinScattering` — scattering rate, Stokes/anti-Stokes frequency shift, cross section
+- `OptomagnonicCoupling` — optomagnonic coupling, Kerr shift
+- `MicrowaveToOptical` — conversion efficiency 4C_me·C_mo/(1+C_me+C_mo)², bandwidth, impedance matching
+- `MagnonicFrequencyComb` — comb spectrum, phase noise, coherence time
+
+#### Random Anisotropy Disorder (`src/material/random_anisotropy.rs`)
+- `RandomAnisotropy` — Gaussian/Uniform/FixedAxes distributions; Marsaglia sphere sampling; Imry-Ma correlation length; Harris criterion; LLG coupling via `effective_field()`; `nanocrystalline` preset
+
+#### New Examples (6)
+- `magnon_zero_point` — YIG quantized modes → zero-point amplitudes, Casimir free energy, Bogoliubov squeeze
+- `negf_transport` — tight-binding chain, Landauer I-V, shot noise/Fano factor, Anderson disorder
+- `tavis_cummings_dicke` — √N collective coupling, anticrossing, superradiant threshold, mean-field dynamics
+- `magnon_polariton` — anticrossing sweep, Hopfield fractions, coupling regimes, multi-mode polariton
+- `topological_magnon_haldane` — Berry curvature, Chern number, DMI phase transition, chiral edge modes
+- `random_anisotropy_disorder` — Imry-Ma length, Harris criterion, LLG with disorder dephasing
+
+### Changed
+- `cargo check` no longer fails due to `oxiarc-lz4`/`oxiarc-zstd`: `scirs2-core` and `scirs2-spatial` now use `default-features = false`
+- `math::Complex` is now the canonical complex number type; `magnon::bec::Complex` is a deprecated re-export
+- Test count increased from 718 (v0.3.0) to 917 (v0.4.0)
+- 25 examples → 31 examples
+
+### Deprecated
+- `spintronics::magnon::bec::Complex` — use `spintronics::math::Complex` instead (deprecated since 0.4.0)
+
+### Fixed
+- `CMatrix::hermitian_eigendecomposition` — replaced naive Jacobi with Householder tridiagonalization + implicit QL (Wilkinson shift) to fix convergence for matrices with large diagonal/off-diagonal ratios (e.g. 10 GHz / 100 MHz = 100:1)
+- Zero clippy warnings maintained across all modules and examples
+
 ## [0.3.0] - 2026-03-13
 
 ### Added

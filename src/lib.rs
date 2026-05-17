@@ -1,6 +1,6 @@
 //! # spintronics
 //!
-//! **Version 0.3.0** - Advanced physics modules, higher-order integrators, SIMD optimization
+//! **Version 0.6.0** - Spin wave extensions, HOTI, axion electrodynamics, data formats, ML autodiff
 //!
 //! A pure Rust library for simulating spin dynamics, spin current generation,
 //! and conversion phenomena in magnetic materials and topological materials.
@@ -26,10 +26,25 @@
 //! - **Spin Nernst Effect**: Thermal gradient → transverse spin current
 //!
 //! ### Key Features
-//! - ✅ **718 tests passing** (718 library tests, v0.3.0)
+//! - ✅ **1200 tests passing** (1200 library tests, v0.6.0)
+//! - ✅ **Spin wave extensions** - Damon-Eshbach non-reciprocity, BVMSW negative v_g, surface spin waves, spectral magnon solver (v0.6.0)
+//! - ✅ **Higher-order topological insulators** - BBH model, breathing kagome, corner states, nested Wilson loops (v0.6.0)
+//! - ✅ **Axion electrodynamics** - 3D Berry-curvature θ-term, axion magnon-photon coupling, topological ME polarizability (v0.6.0)
+//! - ✅ **Data export** - VTI, XDMF, pure-Rust NetCDF3 Classic, Zarr v2 writers (v0.6.0)
+//! - ✅ **ML autodiff** - Reverse-mode AD tape, SGD/Adam/L-BFGS optimizers, differentiable physics functions (v0.6.0)
+//! - ✅ **41 examples** organized by difficulty (v0.6.0)
+//! - ✅ **Non-collinear magnetism** - Spin spirals (cycloidal/helical/conical), Luttinger-Tisza ground state (v0.5.0)
+//! - ✅ **Multiferroics** - Magnetoelectric tensor, KNB mechanism, DM polarization, toroidal moments (v0.5.0)
+//! - ✅ **Kane-Mele QSH** - Z2 topological invariant, Rashba/staggered potential, helical edge states (v0.5.0)
+//! - ✅ **Nonlinear magnon physics** - Four-magnon scattering, Suhl instability, parametric amplification (v0.5.0)
+//! - ✅ **Quantum magnonics** - Holstein-Primakoff, Bogoliubov transform, zero-point fluctuations (v0.4.0)
+//! - ✅ **NEGF transport** - Keldysh formalism, Landauer-Büttiker, shot noise, spin accumulation (v0.4.0)
+//! - ✅ **Topological magnon bands** - Haldane model, Chern numbers, Berry curvature, edge modes (v0.4.0)
+//! - ✅ **Cavity extensions** - Tavis-Cummings, polaritons, optomagnonics, frequency combs (v0.4.0)
+//! - ✅ **Random anisotropy** - Imry-Ma disorder, Harris criterion, LLG coupling (v0.4.0)
+//! - ✅ **Math primitives** - Complex, CMatrix with Gauss-Jordan inverse + TQLI eigendecomposition (v0.4.0)
 //! - ✅ **Advanced integrators** - Dormand-Prince RK5(4)/RK8(7), symplectic methods (v0.3.0)
 //! - ✅ **New physics modules** - Altermagnets, Orbitronics, Frustrated magnets, Hopfions, Magnon BEC, Magnetoelastics (v0.3.0)
-//! - ✅ **25 examples** organized by difficulty (v0.3.0)
 //! - ✅ **Interactive web demo** - Axum + HTMX subcrate with 4 physics simulations (v0.2.0)
 //! - ✅ **5 experimental validations** against landmark papers
 //! - ✅ **WebAssembly support** for browser-based simulations
@@ -59,6 +74,7 @@
 //!
 //! ### Core Infrastructure
 //! - [`constants`]: Physical constants (ℏ, γ, e, μ_B, k_B, 20+ NIST-validated values)
+//! - [`math`]: Math primitives — `Complex`, `CMatrix` (Gauss-Jordan + TQLI eigendecomposition, v0.4.0)
 //! - [`vector3`]: Optimized 3D vector operations for spin/magnetization
 //! - [`units`]: Unit validation - 14 validators for physical quantities (v0.2.0)
 //! - [`error`]: Error handling and result types
@@ -75,15 +91,21 @@
 //! - [`magnon`]: Magnon propagation and spin wave dynamics
 //! - [`thermo`]: Thermoelectric effects (ANE, thermal magnon transport, multilayers)
 //! - [`texture`]: Magnetic textures (skyrmions, domain walls, DMI, topological charge)
-//! - [`spinwave`]: Spin wave theory (dispersion, modes, quantization)
+//! - [`spinwave`]: Spin wave theory — dispersion, modes, quantization, Damon-Eshbach, BVMSW, surface waves (v0.6.0)
 //!
 //! ### Specialized Physics
 //! - [`afm`]: Antiferromagnetic dynamics for THz spintronics
 //! - [`stochastic`]: Thermal fluctuations and finite-temperature effects
-//! - [`cavity`]: Cavity magnonics - Hybrid magnon-photon quantum systems
+//! - [`cavity`]: Cavity magnonics - Tavis-Cummings, polaritons, optomagnonics (v0.3.0/v0.4.0)
 //! - [`altermagnet`]: Altermagnetic materials (RuO2, CrSb, MnTe; spin-splitter effect, v0.3.0)
 //! - [`orbitronics`]: Orbital Hall effect, orbital torques (v0.3.0)
 //! - [`frustrated`]: Frustrated magnets, spin ice, kagome (v0.3.0)
+//! - [`quantum`]: Quantum magnonics — Holstein-Primakoff, Bogoliubov, zero-point fluctuations (v0.4.0)
+//! - [`negf`]: Non-equilibrium transport — Keldysh, Landauer-Büttiker, shot noise (v0.4.0)
+//! - [`topomagnon`]: Topological magnon bands, HOTI corner states, nested Wilson loops, axion electrodynamics (v0.4.0–v0.6.0)
+//! - [`noncollinear`]: Non-collinear magnetism — spin spirals, Luttinger-Tisza method (v0.5.0)
+//! - [`multiferroic`]: Magnetoelectric coupling — ME tensor, KNB mechanism, DM polarization (v0.5.0)
+//! - [`autodiff`]: Reverse-mode autodiff — tape, SGD/Adam/L-BFGS optimizers, differentiable physics (v0.6.0, feature-gated)
 //!
 //! ### Coupled Systems
 //! - [`circuit`]: Spin circuit elements (resistors, networks, spin accumulation)
@@ -99,7 +121,7 @@
 //! - [`builder`]: Type-state SimulationBuilder for validated construction (v0.3.0)
 //!
 //! ### Data & Validation
-//! - [`visualization`]: Data export (VTK, CSV, JSON, HDF5)
+//! - [`visualization`]: Data export (VTK, CSV, JSON, HDF5, VTI, XDMF, NetCDF3, Zarr v2, v0.6.0)
 //! - [`validation`]: Experimental validation tests against landmark papers
 //! - `python`: Python bindings via PyO3 (v0.2.0, optional feature)
 //!
@@ -139,6 +161,7 @@
 pub mod afm;
 pub mod altermagnet;
 pub mod caloritronics;
+pub mod math;
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod ai;
@@ -166,6 +189,7 @@ pub mod magnon;
 pub mod material;
 pub mod mech;
 pub mod memory;
+pub mod multiferroic;
 
 #[cfg(feature = "parallel")]
 pub mod parallel;
@@ -177,8 +201,12 @@ pub mod spinwave;
 #[cfg(feature = "scirs2")]
 pub mod stochastic;
 
+pub mod negf;
+pub mod noncollinear;
+pub mod quantum;
 pub mod texture;
 pub mod thermo;
+pub mod topomagnon;
 pub mod transport;
 pub mod units;
 pub mod validation;
@@ -190,6 +218,9 @@ pub mod wasm;
 
 #[cfg(feature = "python")]
 pub mod python;
+
+#[cfg(feature = "autodiff")]
+pub mod autodiff;
 
 pub mod prelude;
 
