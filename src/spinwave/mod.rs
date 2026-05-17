@@ -28,6 +28,9 @@
 //! - [`dispersion`]: Core dispersion relations (Kittel, exchange, Kalinikos-Slavin)
 //! - [`modes`]: Magnetostatic mode types (DE, BVMSW, FVMSW)
 //! - [`quantization`]: Quantized modes in finite geometries
+//! - [`nanodisk`]: Confined modes in magnetic nanodisks (v0.7.0)
+//! - [`magnonic_crystal`]: 1D/2D magnonic crystals with plane-wave band structure (v0.7.0)
+//! - [`semi_infinite_de`]: Semi-infinite Damon-Eshbach surface modes (v0.7.0)
 //!
 //! # References
 //!
@@ -42,13 +45,19 @@
 pub mod bvmsw;
 pub mod damon_eshbach;
 pub mod dispersion;
+pub mod magnonic_crystal;
 pub mod modes;
+pub mod nanodisk;
 pub mod quantization;
+pub mod semi_infinite_de;
 pub mod surface;
 
 pub use bvmsw::BackwardVolumeMSW;
 pub use damon_eshbach::DamonEshbachDetailed;
 pub use dispersion::SpinWaveDispersion;
+pub use magnonic_crystal::{MagnonicCrystal1D, MagnonicCrystal2D};
 pub use modes::{SpinWaveMode, SpinWaveModeCalculator};
+pub use nanodisk::NanodiskSpinWaves;
 pub use quantization::{NanostructureGeometry, QuantizedModes};
+pub use semi_infinite_de::SemiInfiniteDamonEshbach;
 pub use surface::SurfaceSpinWave;

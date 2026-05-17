@@ -1,6 +1,6 @@
 [package]
 name = "spintronics"
-version = "0.6.0"
+version = "0.9.0"
 edition = "2021"
 rust-version = "1.70.0"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
@@ -67,6 +67,7 @@ getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.6"
 
 [features]
 default = ["fem", "scirs2", "serde"]
@@ -84,6 +85,9 @@ xdmf     = ["hdf5"]               # XDMF (XML descriptor + HDF5 heavy data)
 netcdf   = []                     # Pure-Rust NetCDF3 Classic writer (no external dep)
 zarr     = []                     # Pure-Rust Zarr v2 writer (no external dep)
 autodiff = []                     # Reverse-mode autodiff tape (no external dep)
+
+# v0.9.0 features
+cuda     = []                     # GPU acceleration skeleton (CUDA, currently CPU-fallback only)
 
 [[example]]
 name = "yig_pt_pumping"
@@ -133,6 +137,66 @@ path = "examples/data_export_formats.rs"
 name = "autodiff_parameter_fitting"
 path = "examples/autodiff_parameter_fitting.rs"
 
+[[example]]
+name = "neural_exchange_training"
+path = "examples/neural_exchange_training.rs"
+
+[[example]]
+name = "nanodisk_modes"
+path = "examples/nanodisk_modes.rs"
+
+[[example]]
+name = "implicit_midpoint_stiff_demo"
+path = "examples/implicit_midpoint_stiff_demo.rs"
+
+[[example]]
+name = "pinn_llg_solver"
+path = "examples/pinn_llg_solver.rs"
+
+[[example]]
+name = "magnonic_crystal_bandgap"
+path = "examples/magnonic_crystal_bandgap.rs"
+
+[[example]]
+name = "experimental_validation_demo"
+path = "examples/experimental_validation_demo.rs"
+
+[[example]]
+name = "heun_adaptive_thermal_llg"
+path = "examples/heun_adaptive_thermal_llg.rs"
+
+[[example]]
+name = "pimc_heisenberg_chain"
+path = "examples/pimc_heisenberg_chain.rs"
+
+[[example]]
+name = "equivariant_nn_demo"
+path = "examples/equivariant_nn_demo.rs"
+
+[[example]]
+name = "active_learning_demo"
+path = "examples/active_learning_demo.rs"
+
+[[example]]
+name = "validation_landmark_suite"
+path = "examples/validation_landmark_suite.rs"
+
+[[example]]
+name = "graph_nn_lattice"
+path = "examples/graph_nn_lattice.rs"
+
+[[example]]
+name = "bayesian_opt_materials"
+path = "examples/bayesian_opt_materials.rs"
+
+[[example]]
+name = "validation_full_suite"
+path = "examples/validation_full_suite.rs"
+
+[[example]]
+name = "gpu_device_demo"
+path = "examples/gpu_device_demo.rs"
+
 [[bench]]
 name = "llg_benchmark"
 harness = false
@@ -149,7 +213,7 @@ harness = false
 members = ["demo", "py"]
 
 [workspace.package]
-version = "0.6.0"
+version = "0.9.0"
 edition = "2021"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
 license = "MIT OR Apache-2.0"

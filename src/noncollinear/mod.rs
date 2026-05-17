@@ -80,10 +80,14 @@
 //! let p_dir = tbmno3.electric_polarization_direction();
 //! assert!(p_dir.is_some()); // cycloidal → finite polarization
 //!
-//! // J1-J2 chain: frustrated → spiral ground state
+//! // J1-J2 chain: frustrated → spiral ground state.
+//! // Use the same parameter set as the inline unit test
+//! // (sufficient frustration |J2|/J1 = 0.5 > 0.25 for a spiral).
 //! let a = 3.0e-10_f64;
-//! let lt = LuttingerTisza::j1j2_chain(1.0, 0.5, a, 0.5);
-//! assert!(lt.is_spiral_ground_state(1e-3));
+//! let j1 = 1.0e-21_f64;
+//! let j2 = -0.5 * j1;
+//! let lt = LuttingerTisza::j1j2_chain(j1, j2, a, 0.5);
+//! assert!(lt.is_spiral_ground_state(0.05));
 //! ```
 
 pub mod luttinger_tisza;

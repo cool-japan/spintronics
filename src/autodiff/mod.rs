@@ -68,15 +68,37 @@
 //! - J. Nocedal, "Updating Quasi-Newton Matrices with Limited Storage",
 //!   *Math. Comp.* **35**, 773–782 (1980).
 
+pub mod active_learning;
+pub mod bayesian_opt;
+pub mod equivariant;
+pub mod graph_nn;
+pub mod neural;
 pub mod optimizer;
 pub mod physics_fns;
+pub mod pinn;
+pub mod structure_opt;
 pub mod tape;
 
 // ─── Re-exports ───────────────────────────────────────────────────────────────
 
+pub use active_learning::{ActiveLearnResult, ActiveLearner, ActiveLearningConfig, QueryStrategy};
+pub use bayesian_opt::{
+    AcquisitionStrategy, BayesianOptConfig, BayesianOptResult, BayesianOptimizer, GaussianProcess,
+    GpConfig,
+};
+pub use equivariant::{
+    random_so3, rotate_vector, EquivariantConfig, EquivariantLinear, EquivariantMlp,
+};
+pub use graph_nn::{GraphMessagePassingLayer, GraphMlp, LatticeGraph, NodeFeatures};
+pub use neural::{Activation, Layer, Mlp, NeuralAnisotropy, NeuralExchange};
 pub use optimizer::{Adam, FitResult, LBfgs, Optimizer, OptimizerKind, ParameterFitter, Sgd};
 pub use physics_fns::{
     anisotropy_energy_diff, dmi_energy_diff, exchange_energy_diff, kittel_frequency_diff,
     llg_torque_norm_diff, zeeman_energy_diff,
+};
+pub use pinn::{LlgPinn, PinnTrainer};
+pub use structure_opt::{
+    find_afm_ground_state, find_fm_ground_state, EnergyFunctional, MagneticStructureOptimizer,
+    SpinConfig, StructureOptResult,
 };
 pub use tape::{check_gradient, finite_diff_grad, Tape, Var};

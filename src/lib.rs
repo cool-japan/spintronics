@@ -1,6 +1,8 @@
 //! # spintronics
 //!
-//! **Version 0.6.0** - Spin wave extensions, HOTI, axion electrodynamics, data formats, ML autodiff
+//! **Version 0.9.0** - ML Phase 4 (graph NN message passing, Bayesian optimization),
+//! Garello 2013 + Boona 2014 validations, GPU device abstraction (CPU + CUDA stub),
+//! 7 landmark-paper validation suite
 //!
 //! A pure Rust library for simulating spin dynamics, spin current generation,
 //! and conversion phenomena in magnetic materials and topological materials.
@@ -26,13 +28,24 @@
 //! - **Spin Nernst Effect**: Thermal gradient → transverse spin current
 //!
 //! ### Key Features
-//! - ✅ **1200 tests passing** (1200 library tests, v0.6.0)
+//! - ✅ **1463 lib + 27 proptest + 103 doctests passing** (v0.9.0, +60 new lib tests)
+//! - ✅ **ML Phase 4** - Graph NN message-passing potentials (equivariant aggregation over arbitrary lattice topology), Bayesian optimization with Gaussian Process surrogate + Expected Improvement (v0.9.0)
+//! - ✅ **GPU device abstraction** - `Device` trait with CPU baseline (`CpuDevice`) + CUDA skeleton (`CudaDevice`, feature-gated, ~92 ns/spin/step on CPU) (v0.9.0)
+//! - ✅ **7 landmark-paper validations** - Demidov 2006, Saitoh 2006, Uchida 2008, Mosendz 2010, Liu 2012, Garello 2013, Boona 2014 with quantitative pass/fail metrics (v0.7.0–v0.9.0)
+//! - ✅ **Stochastic methods** - Heun adaptive (Euler-Heun embedded pair, PI controller), Implicit-Milstein (Newton + multiplicative noise), Path-Integral MC for finite-T Heisenberg chains (v0.8.0)
+//! - ✅ **Advanced ML Phase 3** - O(3)-equivariant NN (Cartesian-tensor formulation, rotation-invariant energy by construction), active learning with uncertainty sampling / query-by-committee (v0.8.0)
+//! - ✅ **Property-based testing** - `proptest` integration suite (27 properties × 32 cases) for conservation laws, SO(3) symmetries, time-reversal (v0.8.0)
+//! - ✅ **5 landmark-paper validations** - Demidov 2006, Saitoh 2006, Uchida 2008, Mosendz 2010, Liu 2012 with quantitative pass/fail metrics (v0.7.0–v0.8.0)
+//! - ✅ **ML Phase 2** - Neural network exchange/anisotropy potentials, physics-informed NN for LLG, gradient-based magnetic structure optimization (v0.7.0)
+//! - ✅ **Advanced spin waves** - Nanodisk Bessel + Kalinikos-Slavin modes, 1D/2D magnonic crystals (plane-wave band structure), semi-infinite Damon-Eshbach (v0.7.0)
+//! - ✅ **Stiff/diffusion integrators** - Implicit midpoint with Newton + finite-diff Jacobian (A-stable LLG), Crank-Nicolson with Thomas algorithm for spin diffusion (v0.7.0)
+//! - ✅ **Experimental validation** - Demidov 2006 (DE BLS), Saitoh 2006 (ISHE in Pt/Py), Uchida 2008 (LSSE) with embedded reference data and quantitative relative-error metrics (v0.7.0)
+//! - ✅ **56 examples** organized by difficulty (v0.9.0)
 //! - ✅ **Spin wave extensions** - Damon-Eshbach non-reciprocity, BVMSW negative v_g, surface spin waves, spectral magnon solver (v0.6.0)
 //! - ✅ **Higher-order topological insulators** - BBH model, breathing kagome, corner states, nested Wilson loops (v0.6.0)
 //! - ✅ **Axion electrodynamics** - 3D Berry-curvature θ-term, axion magnon-photon coupling, topological ME polarizability (v0.6.0)
 //! - ✅ **Data export** - VTI, XDMF, pure-Rust NetCDF3 Classic, Zarr v2 writers (v0.6.0)
 //! - ✅ **ML autodiff** - Reverse-mode AD tape, SGD/Adam/L-BFGS optimizers, differentiable physics functions (v0.6.0)
-//! - ✅ **41 examples** organized by difficulty (v0.6.0)
 //! - ✅ **Non-collinear magnetism** - Spin spirals (cycloidal/helical/conical), Luttinger-Tisza ground state (v0.5.0)
 //! - ✅ **Multiferroics** - Magnetoelectric tensor, KNB mechanism, DM polarization, toroidal moments (v0.5.0)
 //! - ✅ **Kane-Mele QSH** - Z2 topological invariant, Rashba/staggered potential, helical edge states (v0.5.0)
@@ -83,7 +96,7 @@
 //! - [`material`]: Material properties (ferromagnets, interfaces, 2D magnets, topological insulators, Weyl semimetals)
 //!
 //! ### Dynamics & Transport
-//! - [`dynamics`]: Time evolution solvers (LLG equation, RK4, Heun, adaptive methods)
+//! - [`dynamics`]: Time evolution solvers (LLG, RK4, Heun, adaptive, Dormand-Prince, symplectic, implicit-midpoint Newton, Crank-Nicolson diffusion) (v0.1.0–v0.7.0)
 //! - [`transport`]: Spin transport phenomena (spin pumping, diffusion)
 //!
 //! ### Physical Effects
@@ -91,11 +104,11 @@
 //! - [`magnon`]: Magnon propagation and spin wave dynamics
 //! - [`thermo`]: Thermoelectric effects (ANE, thermal magnon transport, multilayers)
 //! - [`texture`]: Magnetic textures (skyrmions, domain walls, DMI, topological charge)
-//! - [`spinwave`]: Spin wave theory — dispersion, modes, quantization, Damon-Eshbach, BVMSW, surface waves (v0.6.0)
+//! - [`spinwave`]: Spin wave theory — dispersion, modes, Damon-Eshbach, BVMSW, surface waves, nanodisk/magnonic-crystal/semi-infinite-DE (v0.6.0–v0.7.0)
 //!
 //! ### Specialized Physics
 //! - [`afm`]: Antiferromagnetic dynamics for THz spintronics
-//! - [`stochastic`]: Thermal fluctuations and finite-temperature effects
+//! - [`stochastic`]: Thermal fluctuations and finite-T effects — FDT noise, Euler-Maruyama, Heun adaptive, Implicit-Milstein, path-integral MC (v0.1.0–v0.8.0)
 //! - [`cavity`]: Cavity magnonics - Tavis-Cummings, polaritons, optomagnonics (v0.3.0/v0.4.0)
 //! - [`altermagnet`]: Altermagnetic materials (RuO2, CrSb, MnTe; spin-splitter effect, v0.3.0)
 //! - [`orbitronics`]: Orbital Hall effect, orbital torques (v0.3.0)
@@ -105,7 +118,7 @@
 //! - [`topomagnon`]: Topological magnon bands, HOTI corner states, nested Wilson loops, axion electrodynamics (v0.4.0–v0.6.0)
 //! - [`noncollinear`]: Non-collinear magnetism — spin spirals, Luttinger-Tisza method (v0.5.0)
 //! - [`multiferroic`]: Magnetoelectric coupling — ME tensor, KNB mechanism, DM polarization (v0.5.0)
-//! - [`autodiff`]: Reverse-mode autodiff — tape, SGD/Adam/L-BFGS optimizers, differentiable physics (v0.6.0, feature-gated)
+//! - [`autodiff`]: Reverse-mode autodiff — tape, SGD/Adam/L-BFGS optimizers, differentiable physics, neural-net potentials, PINN, structure optimization, O(3)-equivariant NN, active learning, graph NN message passing, Bayesian optimization with Gaussian Processes (v0.6.0–v0.9.0, feature-gated)
 //!
 //! ### Coupled Systems
 //! - [`circuit`]: Spin circuit elements (resistors, networks, spin accumulation)
@@ -122,7 +135,8 @@
 //!
 //! ### Data & Validation
 //! - [`visualization`]: Data export (VTK, CSV, JSON, HDF5, VTI, XDMF, NetCDF3, Zarr v2, v0.6.0)
-//! - [`validation`]: Experimental validation tests against landmark papers
+//! - [`validation`]: Parameter checks + experimental validation against landmark papers — Demidov 2006, Saitoh 2006, Uchida 2008, Mosendz 2010, Liu 2012, Garello 2013, Boona 2014 (v0.7.0–v0.9.0)
+//! - [`gpu`]: Device trait abstraction for portable LLG; `CpuDevice` baseline + `CudaDevice` skeleton, feature-gated (v0.9.0)
 //! - `python`: Python bindings via PyO3 (v0.2.0, optional feature)
 //!
 //! ## Quick Start
@@ -180,6 +194,7 @@ pub mod fem;
 
 pub mod fluid;
 pub mod frustrated;
+pub mod gpu;
 pub mod io;
 pub mod llg;
 

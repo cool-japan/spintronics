@@ -121,6 +121,10 @@ pub use crate::spinwave::{
 #[cfg(all(feature = "scirs2", not(target_arch = "wasm32")))]
 pub use crate::magnon::spectral::SpectralMagnonSolver;
 pub use crate::spinwave::{BackwardVolumeMSW, DamonEshbachDetailed, SurfaceSpinWave};
+// Advanced spin wave models (v0.7.0)
+pub use crate::spinwave::{
+    MagnonicCrystal1D, MagnonicCrystal2D, NanodiskSpinWaves, SemiInfiniteDamonEshbach,
+};
 // Magnetic textures
 pub use crate::texture::{
     calculate_skyrmion_number, Chirality, DmiParameters, DmiType, DomainWall, Helicity, Skyrmion,
@@ -151,6 +155,51 @@ pub use crate::units::{
 // ML autodiff (v0.6.0)
 #[cfg(feature = "autodiff")]
 pub use crate::autodiff::{Adam, FitResult, LBfgs, OptimizerKind, ParameterFitter, Sgd, Tape, Var};
+// ML enhancements (v0.7.0)
+#[cfg(feature = "autodiff")]
+pub use crate::autodiff::{
+    find_afm_ground_state, find_fm_ground_state, Activation, EnergyFunctional, Layer, LlgPinn,
+    MagneticStructureOptimizer, Mlp, NeuralAnisotropy, NeuralExchange, PinnTrainer, SpinConfig,
+    StructureOptResult,
+};
+// Advanced ML Phase 3 (v0.8.0)
+#[cfg(feature = "autodiff")]
+pub use crate::autodiff::{
+    random_so3, rotate_vector, ActiveLearnResult, ActiveLearner, ActiveLearningConfig,
+    EquivariantConfig, EquivariantLinear, EquivariantMlp, QueryStrategy,
+};
+// Advanced ML Phase 4 (v0.9.0)
+#[cfg(feature = "autodiff")]
+pub use crate::autodiff::{
+    AcquisitionStrategy, BayesianOptConfig, BayesianOptResult, BayesianOptimizer, GaussianProcess,
+    GpConfig, GraphMessagePassingLayer, GraphMlp, LatticeGraph, NodeFeatures,
+};
+// GPU acceleration (v0.9.0) — Device trait always available; CudaDevice gated.
+#[cfg(feature = "cuda")]
+pub use crate::gpu::CudaDevice;
+pub use crate::gpu::{available_devices, select_best_device, CpuDevice, Device};
+// More experimental validations (v0.9.0)
+pub use crate::validation::experimental::boona_2014::Boona2014Validation;
+pub use crate::validation::experimental::garello_2013::Garello2013Validation;
+// Stochastic methods (v0.8.0)
+#[cfg(feature = "scirs2")]
+pub use crate::stochastic::{
+    HeunAdaptive, ImplicitMilstein, PimcConfig, PimcLattice, PimcResult, PimcSimulation,
+};
+// More experimental validations (v0.8.0)
+pub use crate::validation::experimental::liu_2012::Liu2012Validation;
+pub use crate::validation::experimental::mosendz_2010::Mosendz2010Validation;
+// Stiff/diffusion integrators (v0.7.0).
+// Note: BoundaryCondition is aliased as DiffusionBoundary to avoid clash with negf::BoundaryCondition.
+pub use crate::dynamics::integrators::BoundaryCondition as DiffusionBoundary;
+pub use crate::dynamics::integrators::{
+    CrankNicolsonDiffusion, ImplicitMidpointNewton, SpinDiffusionCrankNicolson,
+};
+// Experimental validation (v0.7.0)
+pub use crate::validation::experimental::demidov_2006::Demidov2006Validation;
+pub use crate::validation::experimental::saitoh_2006::Saitoh2006Validation;
+pub use crate::validation::experimental::uchida_2008::Uchida2008Validation;
+pub use crate::validation::experimental::ValidationResult as ExperimentalValidationResult;
 pub use crate::vector3::Vector3;
 pub use crate::visualization::{
     CsvWriter, Hdf5Reader, Hdf5Writer, JsonWriter, SimulationData, VtkWriter,

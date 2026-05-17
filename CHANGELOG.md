@@ -7,6 +7,153 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-17
+
+### Added
+
+#### Advanced ML Phase 4 (`#[cfg(feature = "autodiff")]`)
+
+- `LatticeGraph`, `GraphMessagePassingLayer`, `GraphMlp`, `NodeFeatures` — graph neural network potentials for spin Hamiltonians on arbitrary lattice topology, building on v0.8.0 equivariant layers. Each message-passing layer uses `EquivariantLinear` for both the message function `f_msg(s_i, s_j, v_i, v_j, |r_ij|, r̂_ij)` and the update function `f_update(s_i, m_i_s, v_i, m_i_v)`; aggregation by summation preserves SO(3) equivariance; rotation invariance verified to 2.8×10⁻¹⁴ (machine precision). Convenience graph builders: `chain_1d`, `ring_1d`, `square_lattice_2d` (`src/autodiff/graph_nn.rs`)
+- `GaussianProcess`, `GpConfig`, `AcquisitionStrategy`, `BayesianOptConfig`, `BayesianOptResult`, `BayesianOptimizer` — Bayesian optimization with RBF-kernel Gaussian Process surrogate (Cholesky + jitter retry) and Expected Improvement / UCB / Posterior Variance acquisition strategies. Self-contained `erf` via Abramowitz–Stegun 7.1.26 for Φ(z); converges on `(x-0.7)²` to within 0.05 (`src/autodiff/bayesian_opt.rs`)
+
+#### More Experimental Validations
+
+- `Garello2013Validation` — Garello et al. Nat. Nanotechnol. 8, 587 (2013): angular-harmonic decomposition of SOT in Pt/Co/AlOx, H_DL ≈ 0.4 mT per 10¹¹ A/m², H_FL/H_DL ≈ 0.3, critical J_c ≈ 5×10¹⁰ A/m² (`src/validation/experimental/garello_2013.rs`)
+- `Boona2014Validation` — Boona, Heremans, Goennenwein et al. MRS Bulletin 39, 426 (2014): LSSE in granular YIG/Pt with Seebeck coefficient S_S ≈ 0.5–1.0 μV/K, linear V_LSSE(ΔT) up to 50 K, grain-boundary attenuation factor (`src/validation/experimental/boona_2014.rs`)
+- **Total: 7 landmark-paper validations** spanning v0.7.0–v0.9.0 (Demidov 2006, Saitoh 2006, Uchida 2008, Mosendz 2010, Liu 2012, Garello 2013, Boona 2014)
+
+#### GPU Acceleration Skeleton (feature `cuda`)
+
+- `Device` trait — object-safe abstraction for portable LLG simulation: `name`, `is_available`, `max_spins`, `step_llg_rk4`, `step_llg_rk4_multi`, `zeeman_energy` (`src/gpu/mod.rs`)
+- `CpuDevice` — always available; wraps the scalar CPU path via `crate::llg::calc_dm_dt` with frozen-field RK4 and per-spin renormalization. Demonstrated at ~92 ns / (spin · step) for 100–1000-spin batches (`src/gpu/cpu.rs`)
+- `CudaDevice` (`#[cfg(feature = "cuda")]`) — v0.9.0 skeleton. Constructs successfully with `available=false`; all operations return `numerical_error("CUDA backend: not implemented in v0.9.0 ...")`. Establishes the type signatures and contracts that v1.0.0 CUDA kernels must honor (`src/gpu/cuda.rs`)
+- `available_devices()`, `select_best_device()` — device enumeration + auto-selection helpers
+- Feature `cuda = []` (no external deps yet — pure skeleton plumbing)
+
+#### Examples (4 new, total 56)
+
+- `graph_nn_lattice.rs` — 9-spin lattice graph with EquivariantLinear message passing; rotation invariance verified to 2.8×10⁻¹⁴
+- `bayesian_opt_materials.rs` — BO finds (J*, K*) optimum on 625-point grid within 0.026 in 20 evaluations (vs random baseline)
+- `validation_full_suite.rs` — runs all 7 landmark validations; 18/23 quantitative checks pass within 30% relative-error window
+- `gpu_device_demo.rs` — enumerates available devices, evolves 100 spins × 200 steps in 1.8 ms (|m| drift 2.2×10⁻¹⁶), scaling sweep over 10–1000 spins
+
+### Changed
+
+- `prelude` re-exports v0.9.0 types: `LatticeGraph`, `GraphMessagePassingLayer`, `GraphMlp`, `NodeFeatures`, `GaussianProcess`, `GpConfig`, `AcquisitionStrategy`, `BayesianOptConfig`, `BayesianOptResult`, `BayesianOptimizer`, `Device`, `CpuDevice`, `CudaDevice` (feature-gated), `available_devices`, `select_best_device`, `Garello2013Validation`, `Boona2014Validation`
+
+### Test Counts
+
+- **Library tests**: 1463 / 1463 passing (was 1403 in v0.8.0; +60 new across graph_nn, bayesian_opt, garello_2013, boona_2014, gpu)
+- **Integration property tests**: 27 / 27 passing (unchanged)
+- **Doctests**: 103 / 103 passing (5 ignored)
+- **Zero clippy warnings** with `-D warnings` on `--all-targets` and full feature set (incl. `cuda`)
+- **4 new examples** all run with physically sensible output
+
+## [0.8.0] - 2026-05-17
+
+### Added
+
+#### Stochastic Methods Improvements (`#[cfg(feature = "scirs2")]`)
+
+- `HeunAdaptive` — Heun-Euler embedded pair (orders 1 and 2) with PI-style step controller `dt_new = dt · clamp(safety · (tol/err)^(1/2), min_factor, max_factor)`. Frozen-noise convention preserves Brownian statistics across step rejections via `H_th · √dt_old/√dt_new` rescaling (`src/stochastic/heun_adaptive.rs`)
+- `ImplicitMilstein` — implicit-midpoint drift + explicit Wiener-coupled stochastic term with Newton-Raphson 3×3 finite-difference Jacobian and self-contained Gauss elimination. Optional Milstein correction `Δm = ½(−γ/(1+α²))² · (m × σΔW) × σΔW` captures leading off-diagonal precessional contribution; disable to recover implicit Euler-Maruyama (`src/stochastic/implicit_milstein.rs`)
+- `PimcSimulation`, `PimcConfig`, `PimcLattice` (Chain1D / Ring1D), `PimcResult` — worldline-based path-integral Monte Carlo for finite-T Heisenberg chains with Trotter-discretized imaginary time, periodic-in-τ rigidity coupling K_rig = 1/Δτ, single-spin Metropolis updates with Marsaglia random unit-vector proposals; estimators: `⟨M_z⟩`, per-site energy, β² · var(E) · N specific heat, β · var(M_z) · N susceptibility (`src/stochastic/pimc.rs`)
+
+#### Advanced ML Phase 3 (`#[cfg(feature = "autodiff")]`)
+
+- `EquivariantLinear`, `EquivariantMlp`, `EquivariantConfig` — Cartesian-tensor O(3)-equivariant NN layers: scalar channels (rotation-invariant) + vector channels (rotation-equivariant) + scalar-vector mixing via `s_j · v_j` (equivariant) and `|v|` (invariant); gated tanh activation preserves equivariance; rotation invariance verified to machine precision (`src/autodiff/equivariant.rs`)
+- `random_so3(seed)` — Marsaglia-normal axis + Rodrigues rotation matrix; orthonormality verified to 1e-12
+- `rotate_vector(R, v)` — 3×3 matrix-vector product
+- `ActiveLearner`, `ActiveLearningConfig`, `QueryStrategy` (UncertaintySampling / QueryByCommittee / RandomBaseline), `ActiveLearnResult` — active learning loop with ensemble bootstrap, predict_with_uncertainty, select_next_query (argmax sum-of-stds), full `fit(oracle, pool)` (`src/autodiff/active_learning.rs`)
+
+#### More Experimental Validations
+
+- `Mosendz2010Validation` — Mosendz et al. PRL 104, 046601 (2010): V_ISHE vs Pt thickness scaling, linewidth enhancement Δα_eff = (γℏ g↑↓_eff)/(4π·M_s·t_F), spin mixing conductance g↑↓ ≈ 2.1×10¹⁹ m⁻², refined θ_SH(Pt) ≈ 0.013 (`src/validation/experimental/mosendz_2010.rs`)
+- `Liu2012Validation` — Liu et al. Science 336, 555 (2012): β-Ta spin Hall angle θ_SH ≈ -0.12 (opposite sign to Pt), critical SOT switching current J_c, thickness scaling, polarity convention (`src/validation/experimental/liu_2012.rs`)
+
+#### Property-Based Testing (first `tests/` integration suite)
+
+- `tests/property_conservation.rs` — 12 property tests with 32 cases each: |m|=1 conservation under RK4/Heun/Euler, Zeeman energy conservation at α=0, damping aligns m with H, Larmor reverses under field flip, dm/dt perpendicular to m and h at α=0, cross-product anti-commutativity, triple product cyclic, Lagrange identity, normalize idempotent
+- `tests/property_symmetries.rs` — 15 property tests with 32 cases each: rotation matrix orthogonality + determinant, SO(3) invariants (dot product, magnitude), cross-product equivariance, exchange / Zeeman / uniaxial-anisotropy invariance under co-rotation, calc_dm_dt equivariance, time-reversal at α=0, linearity in H, parity, rotation composition + inverse
+- Total: **27 property tests × 32 random cases = 864 randomized property trials per `cargo test` run**
+- `proptest = "1.6"` added to `[dev-dependencies]`
+
+#### Examples (5 new, total 52)
+
+- `heun_adaptive_thermal_llg.rs` — Permalloy thin film at T = 300 K with `HeunAdaptive`; dt auto-adjusts (96–276 fs) as magnetization warms up
+- `pimc_heisenberg_chain.rs` — 1D Heisenberg ring at varying β: ⟨M_z⟩ transitions from paramagnetic (β=0.05) to aligned (β=5.0)
+- `equivariant_nn_demo.rs` — 4-spin EquivariantMlp; rotation invariance preserved to 4.4×10⁻¹⁶ (machine precision) over 20 random SO(3) rotations
+- `active_learning_demo.rs` — `f(x) = sin(5x)·exp(-x²)` with 20-query budget: RandomBaseline MSE = 0.184; QueryByCommittee MSE = 0.0075 (24× better); UncertaintySampling MSE = 0.0161 (11× better)
+- `validation_landmark_suite.rs` — runs all 5 landmark validations (3 from v0.7.0 + 2 new); reports 12/15 quantitative checks pass within 30%-relative-error window
+
+### Changed
+
+- `prelude` now re-exports v0.8.0 types: `HeunAdaptive`, `ImplicitMilstein`, `PimcSimulation`, `PimcConfig`, `PimcLattice`, `PimcResult`, `EquivariantLinear`, `EquivariantMlp`, `EquivariantConfig`, `ActiveLearner`, `ActiveLearningConfig`, `QueryStrategy`, `ActiveLearnResult`, `random_so3`, `rotate_vector`, `Mosendz2010Validation`, `Liu2012Validation`
+- Refactored two `assertions_on_constants` clippy warnings (introduced during Phase 3) at the source: const-only assertions moved to module-level `const _: ()` compile-time checks; runtime assertions retained for non-const-evaluable comparisons
+
+### Test Counts
+
+- **Library tests**: 1403 / 1403 passing (was 1329 in v0.7.0; +74 new across stochastic, autodiff, and validation modules)
+- **Integration property tests**: 27 / 27 passing (12 conservation + 15 symmetries, 32 cases each, **first `tests/` directory in repo**)
+- **Doctests**: 103 / 103 passing
+- **Zero clippy warnings** with `-D warnings` on `--all-targets` and full feature set
+- **5 new examples** all run with physically sensible output
+
+## [0.7.0] - 2026-05-17
+
+### Added
+
+#### ML Enhancements (Phase 2) — autodiff feature
+
+- `Mlp`, `Layer`, `Activation` (`Relu`, `Tanh`, `Sigmoid`, `Gelu`, `Linear`) — feed-forward neural network with Xavier/He init, full `Var<'t>` tape integration for backprop; LCG RNG for reproducibility (`src/autodiff/neural.rs`)
+- `NeuralExchange` — trainable Heisenberg J(r) potential, rescales r to [-1,1] for stable training; `coupling()` for fast inference, `coupling_diff()` for differentiable forward
+- `NeuralAnisotropy` — trainable single-ion anisotropy K(m_x, m_y, m_z)
+- `LlgPinn`, `PinnTrainer` — physics-informed neural network for LLG dynamics: time derivative via central finite difference on the tape; explicit LL form `dm/dt = -γ/(1+α²)[m×H + α m×(m×H)]`; configurable residual / IC / norm penalty weights (`src/autodiff/pinn.rs`)
+- `SpinConfig` (spherical coords, unit-norm built-in), `EnergyFunctional` (Heisenberg + uniaxial anisotropy + Zeeman with user/chain/ring bond presets), `MagneticStructureOptimizer`, `StructureOptResult`, `find_fm_ground_state`, `find_afm_ground_state` (`src/autodiff/structure_opt.rs`)
+
+#### Advanced Spin Wave Theory
+
+- `NanodiskSpinWaves` — confined modes in magnetic disks: radial (Bessel zero) × azimuthal angular quantization, `mode_frequency(n_rad, m_az)`, `mode_profile`, `mode_spectrum(n_max, m_max)`, `group_velocity`, `propagation_length`; presets `yig_nanodisk(R)`, `permalloy_nanodisk(R)`, `cofeb_nanodisk(R)` (`src/spinwave/nanodisk.rs`)
+- `MagnonicCrystal1D` / `MagnonicCrystal2D` — periodic magnetic media via plane-wave expansion: `hamiltonian_at(k)` builds Hermitian Hamiltonian in reciprocal-lattice basis, `band_structure(n_kpoints)`, `band_gap(band_idx)`, `group_velocity(band_idx, k)`; constraint n_pw ≤ 31 (1D) / 3 (2D) from `CMatrix::MAX_DIM=64`; presets `yig_pt_alternating(period)`, `nife_cofe_alternating(period)`, `MagnonicCrystal2D::checkerboard()` (`src/spinwave/magnonic_crystal.rs`)
+- `SemiInfiniteDamonEshbach` — single-surface DE in semi-infinite media (distinct from thin-film DE and `SurfaceSpinWave`): ω² = (ω_H + Dk²)(ω_H + ω_M + Dk²) + (ω_M/2)², canonical √[ω_H(ω_H+ω_M)] + ω_M/2 in k→0 limit; surface localization, non-reciprocity, group velocity, propagation length; presets `yig_bulk()`, `iron_bulk()`, `permalloy_bulk()` (`src/spinwave/semi_infinite_de.rs`)
+
+#### Stiff/Diffusion Integrators
+
+- `ImplicitMidpointNewton` — A-stable 2nd-order implicit midpoint with Newton-Raphson + finite-difference Jacobian; explicit Euler initial guess; self-contained Gauss elimination with partial pivoting; `with_max_iter`, `with_tol`, `with_fd_step`; implements existing `Integrator` trait for drop-in replacement (`src/dynamics/integrators/implicit_midpoint.rs`)
+- `CrankNicolsonDiffusion` — unconditionally stable Crank-Nicolson for 1D diffusion equations: Dirichlet / Neumann (zero-flux) / Periodic boundaries; Thomas algorithm for tridiagonal (Sherman-Morrison for periodic); `step`, `evolve`, `steady_state` methods (`src/dynamics/integrators/crank_nicolson.rs`)
+- `SpinDiffusionCrankNicolson` — specialized for ∂μ_s/∂t = D∇²μ_s − μ_s/τ_sf with implicit-trapezoidal sink; `spin_diffusion_length() = √(D τ_sf)`
+
+#### Experimental Validation Refactor
+
+- Refactored `src/validation.rs` → `src/validation/` directory hierarchy (backward-compatible via `pub use parameter_checks::*` in `mod.rs`)
+- `src/validation/parameter_checks.rs` — 11 existing `check_*` / `is_valid_*` functions preserved verbatim
+- `src/validation/experimental/mod.rs` — `ValidationResult { name, max_relative_error, mean_relative_error, n_points, tolerance, passed }`
+- `Demidov2006Validation` — Damon-Eshbach dispersion and non-reciprocity vs BLS data from Demidov et al. PRL 96, 097202 (2006); embedded `K_VALUES`, `OMEGA_GHZ`, `NONRECIP_PCT` const arrays (`src/validation/experimental/demidov_2006.rs`)
+- `Saitoh2006Validation` — Pt spin Hall angle, ISHE polarity, linear J_s scaling vs Saitoh et al. APL 88, 182509 (2006); literature range 0.0037–0.013 (`src/validation/experimental/saitoh_2006.rs`)
+- `Uchida2008Validation` — Longitudinal Spin Seebeck Effect: linear V_LSSE(ΔT), polarity, order-of-magnitude check vs Uchida et al. Nature 455, 778 (2008) (`src/validation/experimental/uchida_2008.rs`)
+
+#### Examples (6 new, total 47)
+
+- `neural_exchange_training.rs` — Train `NeuralExchange` on synthetic RKKY-like target with Adam + finite-difference gradient (~3× MSE reduction)
+- `nanodisk_modes.rs` — YIG 100 nm disk: spectrum table, lowest mode at ~2.2 GHz, radial profile (vanishes at boundary), material comparison
+- `implicit_midpoint_stiff_demo.rs` — Stiff LLG (H=10 MA/m, α=0.1): implicit midpoint at dt=T_L/30 remains bounded; explicit Euler diverges; 2nd-order convergence verified to machine precision
+- `pinn_llg_solver.rs` — Train `LlgPinn` on Larmor precession, compare against RK4 reference; demonstrates norm constraint conservation
+- `magnonic_crystal_bandgap.rs` — 1D NiFe/CoFeB alternating crystal (200 nm period): band structure, first band gap (~57% relative width), group velocity vanishes at BZ edges
+- `experimental_validation_demo.rs` — Run all 3 landmark validations: 6/8 quantitative checks pass with 30%-relative-error tolerance
+
+### Changed
+
+- `prelude` now re-exports v0.7.0 types: `Mlp`, `NeuralExchange`, `NeuralAnisotropy`, `LlgPinn`, `PinnTrainer`, `MagneticStructureOptimizer`, `SpinConfig`, `EnergyFunctional`, `NanodiskSpinWaves`, `MagnonicCrystal1D`, `MagnonicCrystal2D`, `SemiInfiniteDamonEshbach`, `ImplicitMidpointNewton`, `CrankNicolsonDiffusion`, `DiffusionBoundary` (alias to avoid clash with `negf::BoundaryCondition`), `SpinDiffusionCrankNicolson`, `Demidov2006Validation`, `Saitoh2006Validation`, `Uchida2008Validation`, `ExperimentalValidationResult`
+- `validation` is now a directory module with `parameter_checks` and `experimental` submodules; all `crate::validation::check_*` calls remain backward-compatible
+- Fixed pre-existing doctest issues in `src/multiferroic/mod.rs` (bond vector parallel to spin current → zero polarization) and `src/noncollinear/mod.rs` (tolerance too strict for J1-J2 chain spiral detection)
+
+### Test Counts
+
+- **Library tests**: 1329 / 1329 passing (was 1200 in v0.6.0; +129 new)
+- **Doctests**: 103 passing (2 pre-existing failures fixed)
+- **Zero clippy warnings** with `-D warnings` on `--all-targets` and full feature set
+- **6 new examples** all run end-to-end with physically sensible output
+
 ## [0.6.0] - 2026-05-17
 
 ### Added

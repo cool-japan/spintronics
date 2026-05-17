@@ -23,7 +23,9 @@
 //! exchange coupling, anisotropy, and applied field pulses.
 
 mod adaptive;
+mod crank_nicolson;
 mod dormand_prince;
+mod implicit_midpoint;
 mod rhs_fn;
 mod semi_implicit;
 mod symplectic;
@@ -32,7 +34,9 @@ mod symplectic;
 mod tests;
 
 pub use adaptive::AdaptiveIntegrator;
+pub use crank_nicolson::{BoundaryCondition, CrankNicolsonDiffusion, SpinDiffusionCrankNicolson};
 pub use dormand_prince::{DormandPrince45, DormandPrince87};
+pub use implicit_midpoint::ImplicitMidpointNewton;
 pub use rhs_fn::{Integrator, IntegratorOutput, RhsFn};
 pub use semi_implicit::SemiImplicit;
 pub use symplectic::{ForestRuth, VelocityVerlet, Yoshida4};

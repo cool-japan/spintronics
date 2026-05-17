@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.6.0 COMPLETE
-**Last Updated**: 2026-05-17 - v0.6.0 released
-**Status**: 1200 tests passing, ~65K lines (Rust code: ~53K+)
+**Version**: 0.9.0 COMPLETE
+**Last Updated**: 2026-05-17 - v0.9.0 released
+**Status**: 1463 lib + 27 proptest + 103 doctests passing, ~80K lines (Rust code: ~67K+)
 
 ---
 
@@ -289,35 +289,157 @@
 - [x] `damon_eshbach_nonreciprocity.rs`, `backward_volume_magnons.rs`, `hoti_corner_states.rs`
 - [x] `axion_magnon_photon.rs`, `data_export_formats.rs`, `autodiff_parameter_fitting.rs`
 
-## v0.7.0 - ROADMAP
+## v0.7.0 - COMPLETE (2026-05-17)
 
-**Target**: Q4 2026
-**Theme**: Language Bindings, Neural Network Potentials, Extended ML, Experimental Validation
+**Released**: 2026-05-17
+**Theme**: ML Phase 2, Advanced Spin Waves, Stiff/Diffusion Integrators, Experimental Validation
+**Tests**: 1329 passing, 0 failures, 0 warnings
+**Code Size**: ~71K total lines (~58K Rust code)
 
-### Language Bindings
-- [ ] Julia bindings via julia-rs
-- [ ] C/C++ bindings via cbindgen
-- [ ] R bindings for statistical analysis
-
-### ML Enhancements (Phase 2)
-- [ ] Neural network potentials for exchange interactions (trainable Heisenberg/DMI)
-- [ ] ML-based surrogate models for fast parameter space exploration
-- [ ] Gradient-based structure optimization (LLG + autodiff)
-- [ ] Physics-informed neural networks for spin dynamics
+### ML Enhancements / Phase 2 (`#[cfg(feature = "autodiff")]`)
+- [x] `Mlp`, `Layer`, `Activation` enum (`Relu`, `Tanh`, `Sigmoid`, `Gelu`, `Linear`) — feed-forward NN with Xavier/He init (`src/autodiff/neural.rs`)
+- [x] `NeuralExchange` — trainable J(r), rescales r to [-1,1] for stable training
+- [x] `NeuralAnisotropy` — trainable K(m_x, m_y, m_z) surrogate
+- [x] `LlgPinn` / `PinnTrainer` — physics-informed NN for LLG with FD time derivative on tape (`src/autodiff/pinn.rs`)
+- [x] `SpinConfig` (spherical coords), `EnergyFunctional`, `MagneticStructureOptimizer`, `find_fm_ground_state`, `find_afm_ground_state` (`src/autodiff/structure_opt.rs`)
 
 ### Advanced Spin Wave Theory
-- [ ] Damon-Eshbach in semi-infinite ferromagnets (single-surface non-reciprocity)
-- [ ] Experimental validation against Demidov et al. 2006 BLS data
-- [ ] Spin wave quantization in nanodisks (combined Bessel + Kalinikos-Slavin)
-- [ ] Magnonic crystal band gaps
+- [x] `NanodiskSpinWaves` — radial Bessel × azimuthal modes, mode spectrum, group velocity, propagation length (`src/spinwave/nanodisk.rs`)
+- [x] `MagnonicCrystal1D` / `MagnonicCrystal2D` — plane-wave band structure, band gap, group velocity (`src/spinwave/magnonic_crystal.rs`)
+- [x] `SemiInfiniteDamonEshbach` — single-surface DE in semi-infinite media (`src/spinwave/semi_infinite_de.rs`)
 
-### Workspace Restructuring (candidate for v1.0.0)
-- [ ] Split into workspace with multiple crates:
+### Stiff/Diffusion Integrators
+- [x] `ImplicitMidpointNewton` — A-stable 2nd-order with finite-diff Jacobian + Gauss elimination (`src/dynamics/integrators/implicit_midpoint.rs`)
+- [x] `CrankNicolsonDiffusion` — unconditionally stable, Dirichlet/Neumann/Periodic BC via Thomas algorithm (`src/dynamics/integrators/crank_nicolson.rs`)
+- [x] `SpinDiffusionCrankNicolson` — specialized for ∂μ_s/∂t = D∇²μ_s − μ_s/τ_sf
+- [x] Resolves v0.3.0-deferred items: implicit midpoint with Newton iteration; Crank-Nicolson for diffusion-dominated systems
+
+### Experimental Validation Refactor
+- [x] `src/validation.rs` → `src/validation/` directory (backward-compatible via `pub use parameter_checks::*`)
+- [x] `Demidov2006Validation` — DE dispersion + non-reciprocity vs PRL 96, 097202 (2006)
+- [x] `Saitoh2006Validation` — Pt spin Hall angle + ISHE polarity + linear scaling vs APL 88, 182509 (2006)
+- [x] `Uchida2008Validation` — LSSE linear thermal response + polarity vs Nature 455, 778 (2008)
+- [x] `ValidationResult` type with max/mean relative error, n_points, tolerance, pass flag
+
+### Examples (6 new, total 47)
+- [x] `neural_exchange_training.rs` — NeuralExchange + Adam (FD gradient demo)
+- [x] `nanodisk_modes.rs` — YIG 100 nm disk fundamental at ~2.2 GHz
+- [x] `implicit_midpoint_stiff_demo.rs` — Stiff LLG comparison vs explicit Euler
+- [x] `pinn_llg_solver.rs` — LlgPinn on Larmor precession
+- [x] `magnonic_crystal_bandgap.rs` — 1D NiFe/CoFeB crystal (~57% relative band gap)
+- [x] `experimental_validation_demo.rs` — Run all 3 landmark paper validations
+
+---
+
+## v0.8.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Stochastic Methods, Advanced ML Phase 3, More Validations, Property-Based Testing
+**Tests**: 1403 lib + 27 proptest + 103 doctests passing, 0 failures, 0 warnings
+**Code Size**: ~76K total lines (~63K Rust code)
+
+### Stochastic Methods Improvements (`#[cfg(feature = "scirs2")]`)
+- [x] `HeunAdaptive` — Heun-Euler embedded pair with PI controller, frozen-noise rejection retry (`src/stochastic/heun_adaptive.rs`)
+- [x] `ImplicitMilstein` — Newton + 3×3 FD Jacobian + optional Milstein correction for multiplicative noise (`src/stochastic/implicit_milstein.rs`)
+- [x] `PimcSimulation` — worldline path-integral MC for finite-T Heisenberg chains, Chain1D / Ring1D lattices, Trotter rigidity coupling, Marsaglia spin proposals (`src/stochastic/pimc.rs`)
+
+### Advanced ML Phase 3 (`#[cfg(feature = "autodiff")]`)
+- [x] `EquivariantLinear`, `EquivariantMlp`, `EquivariantConfig` — Cartesian-tensor O(3)-equivariant NN layers; rotation invariance preserved to machine precision (`src/autodiff/equivariant.rs`)
+- [x] `random_so3`, `rotate_vector` — Marsaglia + Rodrigues helpers for testing equivariance
+- [x] `ActiveLearner`, `ActiveLearningConfig`, `QueryStrategy` (UncertaintySampling / QueryByCommittee / RandomBaseline), `ActiveLearnResult` — active learning with ensemble bootstrap and `fit(oracle, pool)` loop (`src/autodiff/active_learning.rs`)
+
+### More Experimental Validations
+- [x] `Mosendz2010Validation` — Mosendz et al. PRL 104, 046601 (2010): V_ISHE vs Pt thickness, Δα_eff linewidth enhancement, g↑↓ ≈ 2.1×10¹⁹ m⁻², refined θ_SH ≈ 0.013 (`src/validation/experimental/mosendz_2010.rs`)
+- [x] `Liu2012Validation` — Liu et al. Science 336, 555 (2012): β-Ta θ_SH ≈ -0.12 (negative!), critical J_c, polarity, thickness scaling (`src/validation/experimental/liu_2012.rs`)
+
+### Property-Based Testing (first `tests/` integration suite, `proptest = "1.6"`)
+- [x] `tests/property_conservation.rs` — 12 properties × 32 cases: |m|=1 under RK4/Heun/Euler, Zeeman energy at α=0, damping alignment, Larmor sign reversal, dm/dt orthogonality, cross-product anti-commutativity, triple product cyclic, Lagrange identity, normalize idempotent
+- [x] `tests/property_symmetries.rs` — 15 properties × 32 cases: SO(3) matrix orthogonality + determinant + trace bounded, SO(3) invariants (dot, magnitude), cross-product equivariance, exchange/Zeeman/anisotropy invariance, calc_dm_dt equivariance, time-reversal at α=0, linearity in H, parity, rotation composition + inverse
+- [x] Total: 27 property tests × 32 cases = 864 randomized trials per `cargo test` run
+
+### Examples (5 new, total 52)
+- [x] `heun_adaptive_thermal_llg.rs` — Permalloy at T=300 K, adaptive dt 96–276 fs
+- [x] `pimc_heisenberg_chain.rs` — 1D Heisenberg ring vs β: paramagnetic → aligned
+- [x] `equivariant_nn_demo.rs` — 4-spin EquivariantMlp; rotation drift 4.4×10⁻¹⁶
+- [x] `active_learning_demo.rs` — QueryByCommittee 24× better than RandomBaseline on sin(5x)·exp(-x²)
+- [x] `validation_landmark_suite.rs` — 5 papers / 12 of 15 quantitative checks pass
+
+---
+
+## v0.9.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: ML Phase 4 (Graph NN + Bayesian Opt), Garello 2013 + Boona 2014 validations, GPU device abstraction skeleton
+**Tests**: 1463 lib + 27 proptest + 103 doctests passing, 0 failures, 0 warnings
+**Code Size**: ~80K total lines (~67K Rust code)
+
+### Advanced ML Phase 4 (`#[cfg(feature = "autodiff")]`)
+- [x] `LatticeGraph`, `GraphMessagePassingLayer`, `GraphMlp`, `NodeFeatures` — equivariant graph NN message passing on arbitrary lattice topology; chain_1d, ring_1d, square_lattice_2d builders; rotation invariance to 2.8e-14 (`src/autodiff/graph_nn.rs`)
+- [x] `GaussianProcess`, `GpConfig`, `BayesianOptimizer`, `BayesianOptConfig`, `AcquisitionStrategy` (EI / UCB / PosteriorVariance), `BayesianOptResult` — BO with RBF-kernel GP, Cholesky + jitter, custom erf via Abramowitz-Stegun (`src/autodiff/bayesian_opt.rs`)
+
+### More Experimental Validations (total: 7 papers)
+- [x] `Garello2013Validation` — Nat. Nanotechnol. 8, 587 (2013): angular-harmonic SOT decomposition Pt/Co/AlOx
+- [x] `Boona2014Validation` — MRS Bulletin 39, 426 (2014): LSSE in granular YIG/Pt
+- Previously: Demidov 2006, Saitoh 2006, Uchida 2008 (v0.7.0); Mosendz 2010, Liu 2012 (v0.8.0)
+
+### GPU Acceleration Skeleton (feature `cuda`)
+- [x] `Device` trait — object-safe `Box<dyn Device>` abstraction (`src/gpu/mod.rs`)
+- [x] `CpuDevice` — always available; wraps existing CPU LLG with frozen-field RK4 (~92 ns/spin/step) (`src/gpu/cpu.rs`)
+- [x] `CudaDevice` — `#[cfg(feature = "cuda")]` skeleton; constructs OK with available=false; all ops return numerical_error pending v1.0.0 CUDA kernels (`src/gpu/cuda.rs`)
+- [x] `available_devices()`, `select_best_device()` — auto-enumeration
+- [x] Feature `cuda = []` — no external deps yet (pure plumbing)
+
+### Examples (4 new, total 56)
+- [x] `graph_nn_lattice.rs` — rotation invariance to 2.8e-14
+- [x] `bayesian_opt_materials.rs` — BO converges within 0.026 of true optimum in 20 evals
+- [x] `validation_full_suite.rs` — 18/23 checks across 7 landmark papers
+- [x] `gpu_device_demo.rs` — 100 spins × 200 steps in 1.8 ms; scaling sweep
+
+---
+
+## v1.0.0 - ROADMAP (Stable Release)
+
+**Target**: Q3 2027
+**Theme**: Stable API, Workspace Split, Real CUDA Kernels, Language Bindings
+
+### Language Bindings (FFI foundation)
+- [ ] C/C++ bindings via cbindgen (foundation for FFI to other languages)
+- [ ] Build script `build.rs` for automatic `spintronics.h` generation
+- [ ] Example C program calling LLG solver + Vector3
+- [ ] Julia bindings via julia-rs or jlrs (builds on C ABI)
+- [ ] R bindings via Rcpp (builds on C ABI)
+
+### Workspace Restructuring
+- [ ] Split monolithic crate into workspace with multiple crates:
   - `spintronics-core` — Core physics and materials
-  - `spintronics-solver` — Numerical solvers
-  - `spintronics-io` — I/O and visualization
+  - `spintronics-solver` — Numerical solvers (LLG, integrators)
+  - `spintronics-spinwave` — Spin wave theory + magnonics
+  - `spintronics-topomagnon` — Topological magnon bands + HOTI + axion
+  - `spintronics-autodiff` — ML autodiff + neural potentials + PINN + equivariant + graph NN
+  - `spintronics-io` — I/O and visualization (VTK, HDF5, NetCDF, Zarr)
+  - `spintronics-gpu` — Device abstraction + CUDA / ROCm kernels
   - `spintronics-python` — Python bindings
+  - `spintronics-c` — C bindings
   - `spintronics-cli` — Command-line tools
+
+### Real GPU Kernels (drop the v0.9.0 skeleton)
+- [ ] CUDA kernels via `cudarc` crate
+- [ ] LLG RK4 kernel (one block per spin)
+- [ ] Zeeman / exchange / DMI effective field kernels
+- [ ] Async device-host transfers with stream synchronisation
+- [ ] ROCm equivalent via `rocm-rs`
+- [ ] Benchmark vs OOMMF, mumax3 (target 10–100× speedup on >1M spins)
+
+### API Stabilisation
+- [ ] Comprehensive API review for v1.0
+- [ ] Migration guide for v0.x → v1.0 breaking changes
+- [ ] semver-check in CI
+- [ ] Long-term support announcements
+
+### Advanced ML Phase 5
+- [ ] Hybrid quantum-classical NN for magnetic Hamiltonians
+- [ ] Diffusion models for skyrmion lattice generation
+- [ ] Reinforcement learning for SOT switching protocol design
 
 ---
 

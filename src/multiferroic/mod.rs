@@ -105,8 +105,10 @@
 //! let p_knb = knb.polarization_from_spiral(&s_i, &s_j, &e_ij);
 //! assert!(p_knb.magnitude() > 0.0);
 //!
-//! // DM-based spin-current polarization (free function)
-//! let bond = Vector3::new(0.0, 0.0, 1.0);
+//! // DM-based spin-current polarization (free function).
+//! // Use a bond vector NOT parallel to (s_i × s_j) = (0,0,1) so that
+//! // P_DM = ê_ij × (s_i × s_j) is non-zero.
+//! let bond = Vector3::new(1.0, 0.0, 0.0);
 //! let p_dm = dzyaloshinskii_moriya_polarization(&s_i, &s_j, &bond);
 //! assert!(p_dm.magnitude() > 0.0);
 //! ```

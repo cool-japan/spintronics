@@ -39,4 +39,11 @@
 
 pub mod thermal;
 
+pub mod heun_adaptive;
+pub mod implicit_milstein;
+pub mod pimc;
+
+pub use heun_adaptive::HeunAdaptive;
+pub use implicit_milstein::ImplicitMilstein;
+pub use pimc::{PimcConfig, PimcLattice, PimcResult, PimcSimulation};
 pub use thermal::{StochasticLLG, ThermalField};
