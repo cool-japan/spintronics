@@ -211,8 +211,9 @@ impl std::fmt::Display for Complex {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+
+    use super::*;
 
     #[test]
     fn test_constants() {

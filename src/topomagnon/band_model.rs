@@ -26,9 +26,10 @@
 //! The NN hopping gives dₓ + i·d_y = J·(1 + e^{ik·a₁} + e^{ik·a₂}) and the
 //! topological mass from NNN-DMI is d_z = h_ext + 2·dmi·(sin(k·b₁)+sin(k·b₂)+sin(k·(b₁−b₂))).
 
+use std::f64::consts::PI;
+
 use crate::error::{self, Result};
 use crate::math::{CMatrix, Complex};
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // Direct analytical eigendecomposition for small matrices

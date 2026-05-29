@@ -33,10 +33,11 @@
 //!    compute its Berry phase along kx to obtain the nested polarisation.
 //!    A quantised value of 0.5 signals a HOTI corner charge.
 
+use std::f64::consts::PI;
+
 use crate::error::{self, Result};
 use crate::math::{CMatrix, Complex};
 use crate::topomagnon::band_model::MagnonBandModel;
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // WilsonLoop

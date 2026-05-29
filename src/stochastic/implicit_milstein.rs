@@ -440,8 +440,7 @@ mod tests {
 
     #[test]
     fn test_deterministic_matches_implicit_midpoint() {
-        use crate::dynamics::integrators::ImplicitMidpointNewton;
-        use crate::dynamics::integrators::Integrator;
+        use crate::dynamics::integrators::{ImplicitMidpointNewton, Integrator};
 
         let alpha = 0.05_f64;
         let gamma = GAMMA;
@@ -585,9 +584,10 @@ mod tests {
 
     #[test]
     fn test_fdt_thermal_variance() {
-        use crate::constants::KB;
         use scirs2_core::random::rand_distributions::Normal;
         use scirs2_core::random::seeded_rng;
+
+        use crate::constants::KB;
 
         let alpha = 0.05_f64;
         let gamma = GAMMA;

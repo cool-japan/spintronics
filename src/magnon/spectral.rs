@@ -551,8 +551,9 @@ impl SpectralMagnonSolver {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     fn square_fm_solver() -> SpectralMagnonSolver {
         // J = 1e-23 J ~ 6 μeV per spin pair, H = 0

@@ -726,8 +726,9 @@ fn parse_var_list(r: &mut impl Read) -> Result<Vec<ParsedVar>, Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
+
+    use super::*;
 
     fn temp_path(name: &str) -> std::path::PathBuf {
         std::env::temp_dir().join(name)

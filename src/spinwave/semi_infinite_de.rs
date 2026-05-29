@@ -295,8 +295,9 @@ impl SemiInfiniteDamonEshbach {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     fn yig() -> SemiInfiniteDamonEshbach {
         SemiInfiniteDamonEshbach::yig_bulk().expect("valid YIG preset")

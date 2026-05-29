@@ -25,12 +25,12 @@
 //! For pure unit-system-agnostic usage, treat the result as proportional to
 //! the Hall angle.
 
-use crate::constants::{HBAR, KB};
-use crate::error::{self, Result};
 use std::f64::consts::PI;
 
 use super::band_model::MagnonBandModel;
 use super::berry_curvature::BerryCurvature;
+use crate::constants::{HBAR, KB};
+use crate::error::{self, Result};
 
 // Conversion factor: 1 meV = 1.602176634e-22 J
 const MEV_TO_J: f64 = 1.602_176_634e-22;
@@ -235,9 +235,10 @@ impl<'a> MagnonHallConductivity<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::PI;
+
     use super::*;
     use crate::topomagnon::band_model::MagnonBandModel;
-    use std::f64::consts::PI;
 
     fn approx(a: f64, b: f64, tol: f64) -> bool {
         (a - b).abs() < tol

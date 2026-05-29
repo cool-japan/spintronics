@@ -24,11 +24,11 @@
 //! - **Berry phase along arbitrary path**: discrete phase product.
 //! - **Total Chern sum**: verifies the Nielsen-Ninomiya sum rule (C_total = 0).
 
-use crate::error::{self, Result};
-use crate::math::Complex;
 use std::f64::consts::PI;
 
 use super::band_model::MagnonBandModel;
+use crate::error::{self, Result};
+use crate::math::Complex;
 
 // ---------------------------------------------------------------------------
 // ChernNumber

@@ -532,8 +532,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     // Helper: run backward on the given computation and return (value, grad of x)
     fn run_unary<F: Fn(Var<'_>) -> Var<'_>>(x_val: f64, f: F) -> (f64, f64) {

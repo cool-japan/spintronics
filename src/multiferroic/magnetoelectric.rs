@@ -47,12 +47,12 @@
 //! - S.-W. Cheong & M. Mostovoy, Nat. Mater. 6, 13 (2007) — review of multiferroics
 //! - H. Katsura, N. Nagaosa & A. V. Balatsky, PRL 95, 057205 (2005) — KNB mechanism
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::constants::C_LIGHT;
 use crate::error::{self, Result};
 use crate::vector3::Vector3;
-
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // Types

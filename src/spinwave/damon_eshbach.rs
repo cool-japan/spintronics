@@ -388,8 +388,9 @@ impl DamonEshbachDetailed {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::{FRAC_PI_2, PI};
+
+    use super::*;
 
     // Tolerance for relative comparisons
     const TOL_REL: f64 = 0.05; // 5%

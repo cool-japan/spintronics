@@ -73,10 +73,11 @@
 //! - R. J. Elliott, "Phenomenological Discussion of Magnetic Ordering in the Heavy
 //!   Rare-Earth Metals", *Phys. Rev.* **124**, 346–353 (1961)
 
+use std::f64::consts::TAU;
+
 use crate::constants::KB;
 use crate::error::{self, Result};
 use crate::vector3::Vector3;
-use std::f64::consts::TAU;
 
 /// A single exchange interaction between site 0 and a neighbor at displacement **δ**
 ///
@@ -431,8 +432,9 @@ impl LuttingerTisza {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     const TOL: f64 = 1e-6;
 

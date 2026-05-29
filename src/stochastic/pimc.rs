@@ -57,12 +57,12 @@
 //! - Bonner, J. C. and Fisher, M. E., *Linear magnetic chains with
 //!   anisotropic coupling*, Phys. Rev. **135**, A640 (1964).
 
-use crate::error::{invalid_param, Result};
-use crate::vector3::Vector3;
 use scirs2_core::random::core::Random as CoreRandom;
 use scirs2_core::random::rand_distributions::Normal;
-use scirs2_core::random::rngs;
-use scirs2_core::random::seeded_rng;
+use scirs2_core::random::{rngs, seeded_rng};
+
+use crate::error::{invalid_param, Result};
+use crate::vector3::Vector3;
 
 /// Geometry of the lattice on which the PIMC simulation runs.
 #[derive(Debug, Clone, Copy)]

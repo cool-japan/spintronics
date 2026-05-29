@@ -23,8 +23,9 @@
 //! ## References
 //! - mumax3 — Vansteenkiste et al., AIP Adv. 4, 107133 (2014)
 
-use spintronics::prelude::*;
 use std::time::Instant;
+
+use spintronics::prelude::*;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("=============================================================");
