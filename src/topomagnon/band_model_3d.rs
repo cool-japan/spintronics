@@ -38,9 +38,10 @@
 //!
 //! where `d_ab` are the four inequivalent pyrochlore bond vectors.
 
+use std::f64::consts::PI;
+
 use crate::error::Result;
 use crate::math::{CMatrix, Complex};
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // LatticeType3D

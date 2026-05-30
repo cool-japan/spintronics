@@ -53,12 +53,13 @@
 //! Y. Tabuchi et al., *Science* **349**, 405 (2015);
 //! D. Lachance-Quirion et al., *Appl. Phys. Express* **12**, 070101 (2019).
 
+use std::f64::consts::PI;
+
 use crate::constants::{CONDUCTANCE_QUANTUM, C_LIGHT, EPSILON_0, E_CHARGE, H_PLANCK};
 use crate::error::{self, Result};
 use crate::math::Complex;
 use crate::topomagnon::band_model_3d::MagnonBandModel3D;
 use crate::vector3::Vector3;
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // AxionElectrodynamics

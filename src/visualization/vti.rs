@@ -315,8 +315,9 @@ pub fn decode_vti_base64(encoded: &str) -> Result<(u32, Vec<f32>), Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
+
+    use super::*;
 
     fn temp_path(name: &str) -> std::path::PathBuf {
         std::env::temp_dir().join(name)

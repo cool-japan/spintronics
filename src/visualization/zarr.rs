@@ -517,8 +517,9 @@ fn parse_zarray_dtype(json: &str) -> Result<String, Error> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::path::PathBuf;
+
+    use super::*;
 
     fn temp_dir(sub: &str) -> PathBuf {
         std::env::temp_dir().join(sub)

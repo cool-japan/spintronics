@@ -28,11 +28,11 @@
 //!
 //! A value η ≥ 0.3 (adjustable threshold) signals edge localization.
 
-use crate::error::{self, Result};
-use crate::math::{CMatrix, Complex};
 use std::f64::consts::PI;
 
 use super::band_model::MagnonBandModel;
+use crate::error::{self, Result};
+use crate::math::{CMatrix, Complex};
 
 // ---------------------------------------------------------------------------
 // Public types

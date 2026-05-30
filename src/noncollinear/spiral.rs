@@ -52,9 +52,10 @@
 //! - A. Yoshimori, "A New Type of Antiferromagnetic Structure in the Rutile Type Crystal",
 //!   *J. Phys. Soc. Jpn.* **14**, 807–821 (1959)
 
+use std::f64::consts::{PI, TAU};
+
 use crate::error::{self, Result};
 use crate::vector3::Vector3;
-use std::f64::consts::{PI, TAU};
 
 /// Classification of the spin-spiral geometry
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -554,8 +555,9 @@ impl SpinSpiral {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::{PI, TAU};
+
+    use super::*;
 
     const TOL: f64 = 1e-9;
     const TOL_MEDIUM: f64 = 1e-6;

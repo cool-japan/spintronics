@@ -294,8 +294,9 @@ impl SurfaceSpinWave {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     fn yig_surface() -> SurfaceSpinWave {
         SurfaceSpinWave::bulk_yig()

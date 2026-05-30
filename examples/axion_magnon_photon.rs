@@ -28,9 +28,10 @@
 //! - Tokura, Yasuda & Tsukazaki, *Rev. Mod. Phys.* **91**, 015005 (2019)
 //! - Li et al., *Phys. Rev. Lett.* **124**, 167402 (2020)
 
+use std::f64::consts::PI;
+
 use spintronics::prelude::*;
 use spintronics::topomagnon::{AxionElectrodynamics, AxionMagnonPhoton, MagnonBandModel3D};
-use std::f64::consts::PI;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     // ─────────────────────────────────────────────────────────────────────────

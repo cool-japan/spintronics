@@ -59,12 +59,12 @@
 //! - T. Kimura et al., "Magnetic control of ferroelectric polarization",
 //!   Nature **426**, 55 (2003) — TbMnO₃ experiments
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use crate::constants::{HBAR, KB};
 use crate::error::{self, Result};
 use crate::vector3::Vector3;
-
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // KnbMechanism
@@ -484,8 +484,9 @@ pub fn magnon_drag_contribution(temperature: f64, magnon_gap: f64, coupling: f64
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
+
+    use super::*;
 
     const TOL: f64 = 1.0e-10;
 

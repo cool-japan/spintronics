@@ -20,11 +20,11 @@
 //!
 //! [`ChernNumber`]: super::chern_number::ChernNumber
 
-use crate::error::{self, Result};
-use crate::math::{CMatrix, Complex};
 use std::f64::consts::PI;
 
 use super::band_model::MagnonBandModel;
+use crate::error::{self, Result};
+use crate::math::{CMatrix, Complex};
 
 // ---------------------------------------------------------------------------
 // BerryCurvature

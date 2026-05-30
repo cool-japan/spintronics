@@ -45,9 +45,10 @@
 //! `lx × ly` cluster with open boundary conditions and diagonalises it to
 //! reveal mid-gap corner states.
 
+use std::f64::consts::PI;
+
 use crate::error::{self, Result};
 use crate::math::{CMatrix, Complex};
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // HotiLattice enum

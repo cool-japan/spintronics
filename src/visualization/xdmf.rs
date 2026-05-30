@@ -281,8 +281,9 @@ fn write_field_binary(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
+
+    use super::*;
 
     fn temp_path(name: &str) -> std::path::PathBuf {
         std::env::temp_dir().join(name)

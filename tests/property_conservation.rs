@@ -20,11 +20,12 @@
 
 #![allow(clippy::needless_pass_by_value)]
 
+use std::f64::consts::PI;
+
 use proptest::prelude::*;
 use spintronics::constants::{GAMMA, MU_0};
 use spintronics::dynamics::llg::{calc_dm_dt, zeeman_energy, LlgSolver};
 use spintronics::vector3::Vector3;
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // Strategy helpers

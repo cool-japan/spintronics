@@ -44,9 +44,10 @@
 //! |---|---|
 //! | [`KaneMeleModel`] | Full Kane-Mele Bloch Hamiltonian and topological analysis |
 
+use std::f64::consts::PI;
+
 use crate::error::{self, Result};
 use crate::math::{CMatrix, Complex};
-use std::f64::consts::PI;
 
 // ---------------------------------------------------------------------------
 // Honeycomb geometry constants and helpers

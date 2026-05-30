@@ -35,10 +35,9 @@
 use std::fs;
 use std::path::PathBuf;
 
-use spintronics::prelude::*;
-
 #[cfg(feature = "vti")]
 use spintronics::prelude::VtiWriter;
+use spintronics::prelude::*;
 #[cfg(feature = "netcdf")]
 use spintronics::prelude::{NetCdfReader, NetCdfWriter};
 #[cfg(feature = "zarr")]
