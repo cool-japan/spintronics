@@ -43,7 +43,6 @@ pub use simulation::PySpinPumpingSimulation;
 pub use vector::PyVector3;
 
 /// Python module for spintronics simulations
-#[pymodule]
 pub fn spintronics(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Core types
     m.add_class::<PyVector3>()?;

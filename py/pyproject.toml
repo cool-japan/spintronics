@@ -9,7 +9,7 @@ description = "High-performance spintronics simulation library"
 authors = [
     {name = "COOLJAPAN OU (Team Kitasan)", email = "contact@cooljapan.tech"}
 ]
-readme = "README.md"
+readme = {file = "PYPI_README.md", content-type = "text/markdown"}
 requires-python = ">=3.8"
 license = {text = "MIT OR Apache-2.0"}
 classifiers = [
@@ -54,7 +54,7 @@ python-source = "python"
 binding = "pyo3"
 include = [
     "LICENSE*",
-    "README.md",
+    "PYPI_README.md",
     "python/spintronics/*.pyi",
     "python/spintronics/py.typed",
 ]
