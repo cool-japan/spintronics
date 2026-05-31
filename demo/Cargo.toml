@@ -1,6 +1,6 @@
 [package]
 name = "spintronics-demo"
-version = "0.3.0"
+version.workspace = true
 edition = "2021"
 rust-version = "1.70.0"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
