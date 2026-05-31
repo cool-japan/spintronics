@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-31
+
+### Added
+
+#### New Physics Effect Modules
+- `SpinHallMagnetoresistance`, `UnidirectionalSmr` — SMR + USMR with full Chen (PRB 2013) ρ₁ formula; angular scans; Pt/YIG, W/YIG, Pt/Co presets (`src/effect/smr.rs`)
+- `SpinTorqueOscillator`, `SpinTorqueOscillatorConfig` — Slonczewski STT auto-oscillation; threshold current; Slavin–Tiberkevich thermal linewidth; Adler injection locking; Permalloy preset (`src/effect/stno.rs`)
+- `CircularHelicity`, `LaserPulseParams`, `OpticalMagneticMaterial`, `OpticalSwitching`, `OpticalSwitchResult` — Inverse Faraday Effect, helicity-dependent switching, ultrafast demagnetization model; GdFeCo, Co, Py presets (`src/effect/optical_switching.rs`)
+- `AcSpinPumping`, `SpinBattery` — AC spin pumping with backflow-corrected G_r_eff; DC/2ω components at FMR; Gilbert damping enhancement; ISHE open-circuit voltage; YIG/Pt preset (`src/transport/ac_pumping.rs`)
+- `PiezoSubstrate`, `SawMagnetoelastic`, `SawSource`, `SawMagnetoacoustics`, `SawSpinWaveExcitation` — Rayleigh SAW + magnetoelastic coupling; resonant precession; acoustic spin pumping; LiNbO₃, GaAs, ZnO presets (`src/mech/saw.rs`)
+
+#### ML Phase 5 (`#[cfg(feature = "autodiff")]`)
+- `DiffusionModel`, `NoiseSchedule`, `SpinTexture`, `DiffusionLcg` — DDPM for skyrmion spin-texture generation; 2-layer MLP denoiser with manual backprop; Adam training; reverse diffusion sampling; topological charge validation (`src/autodiff/diffusion_model.rs`)
+- `MagnonNeuralNetwork`, `QuantumClassicalOptimizer`, `QuantumClassicalResult`, `MagnonHamiltonianParams` — MLP parameterizes Bogoliubov Hamiltonian (A_k, B_k); central FD gradients; Adam training; ground-state energy; Heisenberg chain reference dispersion (`src/autodiff/quantum_classical.rs`)
+
+#### RL for SOT Switching (`src/ai/rl.rs`)
+- `SotSwitchingEnv`, `CemPolicy`, `SotRlOptimizer`, `SotRlResult`, `SotSwitchingConfig` — macrospin PMA LLG+SOT environment; Cross-Entropy Method for pulse-protocol optimization; CoFeB/Pt preset
+
+#### Micromagnetics Infrastructure (`src/micromagnetics/`)
+- `NewellTensor`, `DemagField` — analytic Newell (1993) demag tensor; 8-corner f-function summation for all cell offsets; direct O(N²) convolution (`src/micromagnetics/demag.rs`)
+- `MicromagneticGrid`, `GridConfig`, `LlgResult` — FD exchange + demag + Zeeman + anisotropy; per-cell LLG RK4; flower/vortex state initialization (`src/micromagnetics/grid.rs`)
+- `StandardProblem3`, `Sp3Config`, `Sp3Result`, `StableState` — muMAG SP#3 flower↔vortex energy comparison (`src/validation/standard_problems/sp3.rs`)
+
+#### Experimental Validations (total: 11 papers)
+- `Nakayama2013Validation` — Pt/YIG SMR angular scan + ratio vs PRL 110, 206601 (2013)
+- `Avci2015Validation` — Pt/Co USMR current linearity + coefficient vs Nat. Phys. 11, 570 (2015)
+- `Woo2016Validation` — skyrmion diameter in Pt/CoFeB/MgO vs Nat. Mater. 15, 501 (2016)
+- `Cornelissen2015Validation` — long-distance nonlocal magnon transport in YIG, λ_m=9.4 μm vs Nat. Phys. 11, 1022 (2015)
+
+#### Property-Based Testing Phase 2 (`tests/property_physics.rs`)
+- 15 property tests × 32 cases = 480 randomized trials: SMR m-symmetry and Hall antisymmetry, USMR odd-in-m + current-linearity, STNO norm conservation under STT + Slonczewski torque perpendicularity, AC pumping backflow inequality + sin²(θ) scaling
+
+### Test Counts
+- **Library tests**: 1689 / 1689 passing (was 1463 in v0.3.1; +226 new)
+- **Integration property tests**: 42 / 42 passing (12 conservation + 15 symmetries + 15 physics × 32 cases each)
+- **Doctests**: 109 / 109 passing (5 ignored)
+- **Zero clippy warnings** with `-D warnings` on `--all-targets` and full feature set
+- **6 new examples** (total 62): `smr_angular_scan`, `stno_auto_oscillation`, `ac_spin_pumping_battery`, `rl_sot_switching`, `diffusion_skyrmion_gen` (autodiff), `variational_magnon_nn` (autodiff)
+
 ## [0.9.0] - 2026-05-17
 
 ### Added

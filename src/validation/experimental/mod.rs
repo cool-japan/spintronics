@@ -28,15 +28,27 @@
 //! | [`mosendz_2010`] | Quantitative spin pumping in Py/Pt | PRL **104**, 046601 | 2010 |
 //! | [`liu_2012`] | SOT switching with β-Ta in Ta/CoFeB/MgO | Science **336**, 555 | 2012 |
 //! | [`garello_2013`] | Quantitative SOT decomposition in Pt/Co/AlO_x | Nat. Nanotechnol. **8**, 587 | 2013 |
+//! | [`nakayama_2013`] | SMR in YIG/Pt | Phys. Rev. Lett. **110**, 206601 | 2013 |
 //! | [`boona_2014`] | LSSE in granular YIG/Pt | MRS Bulletin **39**, 426 | 2014 |
+//! | [`avci_2015`] | Unidirectional SMR in Pt/Co | Nat. Phys. **11**, 570 | 2015 |
+//! | [`cornelissen_2015`] | Nonlocal magnon spin transport in YIG/Pt | Nat. Phys. **11**, 1022 | 2015 |
+//! | [`woo_2016`] | Room-temperature skyrmions in Pt/CoFeB multilayers | Nat. Mater. **15**, 501 | 2016 |
+//! | [`nogues_1999`] | Exchange bias thickness/training/temperature | J. Magn. Magn. Mater. **192**, 203 | 1999 |
+//! | [`miron_2011`] | SOT-driven DW motion in Pt/Co/AlOx | Nature **476**, 189 | 2011 |
 
+pub mod avci_2015;
 pub mod boona_2014;
+pub mod cornelissen_2015;
 pub mod demidov_2006;
 pub mod garello_2013;
 pub mod liu_2012;
+pub mod miron_2011;
 pub mod mosendz_2010;
+pub mod nakayama_2013;
+pub mod nogues_1999;
 pub mod saitoh_2006;
 pub mod uchida_2008;
+pub mod woo_2016;
 
 /// Generic result of an experimental validation: relative-error metrics + pass flag.
 ///

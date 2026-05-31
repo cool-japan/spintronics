@@ -24,6 +24,12 @@ pub use crate::autodiff::{
     AcquisitionStrategy, BayesianOptConfig, BayesianOptResult, BayesianOptimizer, GaussianProcess,
     GpConfig, GraphMessagePassingLayer, GraphMlp, LatticeGraph, NodeFeatures,
 };
+// ML Phase 5 (v0.4.0): diffusion model + quantum-classical hybrid
+#[cfg(feature = "autodiff")]
+pub use crate::autodiff::{
+    DiffusionLcg, DiffusionModel, MagnonHamiltonianParams, MagnonNeuralNetwork, NoiseSchedule,
+    QuantumClassicalOptimizer, QuantumClassicalResult, SpinTexture,
+};
 // ML autodiff (v0.6.0)
 #[cfg(feature = "autodiff")]
 pub use crate::autodiff::{Adam, FitResult, LBfgs, OptimizerKind, ParameterFitter, Sgd, Tape, Var};
@@ -76,9 +82,13 @@ pub use crate::dynamics::integrators::{
 };
 // Dynamics
 pub use crate::dynamics::{calc_dm_dt, LlbMaterial, LlbResult, LlbSolver, LlgSolver};
-// Effects
+// Effects (v0.4.0 adds SMR, USMR, STNO; v0.5.0 adds optical switching; v0.6.0 adds exchange bias)
+pub use crate::effect::exchange_bias::{ExchangeBias, LoopShiftResult};
 pub use crate::effect::{
-    InverseSpinHall, RashbaSystem, SpinNernst, SpinOrbitTorque, SpinSeebeck, TopologicalHall,
+    CircularHelicity, InverseSpinHall, LaserPulseParams, OpticalMagneticMaterial,
+    OpticalSwitchResult, OpticalSwitching, RashbaSystem, SpinHallMagnetoresistance, SpinNernst,
+    SpinOrbitTorque, SpinSeebeck, SpinTorqueOscillator, SpinTorqueOscillatorConfig,
+    TopologicalHall, UnidirectionalSmr,
 };
 // Core types
 pub use crate::error::{Error, Result};
@@ -164,6 +174,8 @@ pub use crate::texture::{
     calculate_skyrmion_number, Chirality, DmiParameters, DmiType, DomainWall, Helicity, Skyrmion,
     SkyrmionLattice, TopologicalCharge, WallType,
 };
+// Domain wall dynamics (v0.3.1)
+pub use crate::texture::dw_dynamics::{DwMaterial, DwSotDynamics, DwSttDynamics, WalkerBreakdown};
 // Hopfion dynamics
 pub use crate::texture::{HopfionDynamicsConfig, HopfionDynamicsResult, HopfionDynamicsSolver};
 // Thermal effects
@@ -180,8 +192,8 @@ pub use crate::topomagnon::{
     BerryCurvature, ChernNumber, EdgeMode, EdgeModes, EdgeSide, KaneMeleModel, MagnonBandModel,
     MagnonHallConductivity,
 };
-// Transport
-pub use crate::transport::{spin_pumping_current, SpinDiffusion};
+// Transport (v0.4.0 adds AC spin pumping + spin battery)
+pub use crate::transport::{spin_pumping_current, AcSpinPumping, SpinBattery, SpinDiffusion};
 // Unit validation utilities
 pub use crate::units::{
     is_valid_current_density, is_valid_damping, is_valid_dmi_constant, is_valid_energy,
@@ -189,6 +201,9 @@ pub use crate::units::{
     is_valid_magnetization, is_valid_resistivity, is_valid_spin_diffusion_length,
     is_valid_spin_hall_angle, is_valid_temperature, is_valid_thickness, is_valid_voltage,
 };
+// Experimental validations (v0.4.0 SMR/USMR)
+pub use crate::validation::experimental::avci_2015::Avci2015Validation;
+pub use crate::validation::experimental::nakayama_2013::Nakayama2013Validation;
 // More experimental validations (v0.9.0)
 pub use crate::validation::experimental::boona_2014::Boona2014Validation;
 // Experimental validation (v0.7.0)
@@ -199,7 +214,27 @@ pub use crate::validation::experimental::liu_2012::Liu2012Validation;
 pub use crate::validation::experimental::mosendz_2010::Mosendz2010Validation;
 pub use crate::validation::experimental::saitoh_2006::Saitoh2006Validation;
 pub use crate::validation::experimental::uchida_2008::Uchida2008Validation;
+// Experimental validations (v0.5.0 skyrmions + magnon transport)
+pub use crate::validation::experimental::cornelissen_2015::Cornelissen2015Validation;
+pub use crate::validation::experimental::woo_2016::Woo2016Validation;
+// Experimental validations (v0.6.0 exchange bias)
+pub use crate::validation::experimental::nogues_1999::Nogues1999Validation;
+// Experimental validations (v0.3.1 SOT DW dynamics)
+pub use crate::validation::experimental::miron_2011::Miron2011Validation;
 pub use crate::validation::experimental::ValidationResult as ExperimentalValidationResult;
+// Micromagnetics: Newell demag + FD grid + NIST standard problems (v0.4.0)
+pub use crate::micromagnetics::{
+    DemagField, GridConfig, LlgResult, MicromagneticGrid, NewellTensor,
+};
+pub use crate::validation::standard_problems::{
+    Sp3Config, Sp3Result, StableState, StandardProblem3,
+};
+// SAW magnetoacoustics (v0.5.0)
+pub use crate::mech::{PiezoSubstrate, SawMagnetoacoustics, SawMagnetoelastic, SawSource};
+// AI / neuromorphic computing (v0.4.0)
+pub use crate::ai::{
+    CemPolicy, MagnonReservoir, SotRlOptimizer, SotRlResult, SotSwitchingConfig, SotSwitchingEnv,
+};
 pub use crate::vector3::Vector3;
 // Data export formats (v0.6.0)
 #[cfg(feature = "netcdf")]

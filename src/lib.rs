@@ -204,6 +204,7 @@ pub mod magnon;
 pub mod material;
 pub mod mech;
 pub mod memory;
+pub mod micromagnetics;
 pub mod multiferroic;
 
 #[cfg(feature = "parallel")]

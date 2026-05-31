@@ -197,6 +197,32 @@ path = "examples/validation_full_suite.rs"
 name = "gpu_device_demo"
 path = "examples/gpu_device_demo.rs"
 
+[[example]]
+name = "smr_angular_scan"
+path = "examples/smr_angular_scan.rs"
+
+[[example]]
+name = "stno_auto_oscillation"
+path = "examples/stno_auto_oscillation.rs"
+
+[[example]]
+name = "ac_spin_pumping_battery"
+path = "examples/ac_spin_pumping_battery.rs"
+
+[[example]]
+name = "rl_sot_switching"
+path = "examples/rl_sot_switching.rs"
+
+[[example]]
+name = "diffusion_skyrmion_gen"
+path = "examples/diffusion_skyrmion_gen.rs"
+required-features = ["autodiff"]
+
+[[example]]
+name = "variational_magnon_nn"
+path = "examples/variational_magnon_nn.rs"
+required-features = ["autodiff"]
+
 [[bench]]
 name = "llg_benchmark"
 harness = false
@@ -213,7 +239,7 @@ harness = false
 members = ["demo", "py"]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.5.0"
 edition = "2021"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
 license = "MIT OR Apache-2.0"

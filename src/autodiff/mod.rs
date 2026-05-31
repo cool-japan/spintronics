@@ -70,12 +70,14 @@
 
 pub mod active_learning;
 pub mod bayesian_opt;
+pub mod diffusion_model;
 pub mod equivariant;
 pub mod graph_nn;
 pub mod neural;
 pub mod optimizer;
 pub mod physics_fns;
 pub mod pinn;
+pub mod quantum_classical;
 pub mod structure_opt;
 pub mod tape;
 
@@ -102,3 +104,8 @@ pub use structure_opt::{
     SpinConfig, StructureOptResult,
 };
 pub use tape::{check_gradient, finite_diff_grad, Tape, Var};
+// ML Phase 5 (v0.4.0)
+pub use diffusion_model::{DiffusionModel, Lcg as DiffusionLcg, NoiseSchedule, SpinTexture};
+pub use quantum_classical::{
+    MagnonHamiltonianParams, MagnonNeuralNetwork, QuantumClassicalOptimizer, QuantumClassicalResult,
+};

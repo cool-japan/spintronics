@@ -36,6 +36,7 @@
 
 pub mod experimental;
 pub mod parameter_checks;
+pub mod standard_problems;
 
 // Backward-compatibility re-export: every `check_*` (and any other public item)
 // from `parameter_checks` is reachable directly from `crate::validation::*`.

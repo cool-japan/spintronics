@@ -66,5 +66,7 @@
 //! Based on research by Prof. Eiji Saitoh's group on spin-wave-based neuromorphic computing.
 
 pub mod reservoir;
+pub mod rl;
 
 pub use reservoir::MagnonReservoir;
+pub use rl::{CemPolicy, Lcg, SotRlOptimizer, SotRlResult, SotSwitchingConfig, SotSwitchingEnv};

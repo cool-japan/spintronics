@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.9.0 COMPLETE
-**Last Updated**: 2026-05-17 - v0.9.0 released
-**Status**: 1463 lib + 27 proptest + 103 doctests passing, ~80K lines (Rust code: ~67K+)
+**Version**: 0.5.0 COMPLETE
+**Last Updated**: 2026-05-31 - v0.5.0 released
+**Status**: 1689 lib + 42 proptest + 109 doctests passing, ~95K lines (Rust code: ~80K+)
 
 ---
 
@@ -394,6 +394,51 @@
 - [x] `bayesian_opt_materials.rs` — BO converges within 0.026 of true optimum in 20 evals
 - [x] `validation_full_suite.rs` — 18/23 checks across 7 landmark papers
 - [x] `gpu_device_demo.rs` — 100 spins × 200 steps in 1.8 ms; scaling sweep
+
+---
+
+## v0.5.0 - COMPLETE (2026-05-31)
+
+**Released**: 2026-05-31
+**Theme**: SMR/STNO/AOS/SAW Physics, ML Phase 5, RL, Micromagnetics, New Validations
+**Tests**: 1689 lib + 42 proptest + 109 doctests passing, 0 failures, 0 warnings
+**Code Size**: ~95K total lines (~80K Rust code)
+
+### New Physics Effect Modules
+- [x] `SpinHallMagnetoresistance`, `UnidirectionalSmr` — SMR/USMR with Chen (PRB 2013) formula, angular scans, Pt/YIG & W/YIG & Pt/Co presets (`src/effect/smr.rs`)
+- [x] `SpinTorqueOscillator`, `SpinTorqueOscillatorConfig` — Slonczewski STT auto-oscillation, threshold current, Slavin–Tiberkevich linewidth, Adler locking, Permalloy preset (`src/effect/stno.rs`)
+- [x] `CircularHelicity`, `LaserPulseParams`, `OpticalMagneticMaterial`, `OpticalSwitching`, `OpticalSwitchResult` — Inverse Faraday Effect, HDS, ultrafast demag model; GdFeCo, Co, Py presets (`src/effect/optical_switching.rs`)
+- [x] `AcSpinPumping`, `SpinBattery` — backflow-corrected G_r_eff; DC/2ω spin current at FMR; Δα enhancement; ISHE voltage; YIG/Pt preset (`src/transport/ac_pumping.rs`)
+- [x] `PiezoSubstrate`, `SawMagnetoelastic`, `SawSource`, `SawMagnetoacoustics`, `SawSpinWaveExcitation` — SAW magnetoacoustics; resonant precession (Lorentzian); acoustic spin pumping; LiNbO₃/GaAs/ZnO presets (`src/mech/saw.rs`)
+
+### ML Phase 5 (`#[cfg(feature = "autodiff")]`)
+- [x] `DiffusionModel`, `NoiseSchedule`, `SpinTexture` — DDPM with 2-layer MLP denoiser + manual backprop; Adam training; reverse diffusion; topological charge validation (`src/autodiff/diffusion_model.rs`)
+- [x] `QuantumClassicalOptimizer`, `MagnonNeuralNetwork`, `MagnonHamiltonianParams`, `QuantumClassicalResult` — MLP → Bogoliubov (A_k, B_k) → ε_k = √(A_k²−B_k²); central FD gradients; Adam training (`src/autodiff/quantum_classical.rs`)
+
+### RL for SOT Switching
+- [x] `SotSwitchingEnv`, `CemPolicy`, `SotRlOptimizer`, `SotRlResult`, `SotSwitchingConfig` — PMA macrospin LLG+SOT environment; CEM for pulse optimization; CoFeB/Pt preset (`src/ai/rl.rs`)
+
+### Micromagnetics Infrastructure
+- [x] `NewellTensor`, `DemagField` — analytic Newell (1993) demag; 8-corner f-function; direct O(N²) convolution (`src/micromagnetics/demag.rs`)
+- [x] `MicromagneticGrid`, `GridConfig`, `LlgResult` — FD exchange + demag + Zeeman + anisotropy; per-cell LLG RK4 (`src/micromagnetics/grid.rs`)
+- [x] `StandardProblem3`, `Sp3Config`, `Sp3Result`, `StableState` — muMAG SP#3 flower↔vortex energy comparison (`src/validation/standard_problems/sp3.rs`)
+
+### Experimental Validations (total: 11 papers)
+- [x] `Nakayama2013Validation` — Pt/YIG SMR angular scan + ratio vs PRL 110, 206601 (2013) (`src/validation/experimental/nakayama_2013.rs`)
+- [x] `Avci2015Validation` — Pt/Co USMR current linearity + coefficient vs Nat. Phys. 11, 570 (2015) (`src/validation/experimental/avci_2015.rs`)
+- [x] `Woo2016Validation` — skyrmion diameter in Pt/CoFeB/MgO vs Nat. Mater. 15, 501 (2016) (`src/validation/experimental/woo_2016.rs`)
+- [x] `Cornelissen2015Validation` — nonlocal magnon transport, λ_m=9.4 μm vs Nat. Phys. 11, 1022 (2015) (`src/validation/experimental/cornelissen_2015.rs`)
+
+### Property-Based Testing Phase 2
+- [x] `tests/property_physics.rs` — 15 property tests × 32 cases = 480 trials: SMR symmetries, USMR antisymmetry, STNO norm conservation + torque perpendicularity, AC pumping inequalities
+
+### Examples (6 new, total 62)
+- [x] `smr_angular_scan.rs` — SMR angular scan + USMR + Nakayama/Avci validations
+- [x] `stno_auto_oscillation.rs` — STNO auto-oscillation, linewidth, injection locking
+- [x] `ac_spin_pumping_battery.rs` — YIG/Pt spin pumping DC/2ω + ISHE voltage
+- [x] `rl_sot_switching.rs` — CEM RL agent for SOT pulse protocol
+- [x] `diffusion_skyrmion_gen.rs` — DDPM training + topological charge (autodiff)
+- [x] `variational_magnon_nn.rs` — quantum-classical hybrid NN (autodiff)
 
 ---
 
