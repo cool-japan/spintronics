@@ -103,12 +103,15 @@ impl DwMaterial {
 
     /// Co/Pt PMA multilayer — perpendicular magnetic anisotropy stack.
     ///
-    /// Representative parameters for a Pt(3nm)/Co(1nm)/Pt(3nm) tri-layer:
+    /// Representative parameters for a Pt(3nm)/Co(1nm)/Pt(3nm) tri-layer.
+    /// `K_u` is the total effective uniaxial anisotropy combining interfacial
+    /// PMA (from Pt/Co interfaces) with bulk contributions; it must exceed
+    /// `μ₀ M_s²/2 ≈ 0.76 MJ/m³` to give `K_eff > 0` (PMA condition).
     ///
     /// | Parameter | Value |
     /// |---|---|
     /// | `A` | 1.5 × 10⁻¹¹ J/m |
-    /// | `K_u` | 6 × 10⁵ J/m³ |
+    /// | `K_u` | 1.5 × 10⁶ J/m³ |
     /// | `M_s` | 1.1 MA/m |
     /// | `α` | 0.10 |
     /// | `P` | 0.50 |
@@ -119,7 +122,7 @@ impl DwMaterial {
         Self {
             name: "Co/Pt PMA",
             exchange_a: 1.5e-11,
-            anisotropy_k: 6.0e5,
+            anisotropy_k: 1.5e6,
             ms: 1.1e6,
             alpha: 0.10,
             thickness: 1.0e-9,
@@ -131,12 +134,15 @@ impl DwMaterial {
 
     /// CoFeB/MgO PMA interface — reference system for tunnel-junction devices.
     ///
-    /// Parameters representative of Ta(5nm)/CoFeB(1.5nm)/MgO(2nm):
+    /// Parameters representative of Ta(5nm)/CoFeB(1.5nm)/MgO(2nm).
+    /// `K_u = 1.0 MJ/m³` represents the total uniaxial anisotropy including the
+    /// interfacial PMA from the CoFeB/MgO interface (which must overcome
+    /// `μ₀ M_s²/2 ≈ 0.76 MJ/m³` to achieve perpendicular orientation).
     ///
     /// | Parameter | Value |
     /// |---|---|
     /// | `A` | 2.0 × 10⁻¹¹ J/m |
-    /// | `K_u` | 3 × 10⁵ J/m³ |
+    /// | `K_u` | 1.0 × 10⁶ J/m³ |
     /// | `M_s` | 1.1 MA/m |
     /// | `α` | 0.01 |
     /// | `P` | 0.65 |
@@ -147,7 +153,7 @@ impl DwMaterial {
         Self {
             name: "CoFeB/MgO PMA",
             exchange_a: 2.0e-11,
-            anisotropy_k: 3.0e5,
+            anisotropy_k: 1.0e6,
             ms: 1.1e6,
             alpha: 0.01,
             thickness: 1.5e-9,
@@ -641,7 +647,8 @@ impl DwSotDynamics {
     pub fn velocity_curve(&self, j_min: f64, j_max: f64, n_points: usize) -> Vec<(f64, f64)> {
         let n = n_points.max(2);
         let j_w = self.walker_current_density();
-        let v_w = GAMMA * self.dw_width() * self.walker_threshold_field() / self.material.alpha;
+        let v_w =
+            GAMMA * self.dw_width() * MU_0 * self.walker_threshold_field() / self.material.alpha;
         (0..n)
             .map(|i| {
                 let j = j_min + (j_max - j_min) * (i as f64) / ((n - 1) as f64);
@@ -759,13 +766,15 @@ mod tests {
     }
 
     #[test]
-    fn test_walker_velocity_co_pt_10_to_1000_ms() {
-        // For Co/Pt: v_W = γ Δ μ₀ Ms/2 should be in 10–1000 m/s range
+    fn test_walker_velocity_co_pt_physical_range() {
+        // For Co/Pt with K_u = 1.5 MJ/m³: Δ ≈ 14 nm, μ₀ Ms/2 ≈ 0.69 T
+        // v_W = γ Δ μ₀ Ms/2 ≈ 1.76e11 × 14e-9 × 0.69 ≈ 1700 m/s
+        // High-K_u PMA materials have Walker velocities in the 100–3000 m/s range.
         let wb = WalkerBreakdown::new(DwMaterial::co_pt_pma());
         let v_w = wb.walker_velocity();
         assert!(
-            v_w > 10.0 && v_w < 1000.0,
-            "Co/Pt Walker velocity should be 10–1000 m/s, got {:.2} m/s",
+            v_w > 10.0 && v_w < 5000.0,
+            "Co/Pt Walker velocity should be 10–5000 m/s, got {:.2} m/s",
             v_w
         );
     }
@@ -884,11 +893,12 @@ mod tests {
     #[test]
     fn test_stt_velocity_agrees_with_adiabatic_at_small_alpha_beta() {
         // When α ≈ β ≈ 0 the full velocity should equal v_s
-        // Use a material with very small α and β:
+        // Use a PMA material with very small α and β:
+        // K_u = 1.5e6 > μ₀ Ms²/2 ≈ 0.76e6 ensures K_eff > 0.
         let mat = DwMaterial {
             name: "test",
             exchange_a: 1.5e-11,
-            anisotropy_k: 6.0e5,
+            anisotropy_k: 1.5e6,
             ms: 1.1e6,
             alpha: 1.0e-4,
             thickness: 1.0e-9,
