@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.3.1
-**Last Updated**: 2026-06-10 - v0.3.1 released
-**Status**: 1829 lib + 111 doc tests passing, ~95K lines (Rust code: ~80K+)
+**Version**: 0.3.2
+**Last Updated**: 2026-06-10 - v0.3.2 in development
+**Status**: 1846 tests passing (workspace), ~95K lines (Rust code: ~80K+)
 
 ---
 
@@ -615,6 +615,7 @@
 | v0.2.0 | Dec 2025 | Python Bindings, HDF5, Memory Optimization | COMPLETE |
 | v0.3.0 | 2026-03-13 | Advanced Physics, Performance, Simulation Infrastructure | COMPLETE |
 | v0.3.1 | 2026-06-10 | DemagField optimization, hamiltonian_at Result, scirs2 0.5.0 | COMPLETE |
+| v0.3.2 | TBD | In development | IN PROGRESS |
 | v0.4.0 | Q4 2026 | Research Features, ML, Ecosystem Expansion | Planned |
 | v1.0.0 | 2027 | API Stabilization, Production-Grade | Planned |
 

@@ -1,6 +1,6 @@
 //! # spintronics
 //!
-//! **Version 0.3.1** - DemagField optimizations, doc/link cleanup,
+//! **Version 0.3.2** - DemagField optimizations, doc/link cleanup,
 //! Garello 2013 + Boona 2014 validations, GPU device abstraction (CPU + CUDA stub),
 //! 7 landmark-paper validation suite
 //!
@@ -28,7 +28,7 @@
 //! - **Spin Nernst Effect**: Thermal gradient → transverse spin current
 //!
 //! ### Key Features
-//! - ✅ **1829 lib + 111 doctests passing** (v0.3.1)
+//! - ✅ **1829 lib + 111 doctests passing** (v0.3.2)
 //! - ✅ **ML Phase 4** - Graph NN message-passing potentials (equivariant aggregation over arbitrary lattice topology), Bayesian optimization with Gaussian Process surrogate + Expected Improvement (v0.9.0)
 //! - ✅ **GPU device abstraction** - `Device` trait with CPU baseline (`CpuDevice`) + CUDA skeleton (`CudaDevice`, feature-gated, ~92 ns/spin/step on CPU) (v0.9.0)
 //! - ✅ **7 landmark-paper validations** - Demidov 2006, Saitoh 2006, Uchida 2008, Mosendz 2010, Liu 2012, Garello 2013, Boona 2014 with quantitative pass/fail metrics (v0.7.0–v0.9.0)

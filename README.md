@@ -26,9 +26,9 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📊 Development Status
 
-**Current Version**: 0.3.1 ✅ **PRODUCTION READY**
+**Current Version**: 0.3.2 🚧 **IN DEVELOPMENT** (latest release: 0.3.1)
 
-**Latest Release**: June 2026 (2026-06-10)
+**Latest Release**: 0.3.1 — June 2026 (2026-06-10)
 
 ### Version 0.3.1 Highlights
 - ✅ **DemagField Performance**: Direct flat kernel indexing + optional rayon parallelism for demag computation
@@ -42,7 +42,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Unit Validation**: Runtime checks for physical quantity sanity
 - ✅ **Performance**: SIMD-accelerated spin operations and parallel lattice evolution
 - ✅ **25 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
-- ✅ **1829 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
+- ✅ **1846 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
 
 ### Core Capabilities
 - ✅ **32 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
@@ -51,7 +51,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
 - ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
-- ✅ **Production Quality**: Zero warnings, 1829 tests passing
+- ✅ **Production Quality**: Zero warnings, 1846 tests passing
 
 ## ✨ Key Features
 
@@ -215,14 +215,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spintronics = "0.3.1"
+spintronics = "0.3.2"
 ```
 
 ### Optional Features
 
 ```toml
 [dependencies]
-spintronics = { version = "0.3.1", features = ["python", "hdf5", "serde"] }
+spintronics = { version = "0.3.2", features = ["python", "hdf5", "serde"] }
 ```
 
 Available features:
@@ -350,7 +350,7 @@ cargo test        # Unit tests
 
 ### Test Coverage
 
-**Total: 1829 lib + 111 doc tests passing**
+**Total: 1846 tests passing** (workspace)
 - ✅ **Unit Tests**: Core physics calculations
 - ✅ **Doc Tests**: Documentation examples
 - ✅ **Integration Tests**: Multi-module physics workflows
@@ -670,6 +670,11 @@ See `wasm-demo/` directory for complete interactive examples.
 
 **Quality**
 - ✅ 1829 lib + 111 doc tests passing, 0 warnings
+
+### Version 0.3.2 🚧 **IN DEVELOPMENT**
+
+**Quality & Maintenance**
+- 🔄 In development — contributions welcome
 
 ### Version 0.4.0+ (Future Enhancements)
 
