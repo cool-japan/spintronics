@@ -397,7 +397,11 @@ mod tests {
     #[test]
     fn test_large_cube_vortex_stable() {
         let cfg = Sp3Config {
-            relax_steps: 100,
+            // Finiteness / internal-consistency smoke test (it does NOT assert the
+            // flower↔vortex physics ordering), so a short high-damping relaxation on
+            // the full ~13³ grid is sufficient; 25 steps keeps the test well under the
+            // runner's slow-test threshold on the O(N²) demag path.
+            relax_steps: 25,
             ..Sp3Config::default()
         };
 
@@ -407,12 +411,13 @@ mod tests {
         let l = 14.0 * lex;
         let result = sp3.run_for_l(l).expect("SP3 run should succeed");
 
-        // With a coarse grid (≤ 4 cells per edge) and the point-dipole approximation
-        // for non-self demag cells, the quantitative flower↔vortex crossover is not
-        // captured accurately. The test therefore only checks that:
-        // 1. The simulation ran without error (guaranteed by `expect` above)
-        // 2. Both energies are finite and positive (physical sanity)
-        // 3. `stable_state` reflects whichever energy is actually lower
+        // The cube is L = 14·l_ex (~80 nm) on a ~13×13×13 finite-difference grid using
+        // the exact Newell demagnetization tensor. Because this is a coarse
+        // discretization (cell size ≈ l_ex), the quantitative flower↔vortex crossover
+        // is not captured exactly. The test therefore only verifies that:
+        // 1. The solver runs without error (guaranteed by `expect` above)
+        // 2. Both relaxed energies are finite
+        // 3. `stable_state` is consistent with whichever energy is lower
         assert!(
             result.flower_energy.is_finite(),
             "flower energy must be finite"

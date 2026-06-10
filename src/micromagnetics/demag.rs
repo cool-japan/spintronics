@@ -525,41 +525,66 @@ impl DemagField {
             return vec![Vector3::zero(); n_cells];
         }
 
-        let mut h_demag = vec![Vector3::zero(); n_cells];
+        // Kernel array dimensions (see `NewellTensor::flat_index`):
+        //   lu = 2·nx − 1, lv = 2·ny − 1, lw = 2·nz − 1.
+        // For any target index ix ∈ [0, nx) and source jx ∈ [0, nx) the offset
+        // du = ix − jx is guaranteed to lie within [−(nx−1), nx−1] — exactly the
+        // range the kernel arrays store — so `flat_index` could never return None
+        // inside this convolution. We therefore index `tensor.n_xx/n_yy/n_zz`
+        // directly: no Option, no bounds-branch. The (jz, jy, jx) summation order
+        // and per-component accumulation are kept identical to the original
+        // brute-force loop, so the floating-point result is bit-for-bit unchanged.
+        let lu = 2 * nx - 1;
+        let lv = 2 * ny - 1;
 
-        for iz in 0..nz {
-            for iy in 0..ny {
-                for ix in 0..nx {
-                    let tgt = iz * ny * nx + iy * nx + ix;
-                    let mut hx = 0.0_f64;
-                    let mut hy = 0.0_f64;
-                    let mut hz = 0.0_f64;
+        // Compute H_demag for a single target cell whose linear index follows the
+        // same ordering as the input: tgt = iz·ny·nx + iy·nx + ix.
+        let compute_target = |tgt: usize| -> Vector3<f64> {
+            let iz = tgt / (ny * nx);
+            let rem = tgt % (ny * nx);
+            let iy = rem / nx;
+            let ix = rem % nx;
 
-                    for jz in 0..nz {
-                        for jy in 0..ny {
-                            for jx in 0..nx {
-                                let src = jz * ny * nx + jy * nx + jx;
-                                let m_src = magnetization[src];
+            // u_idx = du + (nx−1) = u_base − jx; with min u_base = nx−1 and
+            // max jx = nx−1 this is always ≥ 0, so usize arithmetic never wraps.
+            let u_base = ix + (nx - 1);
 
-                                let du = ix as i64 - jx as i64;
-                                let dv = iy as i64 - jy as i64;
-                                let dw = iz as i64 - jz as i64;
+            let mut hx = 0.0_f64;
+            let mut hy = 0.0_f64;
+            let mut hz = 0.0_f64;
 
-                                // Diagonal demag: H_α = −N_αα × M_α
-                                // Off-diagonal N_αβ (α≠β) are zero.
-                                hx -= self.tensor.get_n_xx(du, dv, dw) * m_src.x;
-                                hy -= self.tensor.get_n_yy(du, dv, dw) * m_src.y;
-                                hz -= self.tensor.get_n_zz(du, dv, dw) * m_src.z;
-                            }
-                        }
+            for jz in 0..nz {
+                // w_idx = dw + (nz−1) = (iz − jz) + (nz−1); always in [0, lw).
+                let w_idx = iz + (nz - 1) - jz;
+                for jy in 0..ny {
+                    let v_idx = iy + (ny - 1) - jy;
+                    let row_base = (w_idx * lv + v_idx) * lu;
+                    let src_row = (jz * ny + jy) * nx;
+                    for jx in 0..nx {
+                        let kidx = row_base + (u_base - jx);
+                        let m_src = magnetization[src_row + jx];
+
+                        // Diagonal demag: H_α = −N_αα × M_α
+                        // Off-diagonal N_αβ (α≠β) are zero.
+                        hx -= self.tensor.n_xx[kidx] * m_src.x;
+                        hy -= self.tensor.n_yy[kidx] * m_src.y;
+                        hz -= self.tensor.n_zz[kidx] * m_src.z;
                     }
-
-                    h_demag[tgt] = Vector3::new(hx, hy, hz);
                 }
             }
-        }
 
-        h_demag
+            Vector3::new(hx, hy, hz)
+        };
+
+        #[cfg(feature = "parallel")]
+        {
+            use rayon::prelude::*;
+            (0..n_cells).into_par_iter().map(compute_target).collect()
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            (0..n_cells).map(compute_target).collect()
+        }
     }
 }
 
@@ -685,5 +710,87 @@ mod tests {
             trace_err < 1e-6,
             "Asymmetric cell trace error {trace_err:.2e} exceeds 1e-6"
         );
+    }
+
+    /// The optimized `DemagField::compute` (direct kernel indexing, optional
+    /// rayon parallelism) must reproduce the original brute-force O(N²)
+    /// convolution to the last bit. A deliberately NON-cubic grid (nx≠ny≠nz,
+    /// dx≠dy≠dz) is used so any kernel-layout / stride bug would surface.
+    /// The reference loop below mirrors the pre-optimization implementation
+    /// exactly: Option-returning getters and jz→jy→jx summation order.
+    #[test]
+    fn test_compute_matches_reference_bruteforce() {
+        let dx = 4e-9;
+        let dy = 5e-9;
+        let dz = 6e-9;
+        let nx = 3;
+        let ny = 4;
+        let nz = 2;
+
+        let tensor =
+            NewellTensor::new(dx, dy, dz, nx, ny, nz).expect("tensor construction should succeed");
+        let n = tensor.n_cells();
+
+        // Deterministic, varied, non-trivial magnetization (no randomness): each
+        // component is a distinct trig function of the cell index so no two cells
+        // share a value and all three axes differ.
+        let mut mag: Vec<Vector3<f64>> = Vec::with_capacity(n);
+        for idx in 0..n {
+            let t = idx as f64;
+            mag.push(Vector3::new(
+                (0.7 * t + 0.3).sin() * 8.0e5,
+                (0.4 * t - 1.1).cos() * 5.0e5,
+                ((t + 1.0) * 0.13).sin() * 6.0e5,
+            ));
+        }
+
+        let h_fast = DemagField::new(tensor.clone()).compute(&mag);
+
+        // Brute-force reference: byte-for-byte the original O(N²) algorithm.
+        let mut h_ref = vec![Vector3::zero(); n];
+        for iz in 0..nz {
+            for iy in 0..ny {
+                for ix in 0..nx {
+                    let tgt = iz * ny * nx + iy * nx + ix;
+                    let mut hx = 0.0_f64;
+                    let mut hy = 0.0_f64;
+                    let mut hz = 0.0_f64;
+                    for jz in 0..nz {
+                        for jy in 0..ny {
+                            for jx in 0..nx {
+                                let src = jz * ny * nx + jy * nx + jx;
+                                let m_src = mag[src];
+                                let du = ix as i64 - jx as i64;
+                                let dv = iy as i64 - jy as i64;
+                                let dw = iz as i64 - jz as i64;
+                                hx -= tensor.get_n_xx(du, dv, dw) * m_src.x;
+                                hy -= tensor.get_n_yy(du, dv, dw) * m_src.y;
+                                hz -= tensor.get_n_zz(du, dv, dw) * m_src.z;
+                            }
+                        }
+                    }
+                    h_ref[tgt] = Vector3::new(hx, hy, hz);
+                }
+            }
+        }
+
+        assert_eq!(h_fast.len(), h_ref.len(), "output length mismatch");
+
+        // Combined absolute + relative tolerance; results should in fact be
+        // bit-identical, so this passes with enormous margin.
+        let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 + 1e-9 * b.abs();
+        for (i, (fast, refv)) in h_fast.iter().zip(h_ref.iter()).enumerate() {
+            assert!(
+                close(fast.x, refv.x) && close(fast.y, refv.y) && close(fast.z, refv.z),
+                "Cell {i}: optimized H = ({:.6e}, {:.6e}, {:.6e}) \
+                 differs from brute-force reference ({:.6e}, {:.6e}, {:.6e})",
+                fast.x,
+                fast.y,
+                fast.z,
+                refv.x,
+                refv.y,
+                refv.z
+            );
+        }
     }
 }
