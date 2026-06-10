@@ -26,7 +26,7 @@ use crate::math::Complex;
 /// Dense N×N complex matrix stored in row-major order.
 #[derive(Debug, Clone)]
 pub struct CMatrix {
-    /// Row-major flat storage: data[i*n + j] = M[i][j]
+    /// Row-major flat storage: data[i*n + j] = M\[i\]\[j\]
     data: Vec<Complex>,
     n: usize,
 }
@@ -87,26 +87,26 @@ impl CMatrix {
         self.n
     }
 
-    /// Get element M[i][j].
+    /// Get element M\[i\]\[j\].
     #[inline]
     pub fn get(&self, i: usize, j: usize) -> Complex {
         self.data[i * self.n + j]
     }
 
-    /// Set element M[i][j].
+    /// Set element M\[i\]\[j\].
     #[inline]
     pub fn set(&mut self, i: usize, j: usize, v: Complex) {
         self.data[i * self.n + j] = v;
     }
 
-    /// Add `v` to element M[i][j] in place.
+    /// Add `v` to element M\[i\]\[j\] in place.
     #[inline]
     fn add_to(&mut self, i: usize, j: usize, v: Complex) {
         let cur = self.get(i, j);
         self.set(i, j, cur.add(&v));
     }
 
-    /// Trace = Σ M[i][i].
+    /// Trace = Σ M\[i\]\[i\].
     pub fn trace(&self) -> Complex {
         let mut t = Complex::ZERO;
         for i in 0..self.n {
@@ -195,7 +195,7 @@ impl CMatrix {
         Ok(out)
     }
 
-    /// Frobenius norm √(Σ|M[i][j]|²).
+    /// Frobenius norm √(Σ|M\[i\]\[j\]|²).
     pub fn frobenius_norm(&self) -> f64 {
         self.data.iter().map(|c| c.norm_sq()).sum::<f64>().sqrt()
     }
@@ -325,7 +325,7 @@ impl CMatrix {
 /// Returns `(d, e, q)` where:
 /// - `d[0..n]` is the real diagonal of the tridiagonal form.
 /// - `e[0..n]` is the real sub-diagonal, Householder convention:
-///   `e[0]=0` (unused), `e[i]` connects `d[i-1]` to `d[i]` for `i=1..n-1`.
+///   `e\[0\]=0` (unused), `e[i]` connects `d[i-1]` to `d[i]` for `i=1..n-1`.
 /// - `q` is the unitary matrix such that `A = Q T Q†`.
 ///
 /// Algorithm: Golub & Van Loan §8.3, complex Hermitian variant.
@@ -502,8 +502,8 @@ fn hermitian_householder_tridiag(h: &CMatrix, n: usize) -> (Vec<f64>, Vec<f64>, 
 /// `e[n-1] = 0` (boundary). This is the NR-post-shift convention.
 ///
 /// The Householder function returns `e_h[]` where `e_h[i]` connects `d[i-1]` to `d[i]`
-/// (i.e. e_h[1..n-1] are the sub-diagonals, e_h[0]=0). The caller must shift:
-/// `e[i] = e_h[i+1]` for i=0..n-2, `e[n-1]=0`.
+/// (i.e. e_h[1..n-1] are the sub-diagonals, e_h\[0\]=0). The caller must shift:
+/// `e\[i\] = e_h[i+1]` for i=0..n-2, `e[n-1]=0`.
 fn tridiag_ql_in_place(
     d: &mut [f64],
     e: &mut [f64],

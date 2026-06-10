@@ -152,7 +152,7 @@ impl SpinChain {
     ///
     /// H_ex = (2 A_ex / (μ0 Ms)) ∇²m
     ///
-    /// Discretized: ∇²m ≈ (m[i+1] - 2m[i] + m[i-1]) / dx²
+    /// Discretized: ∇²m ≈ (m[i+1] - 2m\[i\] + m[i-1]) / dx²
     fn calc_exchange_field(&self, idx: usize) -> Vector3<f64> {
         let m_i = self.spins[idx];
 

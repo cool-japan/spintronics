@@ -134,7 +134,7 @@ impl SpinTorqueOscillatorConfig {
     ///
     /// # Errors
     ///
-    /// Returns [`Error::InvalidParameter`] if η is outside (0, 1), t_fm ≤ 0, or area ≤ 0.
+    /// Returns [`crate::error::Error::InvalidParameter`] if η is outside (0, 1), t_fm ≤ 0, or area ≤ 0.
     pub fn new(
         spin_polarization: f64,
         t_fm: f64,
@@ -316,7 +316,7 @@ impl SpinTorqueOscillator {
     /// directly to the effective-field contribution in the LLG equation.
     ///
     /// **Note:** The tensor `m × (m × p̂)` is automatically perpendicular to m̂,
-    /// which is verified by [`test_stt_perpendicular_to_m`].
+    /// which is verified by `test_stt_perpendicular_to_m`.
     ///
     /// # Arguments
     ///
@@ -487,7 +487,7 @@ impl SpinTorqueOscillator {
     ///
     /// # Arguments
     ///
-    /// * `trajectory` — output of [`simulate`]; must have ≥ 2 points.
+    /// * `trajectory` — output of [`Self::simulate`]; must have ≥ 2 points.
     /// * `dt` — time step used in simulation \[s\].
     ///
     /// # Returns
@@ -539,7 +539,7 @@ impl SpinTorqueOscillator {
     ///
     /// # Arguments
     ///
-    /// * `trajectory` — output of [`simulate`].
+    /// * `trajectory` — output of [`Self::simulate`].
     ///
     /// # Returns
     ///

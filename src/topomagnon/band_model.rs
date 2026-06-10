@@ -364,13 +364,13 @@ pub struct MagnonBandModel {
     pub lattice: LatticeType,
     /// Number of bands (sublattice sites per unit cell).
     pub n_bands: usize,
-    /// Nearest-neighbour exchange coupling [meV] (must be > 0).
+    /// Nearest-neighbour exchange coupling \[meV\] (must be > 0).
     pub j_nn: f64,
-    /// Next-nearest-neighbour exchange coupling [meV] (Haldane mass coefficient).
+    /// Next-nearest-neighbour exchange coupling \[meV\] (Haldane mass coefficient).
     pub j_nnn: f64,
-    /// DMI strength [meV] (same units as j_nn).
+    /// DMI strength \[meV\] (same units as j_nn).
     pub dmi: f64,
-    /// External Zeeman field [meV] (added to diagonal, breaks TRS).
+    /// External Zeeman field \[meV\] (added to diagonal, breaks TRS).
     pub h_ext: f64,
     /// Lattice constant \[m\] — used when converting to physical dispersion (SI).
     pub a_lattice: f64,

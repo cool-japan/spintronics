@@ -42,7 +42,7 @@ use crate::constants::{GAMMA, MU_0};
 /// - `GAMMA`: gyromagnetic ratio |γ| [rad/(s·T)]
 /// - `MU_0`: vacuum permeability [H/m]
 ///
-/// Returns angular frequency ω [rad/s].
+/// Returns angular frequency ω \[rad/s\].
 ///
 /// # Differentiability
 /// Gradients are available w.r.t. both `ms` and `h_ext` after `tape.backward`.
@@ -96,11 +96,11 @@ pub fn zeeman_energy_diff<'t>(
 ///
 /// where
 /// - `a_ex`: exchange stiffness constant [J/m], differentiable
-/// - `lattice_const`: lattice parameter `a` [m], constant
+/// - `lattice_const`: lattice parameter `a` \[m\], constant
 /// - `m₁ = (m1x, m1y, m1z)`, `m₂ = (m2x, m2y, m2z)`: unit-vector spin
 ///   directions, differentiable
 ///
-/// Returns energy [J] (assuming unit volume / bond).
+/// Returns energy \[J\] (assuming unit volume / bond).
 pub fn exchange_energy_diff<'t>(
     _tape: &'t Tape,
     m1x: Var<'t>,
@@ -178,7 +178,7 @@ pub fn anisotropy_energy_diff<'t>(_tape: &'t Tape, mz: Var<'t>, ku: Var<'t>) -> 
 /// here it is used to return the full |dm/dt| including the damping torque
 /// term).  The `gamma` parameter is the gyromagnetic ratio magnitude.
 ///
-/// Returns |dm/dt| in [rad/s] (precessional part only).
+/// Returns |dm/dt| in \[rad/s\] (precessional part only).
 pub fn llg_torque_norm_diff<'t>(
     _tape: &'t Tape,
     mx: Var<'t>,

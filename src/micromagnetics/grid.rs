@@ -62,17 +62,17 @@ use serde::{Deserialize, Serialize};
 
 /// Configuration for a structured-grid FD micromagnetics simulation.
 ///
-/// The simulation box has dimensions (nx⋅dx) × (ny⋅dy) × (nz⋅dz) [m].
+/// The simulation box has dimensions (nx⋅dx) × (ny⋅dy) × (nz⋅dz) \[m\].
 /// Typical values for Permalloy at 5 nm resolution: dx = dy = 5 nm,
 /// dz = 3 nm (thin-film geometry).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GridConfig {
-    /// Cell dimension along x [m]
+    /// Cell dimension along x \[m\]
     pub dx: f64,
-    /// Cell dimension along y [m]
+    /// Cell dimension along y \[m\]
     pub dy: f64,
-    /// Cell dimension along z [m]
+    /// Cell dimension along z \[m\]
     pub dz: f64,
     /// Number of cells along x
     pub nx: usize,
@@ -80,7 +80,7 @@ pub struct GridConfig {
     pub ny: usize,
     /// Number of cells along z
     pub nz: usize,
-    /// LLG time step [s].  Stability requires γ Ms dt ≲ 1e-2.
+    /// LLG time step \[s\].  Stability requires γ Ms dt ≲ 1e-2.
     pub dt: f64,
     /// Total number of integration steps.
     pub n_steps: usize,
@@ -112,7 +112,7 @@ impl Default for GridConfig {
 pub struct LlgResult {
     /// Volume-averaged magnetization m̄ = (1/N) Σ_i m̂_i at each recorded time.
     pub m_avg: Vec<Vector3<f64>>,
-    /// Physical time [s] at each recorded snapshot.
+    /// Physical time \[s\] at each recorded snapshot.
     pub times: Vec<f64>,
     /// Per-cell normalized magnetization m̂ at the end of the run.
     pub final_state: Vec<Vector3<f64>>,
@@ -530,7 +530,7 @@ impl MicromagneticGrid {
 
     // ─── Energy calculations ─────────────────────────────────────────────────
 
-    /// Compute the total exchange energy [J].
+    /// Compute the total exchange energy \[J\].
     ///
     /// E_ex = A × Σ_{unique bonds ⟨i,j⟩} |m̂_j − m̂_i|² / Δ² × V_cell
     ///
@@ -590,7 +590,7 @@ impl MicromagneticGrid {
         energy
     }
 
-    /// Compute the total demagnetizing (magnetostatic) energy [J].
+    /// Compute the total demagnetizing (magnetostatic) energy \[J\].
     ///
     /// E_demag = −(μ₀/2) × Σ_i H_demag(i) · M(i) × V_cell
     ///
@@ -614,7 +614,7 @@ impl MicromagneticGrid {
         energy
     }
 
-    /// Compute the total Zeeman (applied-field) energy [J].
+    /// Compute the total Zeeman (applied-field) energy \[J\].
     ///
     /// E_zee = −μ₀ × Σ_i M(i) · H_ext × V_cell
     ///
@@ -634,7 +634,7 @@ impl MicromagneticGrid {
         energy
     }
 
-    /// Compute the total energy [J] = E_exchange + E_demag + E_zeeman.
+    /// Compute the total energy \[J\] = E_exchange + E_demag + E_zeeman.
     ///
     /// Anisotropy energy is omitted because the standard muMAG Standard Problem #3
     /// uses Permalloy, which has K = 0.

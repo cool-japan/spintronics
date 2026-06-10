@@ -5,7 +5,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 **Inspired by the pioneering work of Prof. Eiji Saitoh's Group (University of Tokyo / RIKEN CEMS)**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)]()
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)]()
 [![Rust Version](https://img.shields.io/badge/rust-2021-orange)]()
 [![npm](https://img.shields.io/npm/v/@cooljapan/spintronics)](https://www.npmjs.com/package/@cooljapan/spintronics)
 [![crates.io](https://img.shields.io/crates/v/spintronics)](https://crates.io/crates/spintronics)
@@ -26,11 +26,14 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📊 Development Status
 
-**Current Version**: 0.3.0 ✅ **PRODUCTION READY**
+**Current Version**: 0.3.1 ✅ **PRODUCTION READY**
 
-**Latest Release**: March 2026
+**Latest Release**: June 2026 (2026-06-10)
 
-### Version 0.3.0 Highlights
+### Version 0.3.1 Highlights
+- ✅ **DemagField Performance**: Direct flat kernel indexing + optional rayon parallelism for demag computation
+- ✅ **API**: `BbhModel::hamiltonian_at` now returns `Result<CMatrix>` for proper error propagation (breaking)
+- ✅ **Dependencies**: scirs2-core and scirs2-spatial upgraded to 0.5.0 (default-features = false)
 - ✅ **Interactive Web Demo**: HTMX + Axum demonstration subcrate with 4 physics simulations
 - ✅ **Python Bindings (PyO3)**: Use from Python with native performance
 - ✅ **HDF5 Export**: Large-scale data storage for simulation results
@@ -39,7 +42,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Unit Validation**: Runtime checks for physical quantity sanity
 - ✅ **Performance**: SIMD-accelerated spin operations and parallel lattice evolution
 - ✅ **25 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
-- ✅ **718 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
+- ✅ **1829 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
 
 ### Core Capabilities
 - ✅ **32 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
@@ -48,7 +51,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
 - ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
-- ✅ **Production Quality**: Zero warnings, 718 tests passing
+- ✅ **Production Quality**: Zero warnings, 1829 tests passing
 
 ## ✨ Key Features
 
@@ -212,14 +215,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spintronics = "0.3.0"
+spintronics = "0.3.1"
 ```
 
 ### Optional Features
 
 ```toml
 [dependencies]
-spintronics = { version = "0.3.0", features = ["python", "hdf5", "serde"] }
+spintronics = { version = "0.3.1", features = ["python", "hdf5", "serde"] }
 ```
 
 Available features:
@@ -347,7 +350,7 @@ cargo test        # Unit tests
 
 ### Test Coverage
 
-**Total: 718 tests passing**
+**Total: 1829 lib + 111 doc tests passing**
 - ✅ **Unit Tests**: Core physics calculations
 - ✅ **Doc Tests**: Documentation examples
 - ✅ **Integration Tests**: Multi-module physics workflows
@@ -391,7 +394,7 @@ Minimal dependency footprint for fast compilation and easy integration:
 
 ```toml
 [dependencies]
-scirs2-core = { version = "0.1.0-rc.4", features = ["random"] }
+scirs2-core = { version = "0.5.0", default-features = false }
 ```
 
 **scirs2-core** provides:
@@ -653,6 +656,21 @@ See `wasm-demo/` directory for complete interactive examples.
 - ✅ 25 examples (8 new examples added)
 - ✅ 718 tests passing
 
+### Version 0.3.1 ✅ **COMPLETE**
+
+**Performance & API**
+- ✅ `DemagField::compute` refactored with direct flat kernel indexing + optional rayon parallelism
+- ✅ `BbhModel::hamiltonian_at` return type changed to `Result<CMatrix>` (breaking change)
+- ✅ `StandardProblem3` test reduced to 25 steps for CI budget
+
+**Dependencies**
+- ✅ scirs2-core → 0.5.0 (default-features = false)
+- ✅ scirs2-spatial → 0.5.0 (default-features = false)
+- ✅ Workspace version tracking unified
+
+**Quality**
+- ✅ 1829 lib + 111 doc tests passing, 0 warnings
+
 ### Version 0.4.0+ (Future Enhancements)
 
 **Performance Optimization**
@@ -750,12 +768,9 @@ Special thanks to all researchers who have contributed to the understanding of s
 
 Copyright (c) 2025 COOLJAPAN OÜ (Team KitaSan)
 
-This project is dual-licensed under:
+This project is licensed under:
 
-- **MIT License** ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
-- **Apache License 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-
-You may choose either license for your use.
+- **Apache License 2.0** ([LICENSE](LICENSE) or http://www.apache.org/licenses/LICENSE-2.0)
 
 ### Academic Use
 

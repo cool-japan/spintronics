@@ -101,18 +101,18 @@ pub struct ExchangeBias {
     /// FM saturation magnetisation M_s [A/m].
     pub m_fm: f64,
 
-    /// FM layer thickness t_FM [m].
+    /// FM layer thickness t_FM \[m\].
     pub t_fm: f64,
 
     /// FM uniaxial anisotropy constant K_FM [J/m³].
     pub k_fm: f64,
 
-    /// Blocking temperature T_B [K].
+    /// Blocking temperature T_B \[K\].
     ///
     /// Below T_B the loop shift is non-zero. T_B < T_N of the AFM in practice.
     pub t_b: f64,
 
-    /// AFM Néel temperature T_N [K].
+    /// AFM Néel temperature T_N \[K\].
     pub t_n: f64,
 }
 
@@ -252,7 +252,7 @@ impl ExchangeBias {
     /// H_EB(T) = 0                                     for T ≥ T_B
     ///
     /// # Arguments
-    /// * `temperature` - Temperature [K]. Must be non-negative.
+    /// * `temperature` - Temperature \[K\]. Must be non-negative.
     pub fn loop_shift_at_temperature(&self, temperature: f64) -> f64 {
         if temperature >= self.t_b {
             return 0.0;

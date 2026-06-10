@@ -79,7 +79,7 @@ impl PyOnsagerMatrix {
     /// Create an Onsager matrix with explicit parameters.
     ///
     /// Args:
-    ///     temperature: Temperature [K]
+    ///     temperature: Temperature \[K\]
     ///     conductivity: Electrical conductivity σ [S/m]
     ///     seebeck: Seebeck coefficient S_e [V/K]
     ///     spin_seebeck: Spin Seebeck coefficient S_s [A/(m·K)]
@@ -106,7 +106,7 @@ impl PyOnsagerMatrix {
         }
     }
 
-    /// YIG/Pt bilayer preset at `temperature` [K].
+    /// YIG/Pt bilayer preset at `temperature` \[K\].
     #[staticmethod]
     pub fn yig_pt(temperature: f64) -> Self {
         Self {
@@ -114,7 +114,7 @@ impl PyOnsagerMatrix {
         }
     }
 
-    /// Fe/Pt bilayer preset at `temperature` [K].
+    /// Fe/Pt bilayer preset at `temperature` \[K\].
     #[staticmethod]
     pub fn fe_pt(temperature: f64) -> Self {
         Self {
@@ -122,7 +122,7 @@ impl PyOnsagerMatrix {
         }
     }
 
-    /// CoFeB/Pt bilayer preset at `temperature` [K].
+    /// CoFeB/Pt bilayer preset at `temperature` \[K\].
     #[staticmethod]
     pub fn cofeb_pt(temperature: f64) -> Self {
         Self {
@@ -130,7 +130,7 @@ impl PyOnsagerMatrix {
         }
     }
 
-    /// Temperature [K]
+    /// Temperature \[K\]
     #[getter]
     pub fn temperature(&self) -> f64 {
         self.inner.temperature
@@ -308,7 +308,7 @@ pub struct PySpinCaloritronicsMaterial {
 
 #[pymethods]
 impl PySpinCaloritronicsMaterial {
-    /// YIG/Pt bilayer preset at `temperature` [K].
+    /// YIG/Pt bilayer preset at `temperature` \[K\].
     #[staticmethod]
     pub fn yig_pt(temperature: f64) -> Self {
         Self {
@@ -316,7 +316,7 @@ impl PySpinCaloritronicsMaterial {
         }
     }
 
-    /// Fe/Pt bilayer preset at `temperature` [K].
+    /// Fe/Pt bilayer preset at `temperature` \[K\].
     #[staticmethod]
     pub fn fe_pt(temperature: f64) -> Self {
         Self {
@@ -324,7 +324,7 @@ impl PySpinCaloritronicsMaterial {
         }
     }
 
-    /// CoFeB/Pt bilayer preset at `temperature` [K].
+    /// CoFeB/Pt bilayer preset at `temperature` \[K\].
     #[staticmethod]
     pub fn cofeb_pt(temperature: f64) -> Self {
         Self {
@@ -377,12 +377,12 @@ impl PySpinCaloritronicsMaterial {
     ///
     /// Returns:
     ///     dict with keys:
-    ///       'spin_seebeck_current': list[float] — j_s [A/m²]
+    ///       'spin_seebeck_current': list\[float\] — j_s [A/m²]
     ///       'peltier_heat': float — |j_Q^sPeltier| [W/m²]
     ///       'nernst_voltage': float — anomalous Nernst ν [V/m]
-    ///       'spin_nernst_current': list[float] — j_s^SN proxy [A/m²]
+    ///       'spin_nernst_current': list\[float\] — j_s^SN proxy [A/m²]
     ///       'reciprocity_satisfied': bool — Onsager error < 1e-10
-    ///       'total_heat_current': list[float] — total j_Q [W/m²]
+    ///       'total_heat_current': list\[float\] — total j_Q [W/m²]
     pub fn compute_all(
         &self,
         py: Python<'_>,

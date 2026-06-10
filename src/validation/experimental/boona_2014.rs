@@ -77,7 +77,7 @@ pub const DELTA_T_VALUES_K: &[f64] = &[2.0, 5.0, 10.0, 20.0, 35.0, 50.0];
 /// [`DELTA_T_VALUES_K`].
 ///
 /// Built from the constant slope `0.5 µV/K`, i.e.
-/// `V_LSSE[i] = 500.0 · DELTA_T_VALUES_K[i]` nV. The curve is rigorously
+/// `V_LSSE\[i\] = 500.0 · DELTA_T_VALUES_K[i]` nV. The curve is rigorously
 /// linear by construction; the validation tests whether the simulation can
 /// reproduce this linearity (after per-curve rescaling).
 pub const V_LSSE_NV: &[f64] = &[1000.0, 2500.0, 5000.0, 10000.0, 17500.0, 25000.0];

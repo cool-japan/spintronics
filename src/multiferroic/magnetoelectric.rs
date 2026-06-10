@@ -134,10 +134,10 @@ pub struct MagnetoelectricTensor {
     /// Spontaneous magnetization M_s [A/m] at zero field.
     magnetization_s: Vector3<f64>,
 
-    /// Ferroelectric transition temperature T_FE [K].
+    /// Ferroelectric transition temperature T_FE \[K\].
     t_ferroelectric: f64,
 
-    /// Magnetic ordering (Néel or Curie) temperature T_mag [K].
+    /// Magnetic ordering (Néel or Curie) temperature T_mag \[K\].
     t_magnetic: f64,
 }
 
@@ -153,8 +153,8 @@ impl MagnetoelectricTensor {
     /// * `material_type` - Classification of the multiferroic mechanism.
     /// * `polarization_s` - Spontaneous polarization [C/m²].
     /// * `magnetization_s` - Spontaneous magnetization [A/m].
-    /// * `t_ferroelectric` - Ferroelectric transition temperature [K]; must be positive.
-    /// * `t_magnetic` - Magnetic transition temperature [K]; must be positive.
+    /// * `t_ferroelectric` - Ferroelectric transition temperature \[K\]; must be positive.
+    /// * `t_magnetic` - Magnetic transition temperature \[K\]; must be positive.
     ///
     /// # Errors
     /// Returns [`crate::error::Error::InvalidParameter`] if any α element is
@@ -207,7 +207,7 @@ impl MagnetoelectricTensor {
     ///
     /// Bi³⁺ lone pairs (6s²) drive ferroelectricity; Fe³⁺ G-type AFM from
     /// super-exchange.  The spontaneous polarization along the pseudo-cubic
-    /// [111] direction reaches ~ 90 μC/cm² in epitaxial films.
+    /// \[111\] direction reaches ~ 90 μC/cm² in epitaxial films.
     ///
     /// ME coupling is weak but non-zero due to the combined breaking of
     /// inversion and time-reversal symmetry.  The diagonal α value here is
@@ -423,12 +423,12 @@ impl MagnetoelectricTensor {
         self.material_type
     }
 
-    /// Return the ferroelectric transition temperature [K].
+    /// Return the ferroelectric transition temperature \[K\].
     pub fn t_ferroelectric(&self) -> f64 {
         self.t_ferroelectric
     }
 
-    /// Return the magnetic transition temperature [K].
+    /// Return the magnetic transition temperature \[K\].
     pub fn t_magnetic(&self) -> f64 {
         self.t_magnetic
     }
@@ -443,7 +443,7 @@ impl MagnetoelectricTensor {
     /// enters the paraelectric phase.
     ///
     /// # Arguments
-    /// * `temperature` - Temperature to test [K].
+    /// * `temperature` - Temperature to test \[K\].
     pub fn is_above_ferroelectric_transition(&self, temperature: f64) -> bool {
         temperature > self.t_ferroelectric
     }
@@ -454,7 +454,7 @@ impl MagnetoelectricTensor {
     /// and the material enters the paramagnetic phase.
     ///
     /// # Arguments
-    /// * `temperature` - Temperature to test [K].
+    /// * `temperature` - Temperature to test \[K\].
     pub fn is_above_magnetic_transition(&self, temperature: f64) -> bool {
         temperature > self.t_magnetic
     }
@@ -583,11 +583,11 @@ pub fn exchange_striction_polarization(
 /// T = (1/2) Σ_i r_i × m_i
 /// ```
 ///
-/// normalised by the number of sites, giving [A·m] if positions are in [m]
+/// normalised by the number of sites, giving [A·m] if positions are in \[m\]
 /// and moments in [A·m²].
 ///
 /// # Arguments
-/// * `positions` - Slice of position vectors [m]; must match length of `moments`.
+/// * `positions` - Slice of position vectors \[m\]; must match length of `moments`.
 /// * `moments`   - Slice of magnetic moment vectors [A·m²].
 ///
 /// # Errors

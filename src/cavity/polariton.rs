@@ -169,11 +169,11 @@ pub enum Branch {
 /// ```
 #[derive(Debug, Clone)]
 pub struct MagnonPolariton {
-    /// Cavity angular frequency ω_c [rad/s].
+    /// Cavity angular frequency ω_c \[rad/s\].
     pub omega_cavity: f64,
-    /// Magnon angular frequency ω_m [rad/s].
+    /// Magnon angular frequency ω_m \[rad/s\].
     pub omega_magnon: f64,
-    /// Coupling strength g [rad/s].
+    /// Coupling strength g \[rad/s\].
     pub coupling_g: f64,
 }
 
@@ -206,7 +206,7 @@ impl MagnonPolariton {
         }
     }
 
-    /// Polariton eigenfrequencies (ω_lower, ω_upper) [rad/s].
+    /// Polariton eigenfrequencies (ω_lower, ω_upper) \[rad/s\].
     ///
     ///   ω_± = (ω_c + ω_m)/2 ± √[(Δ/2)² + g²]
     pub fn eigenfrequencies(&self) -> (f64, f64) {
@@ -325,11 +325,11 @@ impl MagnonPolariton {
 /// ```
 #[derive(Debug, Clone)]
 pub struct MultiModePolariton {
-    /// Cavity angular frequency ω_c [rad/s].
+    /// Cavity angular frequency ω_c \[rad/s\].
     pub cavity_freq: f64,
-    /// Magnon mode angular frequencies ω_i [rad/s].
+    /// Magnon mode angular frequencies ω_i \[rad/s\].
     pub magnon_freqs: Vec<f64>,
-    /// Coupling strengths g_i [rad/s] (one per magnon mode).
+    /// Coupling strengths g_i \[rad/s\] (one per magnon mode).
     pub couplings: Vec<f64>,
 }
 
@@ -437,10 +437,10 @@ impl MultiModePolariton {
         Ok(vals)
     }
 
-    /// Mode compositions: `composition[i][j] = |⟨ψ_i|basis_j⟩|²`.
+    /// Mode compositions: `composition\[i\]\[j\] = |⟨ψ_i|basis_j⟩|²`.
     ///
-    /// - `composition[i][0]`   = photon content of the i-th polariton mode.
-    /// - `composition[i][j+1]` = magnon-j content of the i-th polariton mode.
+    /// - `composition\[i\][0]`   = photon content of the i-th polariton mode.
+    /// - `composition\[i\][j+1]` = magnon-j content of the i-th polariton mode.
     ///
     /// Each row sums to 1 (conservation of probability).
     ///

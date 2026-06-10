@@ -350,7 +350,7 @@ impl Layer {
 pub struct Mlp {
     /// The layers, in evaluation order.
     pub layers: Vec<Layer>,
-    /// Cached input dimensionality (= `layers[0].in_dim`).
+    /// Cached input dimensionality (= `layers\[0\].in_dim`).
     pub input_dim: usize,
     /// Cached output dimensionality (= `layers.last().out_dim`).
     pub output_dim: usize,

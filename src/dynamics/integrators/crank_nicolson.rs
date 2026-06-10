@@ -56,7 +56,7 @@ pub enum BoundaryCondition {
     /// Neumann no-flux boundary: ∂u/∂x = 0 at both ends. Uses a ghost-cell
     /// reflection that makes u₋₁ = u₁ and u_N = u_{N-2}.
     NeumannZero,
-    /// Periodic: `u[0] == u[N-1]` in the continuum sense; the discrete
+    /// Periodic: `u\[0\] == u[N-1]` in the continuum sense; the discrete
     /// scheme treats the grid as a ring of (N-1) unique nodes.
     Periodic,
 }
@@ -386,7 +386,7 @@ fn solve_periodic(
     Ok(x)
 }
 
-/// Thomas algorithm for tridiagonal systems. `a` is the sub-diagonal (a[0]
+/// Thomas algorithm for tridiagonal systems. `a` is the sub-diagonal (a\[0\]
 /// is unused), `b` is the diagonal, `c` is the super-diagonal
 /// (c[n-1] is unused), and `d` is the right-hand side.
 fn thomas(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) -> Result<Vec<f64>> {

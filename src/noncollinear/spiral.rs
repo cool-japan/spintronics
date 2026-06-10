@@ -431,7 +431,7 @@ impl SpinSpiral {
         }
     }
 
-    /// Wavelength of the spiral [m] = 2π / |**q**|.
+    /// Wavelength of the spiral \[m\] = 2π / |**q**|.
     pub fn wavelength(&self) -> f64 {
         let q_mag = self.q_vector.magnitude();
         if q_mag > 1e-30 {
@@ -441,7 +441,7 @@ impl SpinSpiral {
         }
     }
 
-    /// Pitch of the spiral [m] — synonym for `wavelength`.
+    /// Pitch of the spiral \[m\] — synonym for `wavelength`.
     pub fn pitch(&self) -> f64 {
         self.wavelength()
     }
@@ -451,7 +451,7 @@ impl SpinSpiral {
         self.cone_angle_rad.to_degrees()
     }
 
-    /// Returns `true` if the spiral is incommensurate with a lattice of constant `a` [m].
+    /// Returns `true` if the spiral is incommensurate with a lattice of constant `a` \[m\].
     ///
     /// Tests whether |**q**| × a / (2π) is close to a simple rational fraction p/q
     /// with denominator ≤ 20. An incommensurate wavevector is **not** of this form.
@@ -531,8 +531,8 @@ impl SpinSpiral {
     ///
     /// # Arguments
     ///
-    /// - `j_nn` — nearest-neighbor exchange constant [J]; positive = ferromagnetic
-    /// - `a_lattice` — cubic lattice constant [m]
+    /// - `j_nn` — nearest-neighbor exchange constant \[J\]; positive = ferromagnetic
+    /// - `a_lattice` — cubic lattice constant \[m\]
     pub fn landau_lifshitz_energy(&self, j_nn: f64, a_lattice: f64) -> f64 {
         let qx = self.q_vector.x;
         let qy = self.q_vector.y;

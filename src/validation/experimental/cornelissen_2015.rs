@@ -150,12 +150,12 @@ const _: () = assert!(R_NL_RELATIVE[1] < R_NL_RELATIVE[0]);
 /// [`DISTANCES_M`] / [`R_NL_RELATIVE`].
 #[derive(Debug, Clone)]
 pub struct Cornelissen2015Validation {
-    /// Magnon diffusion length λ_m in YIG [m].
+    /// Magnon diffusion length λ_m in YIG \[m\].
     ///
     /// Initialised to the room-temperature value [`MAGNON_DIFFUSION_LENGTH_M`]
     /// (9.4 μm) from Cornelissen 2015, Fig. 3.
     pub magnon_diffusion_length: f64,
-    /// Temperature of the measurement [K].
+    /// Temperature of the measurement \[K\].
     pub temperature: f64,
 }
 
@@ -184,7 +184,7 @@ impl Cornelissen2015Validation {
     /// `λ_m = self.magnon_diffusion_length`.
     ///
     /// # Arguments
-    /// * `d` — Injector-to-detector separation [m].
+    /// * `d` — Injector-to-detector separation \[m\].
     ///
     /// # Returns
     /// Dimensionless ratio normalised to the anchor distance.
@@ -271,13 +271,13 @@ impl Cornelissen2015Validation {
     /// λ_m(T) ≈ MAGNON_DIFFUSION_LENGTH_M × √(TEMPERATURE_K / T)
     /// ```
     ///
-    /// This method returns the estimated λ_m at temperature `temperature` [K].
+    /// This method returns the estimated λ_m at temperature `temperature` \[K\].
     ///
     /// # Arguments
-    /// * `temperature` — Target temperature [K]; must be positive.
+    /// * `temperature` — Target temperature \[K\]; must be positive.
     ///
     /// # Returns
-    /// Estimated magnon diffusion length [m] at the given temperature.
+    /// Estimated magnon diffusion length \[m\] at the given temperature.
     pub fn transport_length_scale(&self, temperature: f64) -> f64 {
         MAGNON_DIFFUSION_LENGTH_M * (TEMPERATURE_K / temperature).sqrt()
     }

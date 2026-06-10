@@ -82,11 +82,11 @@ pub enum StableState {
 pub struct Sp3Config {
     /// Material parameters (should have K = 0 for muMAG spec, high α for relaxation).
     pub material: Ferromagnet,
-    /// Cell size (same in x, y, z — cubic cell) [m].
+    /// Cell size (same in x, y, z — cubic cell) \[m\].
     pub cell_size: f64,
     /// Number of LLG relaxation steps.
     pub relax_steps: usize,
-    /// Time step for relaxation [s].
+    /// Time step for relaxation \[s\].
     pub relax_dt: f64,
 }
 
@@ -115,13 +115,13 @@ impl Default for Sp3Config {
 pub struct Sp3Result {
     /// Cube edge length divided by exchange length: L / l_ex.
     pub l_over_lex: f64,
-    /// Total energy of the relaxed flower state [J].
+    /// Total energy of the relaxed flower state \[J\].
     pub flower_energy: f64,
-    /// Total energy of the relaxed vortex state [J].
+    /// Total energy of the relaxed vortex state \[J\].
     pub vortex_energy: f64,
     /// Which state has lower energy (the stable state).
     pub stable_state: StableState,
-    /// Exchange length l_ex [m] for the material used.
+    /// Exchange length l_ex \[m\] for the material used.
     pub exchange_length_m: f64,
 }
 
@@ -149,7 +149,7 @@ impl StandardProblem3 {
         Self::new(Sp3Config::default())
     }
 
-    /// Compute the exchange length [m] for the configured material.
+    /// Compute the exchange length \[m\] for the configured material.
     ///
     /// ```text
     /// l_ex = sqrt( A / (½ μ₀ Ms²) )
@@ -172,12 +172,12 @@ impl StandardProblem3 {
         8.47
     }
 
-    /// Relax either a flower or vortex state for a cube of edge length `l_m` [m].
+    /// Relax either a flower or vortex state for a cube of edge length `l_m` \[m\].
     ///
-    /// Returns the total energy [J] after relaxation.
+    /// Returns the total energy \[J\] after relaxation.
     ///
     /// # Arguments
-    /// * `l_m` — cube edge length [m]
+    /// * `l_m` — cube edge length \[m\]
     /// * `use_vortex` — if true, initialise as vortex; otherwise initialise as uniform +z (flower seed)
     fn relax_cube(&self, l_m: f64, use_vortex: bool) -> Result<f64> {
         // Number of cells along each edge: at least 2, rounded to nearest integer
@@ -223,7 +223,7 @@ impl StandardProblem3 {
     /// their final energies to determine which phase is stable.
     ///
     /// # Arguments
-    /// * `l_m` — cube edge length [m]. Must be positive.
+    /// * `l_m` — cube edge length \[m\]. Must be positive.
     ///
     /// # Errors
     /// Returns `Err` if `l_m` is non-positive or if grid construction fails.

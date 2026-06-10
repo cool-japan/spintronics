@@ -1,7 +1,7 @@
 //! Multi-band Wilson loops and nested Wilson loops for higher-order topology.
 //!
 //! This module generalises the single-band Wilson loop already present in
-//! [`ChernNumber::wilson_loop`] to the multi-band case, following the
+//! [`crate::topomagnon::chern_number::ChernNumber::wilson_loop`] to the multi-band case, following the
 //! non-abelian Berry-phase formalism of:
 //!
 //! - D. Vanderbilt and R. D. King-Smith, *Phys. Rev. B* **48**, 4442 (1993):
@@ -94,7 +94,7 @@ impl<'a> WilsonLoop<'a> {
     ///
     /// `states_a[m]` is the Bloch vector at k, `states_b[n]` at k+dk, each of
     /// length equal to the number of lattice sites.  The returned `CMatrix` has
-    /// `M[m][n] = Σ_j  conj(states_a[m][j]) · states_b[n][j]`.
+    /// `M\[m\][n] = Σ_j  conj(states_a\[m\]\[j\]) · states_b[n][j]`.
     pub fn link_matrix(states_a: &[Vec<Complex>], states_b: &[Vec<Complex>]) -> CMatrix {
         let n = states_a.len();
         let mut mat = CMatrix::zeros(n);

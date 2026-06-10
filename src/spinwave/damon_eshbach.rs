@@ -27,7 +27,7 @@
 //! where:
 //! - ω_H = |γ| μ₀ H_ext  (Larmor frequency)
 //! - ω_M = |γ| μ₀ M_s    (characteristic magnetization frequency)
-//! - λ_ex = 2 A_ex / (μ₀ M_s²)  (exchange length squared, [m²])
+//! - λ_ex = 2 A_ex / (μ₀ M_s²)  (exchange length squared, \[m²\])
 //! - F_kd = 1 − (1 − e^{−kd}) / (kd)  (dipolar propagation factor, k·d → 0: F = 0.5)
 //!
 //! # References

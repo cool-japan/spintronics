@@ -16,7 +16,7 @@
 //!    `j_c ∝ (M_s · t_F · H_eff) / |θ_SH|`, it grows roughly linearly with the
 //!    CoFeB thickness when the anisotropy field is held fixed. This is the
 //!    key qualitative scaling that
-//!    [`Self::validate_thickness_scaling`] verifies.
+//!    [`Liu2012Validation::validate_thickness_scaling`] verifies.
 //! 4. **Polarity convention**. For current along `+x̂` and magnetisation
 //!    initially `+ẑ`, the SOT damping-like field has the form
 //!    `H_DL ∝ (m × σ)` with `σ = ĵ × ẑ = -ŷ`. The sign of `θ_SH` therefore

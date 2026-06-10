@@ -48,15 +48,15 @@ use crate::math::Complex;
 pub struct TavisCummings {
     /// Number of spins in the ensemble.
     pub n_spins: usize,
-    /// Cavity angular frequency ω_c [rad/s].
+    /// Cavity angular frequency ω_c \[rad/s\].
     pub omega_cavity: f64,
-    /// Magnon (spin) angular frequency ω_m [rad/s].
+    /// Magnon (spin) angular frequency ω_m \[rad/s\].
     pub omega_magnon: f64,
-    /// Single-spin coupling constant g [rad/s].
+    /// Single-spin coupling constant g \[rad/s\].
     pub coupling_g: f64,
-    /// Cavity field decay rate κ [rad/s].
+    /// Cavity field decay rate κ \[rad/s\].
     pub kappa: f64,
-    /// Spin damping rate γ [rad/s].
+    /// Spin damping rate γ \[rad/s\].
     pub gamma_damp: f64,
     /// Internal: cavity field complex amplitude a(t).
     cavity_amp: Complex,
@@ -159,7 +159,7 @@ impl TavisCummings {
         }
     }
 
-    /// Collective coupling g_N = g·√N [rad/s].
+    /// Collective coupling g_N = g·√N \[rad/s\].
     ///
     /// This is the effective magnon-photon coupling after bosonic enhancement by
     /// the square root of the spin ensemble size.
@@ -201,7 +201,7 @@ impl TavisCummings {
         4.0 * g_n.powi(2) / (self.kappa * self.gamma_damp)
     }
 
-    /// Frequency detuning Δ = ω_c − ω_m [rad/s].
+    /// Frequency detuning Δ = ω_c − ω_m \[rad/s\].
     pub fn detuning(&self) -> f64 {
         self.omega_cavity - self.omega_magnon
     }
@@ -216,7 +216,7 @@ impl TavisCummings {
         self.magnon_amp
     }
 
-    /// Advance the mean-field equations of motion by one Euler step of size `dt` [s].
+    /// Advance the mean-field equations of motion by one Euler step of size `dt` \[s\].
     ///
     /// Equations (lossless rotating-frame with dissipation):
     ///

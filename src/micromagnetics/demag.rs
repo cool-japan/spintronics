@@ -302,11 +302,11 @@ fn newell_n_zz(p: i64, q: i64, r: i64, dx: f64, dy: f64, dz: f64) -> f64 {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NewellTensor {
-    /// Cell dimension along x [m]
+    /// Cell dimension along x \[m\]
     pub dx: f64,
-    /// Cell dimension along y [m]
+    /// Cell dimension along y \[m\]
     pub dy: f64,
-    /// Cell dimension along z [m]
+    /// Cell dimension along z \[m\]
     pub dz: f64,
     /// Number of cells along x
     pub nx: usize,

@@ -16,14 +16,14 @@
 //! This module therefore validates the model against the *wider* literature
 //! window `[0.0037, 0.013]` for the historical raw 2006 number **and** the
 //! `[0.06, 0.15]` window for modern Pt films. The default reported value here
-//! is the modern preset; the validation method [`Self::validate_spin_hall_angle`]
+//! is the modern preset; the validation method [`Saitoh2006Validation::validate_spin_hall_angle`]
 //! checks containment in the combined window `[θ_SH_LITERATURE_MIN,
 //! θ_SH_LITERATURE_MAX]`.
 //!
 //! We also verify the conversion's qualitative properties:
-//! - [`Self::validate_ishe_voltage_polarity`] — the electric field aligns with
+//! - [`Saitoh2006Validation::validate_ishe_voltage_polarity`] — the electric field aligns with
 //!   `J_s × σ` (not the opposite direction).
-//! - [`Self::validate_ishe_scaling`] — the magnitude of `E_ISHE` is linear in
+//! - [`Saitoh2006Validation::validate_ishe_scaling`] — the magnitude of `E_ISHE` is linear in
 //!   the spin current `J_s`.
 //!
 //! # References

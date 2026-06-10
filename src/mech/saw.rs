@@ -191,12 +191,12 @@ impl PiezoSubstrate {
         }
     }
 
-    /// SAW wavelength at a given excitation frequency [m].
+    /// SAW wavelength at a given excitation frequency \[m\].
     ///
     /// λ_SAW = v_SAW / f
     ///
     /// # Arguments
-    /// * `frequency_hz` — SAW frequency f [Hz].
+    /// * `frequency_hz` — SAW frequency f \[Hz\].
     #[inline]
     pub fn wavelength_m(&self, frequency_hz: f64) -> f64 {
         self.saw_velocity / frequency_hz
@@ -207,20 +207,20 @@ impl PiezoSubstrate {
     /// k = 2π f / v_SAW = 2π / λ_SAW
     ///
     /// # Arguments
-    /// * `frequency_hz` — SAW frequency f [Hz].
+    /// * `frequency_hz` — SAW frequency f \[Hz\].
     #[inline]
     pub fn wavenumber(&self, frequency_hz: f64) -> f64 {
         2.0 * PI * frequency_hz / self.saw_velocity
     }
 
-    /// Rayleigh-wave penetration depth [m].
+    /// Rayleigh-wave penetration depth \[m\].
     ///
     /// The elastic displacement decays as exp(−k·z), so the characteristic
     /// penetration depth is:
     ///   δ = 1/k = v_SAW / (2π f) = λ_SAW / (2π)
     ///
     /// # Arguments
-    /// * `frequency_hz` — SAW frequency f [Hz].
+    /// * `frequency_hz` — SAW frequency f \[Hz\].
     #[inline]
     pub fn penetration_depth_m(&self, frequency_hz: f64) -> f64 {
         // δ = v_SAW / (2π f)
@@ -368,7 +368,7 @@ impl MagnetoelasticMaterial {
         2.0 * self.anisotropy_k / (MU_0 * self.ms)
     }
 
-    /// FMR frequency [Hz] for out-of-plane magnetisation saturation.
+    /// FMR frequency \[Hz\] for out-of-plane magnetisation saturation.
     ///
     /// Kittel formula (simplified — uniform mode, out-of-plane saturation):
     ///   f_FMR = γ / (2π) · μ₀ · (H_ext + H_k)
@@ -417,7 +417,7 @@ pub struct SawSource {
     /// Piezoelectric substrate on which the SAW propagates.
     pub substrate: PiezoSubstrate,
 
-    /// SAW drive frequency f [Hz].
+    /// SAW drive frequency f \[Hz\].
     pub frequency_hz: f64,
 
     /// Peak strain amplitude ε₀ (dimensionless).
@@ -498,7 +498,7 @@ impl SawSource {
         }
     }
 
-    /// SAW wavelength [m] at the current drive frequency.
+    /// SAW wavelength \[m\] at the current drive frequency.
     ///
     /// λ = v_SAW / f
     #[inline]
@@ -506,7 +506,7 @@ impl SawSource {
         self.substrate.wavelength_m(self.frequency_hz)
     }
 
-    /// Angular frequency ω = 2π f [rad/s].
+    /// Angular frequency ω = 2π f \[rad/s\].
     #[inline]
     pub fn angular_frequency(&self) -> f64 {
         2.0 * PI * self.frequency_hz
@@ -522,9 +522,9 @@ impl SawSource {
     ///   z ≥ 0).
     ///
     /// # Arguments
-    /// * `x` — Position along the propagation direction [m].
-    /// * `z` — Depth below the surface [m]; 0 = surface, increasing into bulk.
-    /// * `t` — Time [s].
+    /// * `x` — Position along the propagation direction \[m\].
+    /// * `z` — Depth below the surface \[m\]; 0 = surface, increasing into bulk.
+    /// * `t` — Time \[s\].
     pub fn strain_at_point(&self, x: f64, z: f64, t: f64) -> f64 {
         let k = self.substrate.wavenumber(self.frequency_hz);
         let omega = self.angular_frequency();
@@ -573,7 +573,7 @@ pub struct SawMagnetoacoustics {
     /// Ferromagnetic thin film material.
     pub material: MagnetoelasticMaterial,
 
-    /// Ferromagnetic film thickness d [m].
+    /// Ferromagnetic film thickness d \[m\].
     pub film_thickness_m: f64,
 
     /// External bias field H_ext [A/m].
@@ -630,7 +630,7 @@ impl SawMagnetoacoustics {
         (2.0 * self.material.b1.abs() * self.saw.strain_amplitude) / (MU_0 * self.material.ms)
     }
 
-    /// FMR frequency f_FMR [Hz] at the current bias field.
+    /// FMR frequency f_FMR \[Hz\] at the current bias field.
     ///
     /// Uses the simplified Kittel formula (out-of-plane saturation / uniform mode):
     ///   f_FMR = γ / (2π) · (H_ext + H_k)
@@ -638,7 +638,7 @@ impl SawMagnetoacoustics {
         self.material.fmr_frequency_hz(self.h_ext)
     }
 
-    /// Frequency detuning Δf = f_SAW − f_FMR [Hz].
+    /// Frequency detuning Δf = f_SAW − f_FMR \[Hz\].
     ///
     /// Δf = 0 → exact acoustic FMR resonance.
     /// |Δf| ≫ α f_FMR → far off-resonance, exponentially small response.
@@ -666,7 +666,7 @@ impl SawMagnetoacoustics {
         1.0 / (detuning_sq.sqrt() * omega_fmr)
     }
 
-    /// Magnetisation precession cone angle θ_cone [rad].
+    /// Magnetisation precession cone angle θ_cone \[rad\].
     ///
     /// The driven precession amplitude is:
     ///   θ_cone = H_me · L(ω)
@@ -711,7 +711,7 @@ impl SawMagnetoacoustics {
     ///
     ///   P_abs = (μ₀ / 2) · M_s · α · ω_FMR · θ_cone² · d_film
     ///
-    /// where d_film [m] is the film thickness (converting volume density to
+    /// where d_film \[m\] is the film thickness (converting volume density to
     /// areal density).
     ///
     /// Strictly valid for θ_cone ≪ 1 (small-angle, linear response).
@@ -792,7 +792,7 @@ impl SawSpinWaveExcitation {
         self.saw.substrate.wavenumber(self.saw.frequency_hz)
     }
 
-    /// Excited spin-wave frequency f_SW [Hz] at the given bias field.
+    /// Excited spin-wave frequency f_SW \[Hz\] at the given bias field.
     ///
     /// In the simplified out-of-plane Kittel picture the spin-wave frequency
     /// for the uniform mode is:
@@ -806,7 +806,7 @@ impl SawSpinWaveExcitation {
     /// * `h_ext` — External bias field [A/m].
     ///
     /// # Returns
-    /// Spin-wave frequency f_SW [Hz].
+    /// Spin-wave frequency f_SW \[Hz\].
     pub fn excited_spinwave_frequency(&self, h_ext: f64) -> f64 {
         let omega_sw = GAMMA * MU_0 * (h_ext + self.material.anisotropy_field());
         omega_sw / (2.0 * PI)

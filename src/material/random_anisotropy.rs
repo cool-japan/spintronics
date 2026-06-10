@@ -80,7 +80,7 @@ pub struct RandomAnisotropy {
     pub k_mean: f64,
     /// Standard deviation of anisotropy strength [J/m³].
     pub k_std: f64,
-    /// Grain (correlation) length ξ_a [m].
+    /// Grain (correlation) length ξ_a \[m\].
     pub correlation_length: f64,
     /// Distribution of anisotropy strengths.
     pub distribution: RandomAnisotropyDistribution,
@@ -101,7 +101,7 @@ impl RandomAnisotropy {
     /// * `k_mean` — mean anisotropy strength [J/m³]; negative values are
     ///   allowed (unusual anisotropy) but zero is fine too.
     /// * `k_std` — standard deviation of strength [J/m³]; must be ≥ 0.
-    /// * `correlation_length` — grain size ξ_a [m]; must be > 0.
+    /// * `correlation_length` — grain size ξ_a \[m\]; must be > 0.
     /// * `distribution` — how strengths are distributed across sites.
     /// * `seed` — RNG seed for reproducibility.
     ///
@@ -287,7 +287,7 @@ impl RandomAnisotropy {
     /// # Arguments
     /// * `magnetization` — unit magnetisation vector at each site.
     /// * `axes`          — easy-axis unit vectors (from [`generate_axes`]).
-    /// * `strengths`     — anisotropy strengths K_i [J/m³] (from [`generate_strengths`]).
+    /// * `strengths`     — anisotropy strengths K_i \[J/m³\] (from [`Self::generate_strengths`]).
     /// * `ms`            — saturation magnetisation [A/m]; must be > 0.
     ///
     /// # Errors

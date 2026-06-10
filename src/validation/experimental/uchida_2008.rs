@@ -15,15 +15,15 @@
 //! This validation checks three properties:
 //!
 //! 1. **Linear thermal response**:
-//!    [`Self::validate_linear_thermal_response`] compares the simulated
+//!    [`Uchida2008Validation::validate_linear_thermal_response`] compares the simulated
 //!    voltage to a pre-computed table at several `ΔT` values and verifies
 //!    that the slope agrees with the literature value within tolerance.
 //! 2. **Polarity**:
-//!    [`Self::validate_polarity`] verifies the *sign* of the simulated `V_ISHE`
+//!    [`Uchida2008Validation::validate_polarity`] verifies the *sign* of the simulated `V_ISHE`
 //!    matches the canonical orientation reported in the paper (positive bias
 //!    along the cross-product direction `J_s × σ`).
 //! 3. **Order-of-magnitude Seebeck coefficient**:
-//!    [`Self::validate_seebeck_coefficient_order`] checks that the effective
+//!    [`Uchida2008Validation::validate_seebeck_coefficient_order`] checks that the effective
 //!    voltage-per-Kelvin coefficient is in the `nV/K – µV/K` range
 //!    characteristic of LSSE in YIG/Pt thin-film bilayers.
 //!
@@ -193,7 +193,7 @@ impl Uchida2008Validation {
     /// modest film thicknesses, whereas the canonical published reports
     /// (with optimised geometries) reach `100 nV/K – 1 µV/K`. The relevant
     /// check here is the qualitative finiteness and sign, not the absolute
-    /// magnitude — that is the role of [`Self::validate_linear_thermal_response`].
+    /// magnitude — that is the role of [`Uchida2008Validation::validate_linear_thermal_response`].
     pub fn validate_seebeck_coefficient_order(&self) -> Result<bool> {
         let delta_t = 10.0;
         let v_at_10k = self.predict_voltage(delta_t);

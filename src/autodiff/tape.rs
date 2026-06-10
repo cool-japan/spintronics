@@ -7,12 +7,12 @@
 //!
 //! # Design
 //!
-//! Each elementary operation is stored as a [`TapeOp`]:
+//! Each elementary operation is stored as a `TapeOp`:
 //! - `output_idx` — index of the result node in `values`
 //! - `inputs[0..n_inputs]` — indices of the operand nodes
 //! - `local_grads[0..n_inputs]` — ∂output/∂input_i (local Jacobian entries)
 //!
-//! The backward pass accumulates: `grads[input_i] += local_grads[i] * grads[output]`.
+//! The backward pass accumulates: `grads[input_i] += local_grads\[i\] * grads[output]`.
 //!
 //! # References
 //!
@@ -39,7 +39,7 @@ struct TapeOp {
     inputs: [usize; 2],
     /// Number of valid inputs (1 or 2).
     n_inputs: usize,
-    /// Local partial derivatives ∂output/∂inputs[i].
+    /// Local partial derivatives ∂output/∂inputs\[i\].
     local_grads: [f64; 2],
 }
 

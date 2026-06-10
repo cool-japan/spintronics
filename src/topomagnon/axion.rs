@@ -373,15 +373,15 @@ pub struct AxionMagnonPhoton {
     /// Axion photon coupling `g_aγγ` [rad/(s·T²)] — determines the Faraday
     /// rotation angle and conversion efficiency.
     pub axion_coupling_g: f64,
-    /// Cavity resonance frequency `ω_c` [rad/s].
+    /// Cavity resonance frequency `ω_c` \[rad/s\].
     pub cavity_freq: f64,
-    /// FMR magnon frequency `ω_m` [rad/s].
+    /// FMR magnon frequency `ω_m` \[rad/s\].
     pub magnon_freq: f64,
-    /// Cavity energy decay rate `κ_c` [rad/s].
+    /// Cavity energy decay rate `κ_c` \[rad/s\].
     pub kappa_c: f64,
-    /// Magnon linewidth (Gilbert damping) `γ_m` [rad/s].
+    /// Magnon linewidth (Gilbert damping) `γ_m` \[rad/s\].
     pub gamma_m: f64,
-    /// Axion angle θ [rad].
+    /// Axion angle θ \[rad\].
     pub theta_axion: f64,
 }
 
@@ -449,14 +449,14 @@ impl AxionMagnonPhoton {
     // Derived quantities
     // -----------------------------------------------------------------------
 
-    /// Effective axion-enhanced coupling [rad/s].
+    /// Effective axion-enhanced coupling \[rad/s\].
     ///
     /// `g_eff = g_aγγ · θ / π`
     pub fn effective_coupling(&self) -> f64 {
         self.axion_coupling_g * self.theta_axion / PI
     }
 
-    /// Cavity-magnon detuning [rad/s].
+    /// Cavity-magnon detuning \[rad/s\].
     ///
     /// `Δ = ω_c − ω_m`
     pub fn detuning(&self) -> f64 {
@@ -478,7 +478,7 @@ impl AxionMagnonPhoton {
         }
     }
 
-    /// Magnon-photon conversion efficiency (dimensionless, ∈ [0,1]).
+    /// Magnon-photon conversion efficiency (dimensionless, ∈ \[0,1\]).
     ///
     /// `η = 4 g_eff² / ((κ_c + γ_m)² + Δ²)`
     ///
@@ -495,7 +495,7 @@ impl AxionMagnonPhoton {
         }
     }
 
-    /// Faraday rotation angle [rad] from the axion topological response.
+    /// Faraday rotation angle \[rad\] from the axion topological response.
     ///
     /// The parity-odd electromagnetic response of the axion insulator produces
     /// a Faraday rotation proportional to the axion angle:

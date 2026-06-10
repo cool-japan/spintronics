@@ -109,7 +109,7 @@ fn nnn_soc_factor(kx: f64, ky: f64) -> f64 {
 /// by the normalized NN bond unit vectors d̂_δ = δ/|δ|.
 ///
 /// Returns the complex scalar R_AB = iλ_R · Σ_δ e^{ik·δ}·(d̂_δ_y - i·d̂_δ_x)
-/// which enters the off-diagonal spin block h_ud[0,1] = -R_AB, h_ud[1,0] = R_AB*.
+/// which enters the off-diagonal spin block h_ud\[0,1\] = -R_AB, h_ud[1,0] = R_AB*.
 #[inline]
 fn rashba_ab_coupling(kx: f64, ky: f64, lambda_r: f64) -> Complex {
     if lambda_r.abs() < 1e-15 {
@@ -235,15 +235,15 @@ fn rashba_ab_coupling(kx: f64, ky: f64, lambda_r: f64) -> Complex {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct KaneMeleModel {
-    /// Nearest-neighbour hopping amplitude [eV]. Must be > 0.
+    /// Nearest-neighbour hopping amplitude \[eV\]. Must be > 0.
     pub t: f64,
-    /// Intrinsic (Kane-Mele) spin-orbit coupling [eV]. NNN imaginary hopping.
+    /// Intrinsic (Kane-Mele) spin-orbit coupling \[eV\]. NNN imaginary hopping.
     pub lambda_so: f64,
-    /// Rashba spin-orbit coupling [eV]. NN spin-flip hopping.
+    /// Rashba spin-orbit coupling \[eV\]. NN spin-flip hopping.
     pub lambda_r: f64,
-    /// Staggered sublattice potential [eV]. Breaks inversion symmetry.
+    /// Staggered sublattice potential \[eV\]. Breaks inversion symmetry.
     pub lambda_v: f64,
-    /// Honeycomb lattice constant [m]. Default: 2.46 × 10⁻¹⁰ m (graphene).
+    /// Honeycomb lattice constant \[m\]. Default: 2.46 × 10⁻¹⁰ m (graphene).
     pub a_lattice: f64,
 }
 
@@ -589,7 +589,7 @@ impl KaneMeleModel {
     ///   b₁ = 2π·(1, -1/√3),  b₂ = 2π·(0, 2/√3)
     ///
     /// The correct Brillouin zone is the parallelogram spanned by b₁, b₂.
-    /// A k-point in this BZ is parameterised as k = s·b₁ + u·b₂ with s,u ∈ [0,1].
+    /// A k-point in this BZ is parameterised as k = s·b₁ + u·b₂ with s,u ∈ \[0,1\].
     /// Using a square [-π,π]² grid is incorrect for the honeycomb because it does
     /// NOT tile the BZ exactly once; it gives a non-integer Chern number.
     fn z2_from_spin_chern(&self) -> Result<i32> {

@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.5.0 COMPLETE
-**Last Updated**: 2026-05-31 - v0.5.0 released
-**Status**: 1689 lib + 42 proptest + 109 doctests passing, ~95K lines (Rust code: ~80K+)
+**Version**: 0.3.1
+**Last Updated**: 2026-06-10 - v0.3.1 released
+**Status**: 1829 lib + 111 doc tests passing, ~95K lines (Rust code: ~80K+)
 
 ---
 
@@ -614,6 +614,7 @@
 | v0.1.0 | 2025 | Core Physics & Materials | COMPLETE |
 | v0.2.0 | Dec 2025 | Python Bindings, HDF5, Memory Optimization | COMPLETE |
 | v0.3.0 | 2026-03-13 | Advanced Physics, Performance, Simulation Infrastructure | COMPLETE |
+| v0.3.1 | 2026-06-10 | DemagField optimization, hamiltonian_at Result, scirs2 0.5.0 | COMPLETE |
 | v0.4.0 | Q4 2026 | Research Features, ML, Ecosystem Expansion | Planned |
 | v1.0.0 | 2027 | API Stabilization, Production-Grade | Planned |
 
@@ -672,6 +673,6 @@
 ---
 
 **Maintained by**: COOLJAPAN OU (Team KitaSan)
-**License**: MIT OR Apache-2.0
+**License**: Apache-2.0
 **Repository**: https://github.com/cool-japan/spintronics
 **Contact**: See CONTRIBUTING.md for communication channels

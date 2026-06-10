@@ -180,7 +180,7 @@ impl Garello2013Validation {
     /// Validate that the simulated `H_DL` scales linearly with current density.
     ///
     /// For each entry in [`CURRENT_DENSITY_A_PER_M2`] we compute
-    /// [`Self::simulated_h_dl_tesla`] and rescale the simulated curve to
+    /// `Self::simulated_h_dl_tesla` and rescale the simulated curve to
     /// match the reference at the largest-current point. The resulting
     /// per-point relative error then measures *linearity* (any deviation from
     /// a strict linear law inflates the error). The model's

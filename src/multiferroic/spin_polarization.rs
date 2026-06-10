@@ -439,7 +439,7 @@ pub fn spin_current_from_spiral(s1: &Vector3<f64>, s2: &Vector3<f64>) -> Vector3
 ///
 /// Thermally excited magnons propagating in a spin-orbit-coupled multiferroic
 /// carry an electric polarization that is proportional to the Bose-Einstein
-/// occupation of the magnon gap mode at angular frequency `magnon_gap` [rad/s]:
+/// occupation of the magnon gap mode at angular frequency `magnon_gap` \[rad/s\]:
 ///
 /// ```text
 /// n_BE(ω_gap, T) = 1 / (exp(ℏ ω_gap / k_B T) − 1)
@@ -456,9 +456,9 @@ pub fn spin_current_from_spiral(s1: &Vector3<f64>, s2: &Vector3<f64>) -> Vector3
 /// occupation grows and the polarization increases.
 ///
 /// # Arguments
-/// * `temperature` - Temperature [K]; must be positive for a physically
+/// * `temperature` - Temperature \[K\]; must be positive for a physically
 ///   meaningful result.  Returns 0.0 for T = 0.
-/// * `magnon_gap` - Gap angular frequency ω [rad/s]; must be non-negative.
+/// * `magnon_gap` - Gap angular frequency ω \[rad/s\]; must be non-negative.
 /// * `coupling` - Magnon-drag coupling constant [C/m²].
 ///
 /// # Returns

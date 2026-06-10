@@ -165,7 +165,7 @@ impl MagnonNeuralNetwork {
 
     /// Compute `(A_k, B_k)` for a single k-point using the current `params`.
     ///
-    /// - `a_k = exp(output[0]) + 1e-3`
+    /// - `a_k = exp(output\[0\]) + 1e-3`
     /// - `b_k = output[1] × 0.3`
     pub fn compute_coefficients(&self, k: f64, j_norm: f64, h_norm: f64) -> (f64, f64) {
         let input = [k / PI, j_norm, h_norm];
@@ -379,7 +379,7 @@ impl QuantumClassicalOptimizer {
     ///
     /// # Errors
     ///
-    /// Propagates errors from [`Self::compute_loss_with_params`].
+    /// Propagates errors from `Self::compute_loss_with_params`.
     pub fn compute_loss_and_gradients(&self) -> Result<(f64, Vec<f64>)> {
         let loss0 = self.compute_loss_f64()?;
         let delta = 1e-5_f64;

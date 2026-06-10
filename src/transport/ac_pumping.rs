@@ -264,7 +264,7 @@ impl AcSpinPumping {
     /// then multiplying by `R_sf` (Ω) gives a voltage (V = J/C).  In spin
     /// physics the natural unit is the spin chemical potential in Joules,
     /// obtained by treating the charge-equivalent voltage as an energy
-    /// `μ_s [J] = J_s [A/m²] · A [m²] · R_sf [Ω] / A [m²]`
+    /// `μ_s \[J\] = J_s [A/m²] · A \[m²\] · R_sf [Ω] / A [m²]`
     ///         `= J_s [A/m²] · λ_sf / σ_NM`.
     ///
     /// The returned value carries SI units of \[J\] (divide by `E_CHARGE` for

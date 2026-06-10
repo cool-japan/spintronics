@@ -315,7 +315,7 @@ impl SpinAccumulation1D {
     /// Compute the steady-state spin accumulation profile via direct tridiagonal solve.
     ///
     /// Solves `(D_s ∇² − 1/τ_sf) μ_s = 0` with Dirichlet conditions:
-    /// `μ_s[0] = injection_value`, `μ_s[N-1] = 0`.
+    /// `μ_s\[0\] = injection_value`, `μ_s\[N-1\] = 0`.
     ///
     /// # Errors
     ///
@@ -438,7 +438,7 @@ impl SpinAccumulation1D {
 
 /// Thomas algorithm for solving a tridiagonal linear system Ax = d.
 ///
-/// `a` is the sub-diagonal (a[0] unused), `b` is the diagonal,
+/// `a` is the sub-diagonal (a\[0\] unused), `b` is the diagonal,
 /// `c` is the super-diagonal (c[n-1] unused), `d` is the RHS.
 ///
 /// All arrays must have the same length n ≥ 1.

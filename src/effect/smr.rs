@@ -83,9 +83,9 @@ pub struct SpinHallMagnetoresistance {
     pub theta_sh: f64,
     /// NM layer bulk resistivity ρ₀ [Ω·m].
     pub resistivity_nm: f64,
-    /// Spin diffusion length in NM [m].
+    /// Spin diffusion length in NM \[m\].
     pub lambda_sf: f64,
-    /// NM layer thickness [m].
+    /// NM layer thickness \[m\].
     pub t_nm: f64,
     /// NM electrical conductivity σ_NM [S/m].
     pub sigma_nm: f64,

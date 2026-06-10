@@ -37,7 +37,7 @@ use crate::math::{CMatrix, Complex};
 /// Tight-binding Hamiltonian for a 1D chain of `n_sites` lattice sites.
 ///
 /// The matrix representation is tridiagonal:
-/// `H[i][i] = onsite[i]`,  `H[i][i±1] = hopping` (real).
+/// `H\[i\]\[i\] = onsite[i]`,  `H\[i\][i±1] = hopping` (real).
 #[derive(Debug, Clone)]
 pub struct Hamiltonian1D {
     /// On-site energies \[eV\].
@@ -103,7 +103,7 @@ impl Hamiltonian1D {
     /// Convert the Hamiltonian to an N×N complex matrix.
     ///
     /// The result is the tridiagonal Hermitian matrix with
-    /// `H[i][i] = onsite[i]` and `H[i][i±1] = hopping` (all real).
+    /// `H\[i\]\[i\] = onsite[i]` and `H\[i\][i±1] = hopping` (all real).
     pub fn to_matrix(&self) -> CMatrix {
         let n = self.n_sites;
         let mut m = CMatrix::zeros(n);
@@ -383,7 +383,7 @@ impl GreenFunction {
         Ok(gr.conj_transpose())
     }
 
-    /// Coupling matrix Γ_L (diagonal, non-zero only at [0][0]).
+    /// Coupling matrix Γ_L (diagonal, non-zero only at \[0\]\[0\]).
     ///
     /// Γ_L = i(Σ_L^R − Σ_L^A) = γ_L  (wide-band limit) \[eV\].
     pub fn gamma_l_matrix(&self) -> CMatrix {
@@ -393,7 +393,7 @@ impl GreenFunction {
         m
     }
 
-    /// Coupling matrix Γ_R (diagonal, non-zero only at [N-1][N-1]).
+    /// Coupling matrix Γ_R (diagonal, non-zero only at \[N-1\]\[N-1\]).
     ///
     /// Γ_R = i(Σ_R^R − Σ_R^A) = γ_R \[eV\].
     pub fn gamma_r_matrix(&self) -> CMatrix {
@@ -428,7 +428,7 @@ impl GreenFunction {
 
     /// Local density of states at site `site` \[eV^{-1}\].
     ///
-    /// LDOS(E, i) = A(E)[i][i] / (2π)
+    /// LDOS(E, i) = A(E)\[i\]\[i\] / (2π)
     ///
     /// # Errors
     ///

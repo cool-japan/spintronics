@@ -188,7 +188,7 @@ impl PinnTrainer {
 
     /// Total loss assembled on the shared `tape` with `params` as the leaf
     /// parameter variables.  The corresponding gradient is obtained by
-    /// calling `tape.backward(loss)` once and reading each `params[i].grad()`.
+    /// calling `tape.backward(loss)` once and reading each `params\[i\].grad()`.
     ///
     /// # Errors
     /// Propagates errors from network forward passes and parameter loading.

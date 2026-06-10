@@ -379,7 +379,7 @@ impl SpinTexture {
 /// Flat parameter order:
 /// `[W1 row-major (h*in_dim), b1 (h), W2 row-major (out_dim*h), b2 (out_dim)]`.
 ///
-/// Weight matrices are row-major: `W1[j][i]` = element at row j, col i.
+/// Weight matrices are row-major: `W1\[j\][i]` = element at row j, col i.
 #[derive(Debug, Clone)]
 struct TwoLayerMlp {
     /// Number of input features.
@@ -434,9 +434,9 @@ impl TwoLayerMlp {
 
     /// Forward pass: returns `(pre1, hidden, output)`.
     ///
-    /// - `pre1[j]`    = Σ_i W1[j,i] · input[i] + b1[j]          (layer 1 pre-act)
-    /// - `hidden[j]`  = tanh(pre1[j])                             (layer 1 output)
-    /// - `output[k]`  = Σ_j W2[k,j] · hidden[j] + b2[k]          (layer 2 linear)
+    /// - `pre1[j]`    = Σ_i W1[j,i] · input\[i\] + b1\[j\]          (layer 1 pre-act)
+    /// - `hidden[j]`  = tanh(pre1\[j\])                             (layer 1 output)
+    /// - `output[k]`  = Σ_j W2[k,j] · hidden\[j\] + b2[k]          (layer 2 linear)
     fn forward(&self, input: &[f64], params: &[f64]) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
         let (d_in, h, d_out) = (self.in_dim, self.hidden_dim, self.out_dim);
         let (w1_start, b1_start, w2_start, b2_start) = self.offsets();
@@ -470,12 +470,12 @@ impl TwoLayerMlp {
     /// Backward pass: computes `dL/dparams` given upstream gradient `dl_doutput`.
     ///
     /// Chain rule through both linear layers and the tanh activation:
-    /// - dL/dW2[k,j] = dL/dout[k] · hidden[j]
+    /// - dL/dW2[k,j] = dL/dout[k] · hidden\[j\]
     /// - dL/db2[k]   = dL/dout[k]
-    /// - dL/dhid[j]  = Σ_k dL/dout[k] · W2[k,j]
-    /// - dL/dpre1[j] = dL/dhid[j] · (1 − tanh²(pre1[j]))
-    /// - dL/dW1[j,i] = dL/dpre1[j] · input[i]
-    /// - dL/db1[j]   = dL/dpre1[j]
+    /// - dL/dhid\[j\]  = Σ_k dL/dout[k] · W2[k,j]
+    /// - dL/dpre1\[j\] = dL/dhid\[j\] · (1 − tanh²(pre1\[j\]))
+    /// - dL/dW1[j,i] = dL/dpre1\[j\] · input\[i\]
+    /// - dL/db1\[j\]   = dL/dpre1\[j\]
     fn backward(
         &self,
         input: &[f64],

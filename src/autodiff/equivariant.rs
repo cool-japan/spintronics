@@ -449,7 +449,7 @@ impl EquivariantLinear {
 pub struct EquivariantMlp {
     /// Layers, in evaluation order.
     pub layers: Vec<EquivariantLinear>,
-    /// Cached input shape (= `layers[0].config`).
+    /// Cached input shape (= `layers\[0\].config`).
     pub input_config: EquivariantConfig,
     /// Cached output shape (= `layers.last().config`).
     pub output_config: EquivariantConfig,
@@ -593,7 +593,7 @@ impl EquivariantMlp {
 
 /// Apply a 3×3 rotation matrix to a [`Vector3<f64>`]: `R · v`.
 ///
-/// The matrix is interpreted as row-major: `r[i][j]` is element `R_{ij}`.
+/// The matrix is interpreted as row-major: `r\[i\][j]` is element `R_{ij}`.
 pub fn rotate_vector(r: &[[f64; 3]; 3], v: Vector3<f64>) -> Vector3<f64> {
     Vector3::new(
         r[0][0] * v.x + r[0][1] * v.y + r[0][2] * v.z,

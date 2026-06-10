@@ -61,12 +61,12 @@ pub const TOL: f64 = 0.30;
 
 // ── Thickness scaling (Fig. 4, IrMn / Co at room temperature) ─────────────
 
-/// IrMn antiferromagnet thickness values [nm] used in the thickness-scaling comparison.
+/// IrMn antiferromagnet thickness values \[nm\] used in the thickness-scaling comparison.
 ///
 /// Data extracted from Nogués & Schuller (1999), Fig. 4, for Co/IrMn bilayers.
 pub const IRMN_THICKNESS_NM: [f64; 6] = [2.0, 4.0, 6.0, 8.0, 10.0, 12.0];
 
-/// Reference loop-shift magnitudes H_EB [mT] vs IrMn thickness.
+/// Reference loop-shift magnitudes H_EB \[mT\] vs IrMn thickness.
 ///
 /// Values digitised from Nogués & Schuller (1999), Fig. 4.
 /// H_EB rises steeply above t_crit ≈ 4–5 nm and saturates around 28–32 mT.

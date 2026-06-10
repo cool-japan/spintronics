@@ -51,11 +51,11 @@ use crate::error::{self, Result};
 /// ```
 #[derive(Debug, Clone)]
 pub struct BrillouinScattering {
-    /// Magnon frequency [rad/s].
+    /// Magnon frequency \[rad/s\].
     pub magnon_frequency: f64,
-    /// Optical photon frequency [rad/s].
+    /// Optical photon frequency \[rad/s\].
     pub optical_frequency: f64,
-    /// Optomagnonic coupling constant g_om [rad/s].
+    /// Optomagnonic coupling constant g_om \[rad/s\].
     pub coupling: f64,
 }
 
@@ -113,7 +113,7 @@ impl BrillouinScattering {
     ///
     ///   Γ = g_om² · n_magnon / (1 + (detuning / g_om)²)
     ///
-    /// which gives units of [rad/s] · n_magnon (dimensionless magnon occupation).
+    /// which gives units of \[rad/s\] · n_magnon (dimensionless magnon occupation).
     ///
     /// The full expression requires knowledge of the optical cavity linewidth κ_o;
     /// the formula above assumes κ_o = g_om for the normalisation.  For actual
@@ -121,7 +121,7 @@ impl BrillouinScattering {
     ///
     /// # Arguments
     ///
-    /// - `detuning`: laser-cavity detuning Δ = ω_laser − ω_opt [rad/s].
+    /// - `detuning`: laser-cavity detuning Δ = ω_laser − ω_opt \[rad/s\].
     /// - `magnon_density`: average magnon occupation ⟨b†b⟩ (dimensionless).
     pub fn scattering_rate(&self, detuning: f64, magnon_density: f64) -> f64 {
         let g = self.coupling;
@@ -154,7 +154,7 @@ impl BrillouinScattering {
     ///
     /// # Arguments
     ///
-    /// - `scattering_angle_rad`: scattering angle θ ∈ [0, π] [rad].
+    /// - `scattering_angle_rad`: scattering angle θ ∈ [0, π] \[rad\].
     pub fn cross_section(&self, scattering_angle_rad: f64) -> f64 {
         // Normalised Lorentzian centred at θ = π/2.
         let x = 2.0 * scattering_angle_rad / PI - 1.0;
@@ -186,7 +186,7 @@ impl BrillouinScattering {
 /// ```
 #[derive(Debug, Clone)]
 pub struct OptomagnonicCoupling {
-    /// Single-magnon optomagnonic coupling g_om [rad/s].
+    /// Single-magnon optomagnonic coupling g_om \[rad/s\].
     pub g_om: f64,
     /// Magnonic Kerr coefficient K [rad/s per intra-cavity photon].
     pub kerr_strength: f64,
@@ -278,21 +278,21 @@ impl OptomagnonicCoupling {
 /// ```
 #[derive(Debug, Clone)]
 pub struct MicrowaveToOptical {
-    /// Microwave photon frequency [rad/s].
+    /// Microwave photon frequency \[rad/s\].
     pub microwave_freq: f64,
-    /// Magnon mode frequency [rad/s].
+    /// Magnon mode frequency \[rad/s\].
     pub magnon_freq: f64,
-    /// Optical photon frequency [rad/s].
+    /// Optical photon frequency \[rad/s\].
     pub optical_freq: f64,
-    /// Microwave-magnon coupling g_me [rad/s].
+    /// Microwave-magnon coupling g_me \[rad/s\].
     pub g_me: f64,
-    /// Optical-magnon coupling g_mo [rad/s].
+    /// Optical-magnon coupling g_mo \[rad/s\].
     pub g_mo: f64,
-    /// Microwave cavity linewidth κ_m [rad/s].
+    /// Microwave cavity linewidth κ_m \[rad/s\].
     pub kappa_m: f64,
-    /// Optical cavity linewidth κ_o [rad/s].
+    /// Optical cavity linewidth κ_o \[rad/s\].
     pub kappa_o: f64,
-    /// Magnon damping rate γ_m [rad/s].
+    /// Magnon damping rate γ_m \[rad/s\].
     pub gamma_m: f64,
 }
 
@@ -434,13 +434,13 @@ impl MicrowaveToOptical {
 /// ```
 #[derive(Debug, Clone)]
 pub struct MagnonicFrequencyComb {
-    /// Repetition rate (line spacing) f_rep [Hz].
+    /// Repetition rate (line spacing) f_rep \[Hz\].
     pub f_repetition: f64,
     /// Number of comb lines.
     pub n_lines: usize,
-    /// Linewidth broadening / decoherence parameter [Hz].
+    /// Linewidth broadening / decoherence parameter \[Hz\].
     pub decoherence: f64,
-    /// Carrier (centre) frequency [Hz].
+    /// Carrier (centre) frequency \[Hz\].
     pub carrier: f64,
 }
 
@@ -499,7 +499,7 @@ impl MagnonicFrequencyComb {
         }
     }
 
-    /// Comb spectral lines [Hz].
+    /// Comb spectral lines \[Hz\].
     ///
     /// Returns `n_lines` frequencies:
     ///
@@ -516,7 +516,7 @@ impl MagnonicFrequencyComb {
             .collect()
     }
 
-    /// Phase noise spectral density at offset frequency `offset_freq_hz` [Hz].
+    /// Phase noise spectral density at offset frequency `offset_freq_hz` \[Hz\].
     ///
     ///   L(f) = decoherence² / (2π f)²   (Lorentzian / Leeson, −20 dB/decade)
     ///
@@ -524,7 +524,7 @@ impl MagnonicFrequencyComb {
     ///
     /// # Arguments
     ///
-    /// - `offset_freq_hz`: offset from carrier [Hz]; must be > 0.
+    /// - `offset_freq_hz`: offset from carrier \[Hz\]; must be > 0.
     pub fn phase_noise(&self, offset_freq_hz: f64) -> f64 {
         if offset_freq_hz <= 0.0 {
             return f64::INFINITY;
@@ -533,7 +533,7 @@ impl MagnonicFrequencyComb {
         self.decoherence.powi(2) / omega_offset.powi(2)
     }
 
-    /// Coherence time τ_c = 1 / (π · decoherence) [s].
+    /// Coherence time τ_c = 1 / (π · decoherence) \[s\].
     ///
     /// Estimated from the Fourier-transform relation between a Lorentzian lineshape
     /// of FWHM decoherence and its time-domain exponential decay.

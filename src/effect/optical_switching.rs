@@ -84,7 +84,7 @@ const C_LIGHT: f64 = 2.997_924_58e8;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LaserPulseParams {
-    /// Laser center wavelength [m]
+    /// Laser center wavelength \[m\]
     ///
     /// Typical: 800 nm (Ti:Sapphire fundamental), 400 nm (second harmonic).
     /// Valid range: 100 nm – 10 µm.
@@ -95,7 +95,7 @@ pub struct LaserPulseParams {
     /// Typical: 1e13–1e17 W/m² for femtosecond pulses focused to µm spots.
     pub peak_intensity: f64,
 
-    /// FWHM pulse duration [s]
+    /// FWHM pulse duration \[s\]
     ///
     /// Typical: 50 fs – 10 ps for ultrafast laser experiments.
     pub pulse_duration_s: f64,
@@ -170,7 +170,7 @@ impl LaserPulseParams {
         }
     }
 
-    /// Photon energy E = ℏ·ω = ℏ·2π·c / λ  [J].
+    /// Photon energy E = ℏ·ω = ℏ·2π·c / λ  \[J\].
     ///
     /// At 800 nm this is ≈ 2.48 eV = 3.97 × 10⁻¹⁹ J.
     #[inline]
@@ -224,12 +224,12 @@ pub struct OpticalMagneticMaterial {
     /// Minimum field required to reverse the magnetization.
     pub coercive_field: f64,
 
-    /// Ultrafast demagnetization time constant τ_demag [s].
+    /// Ultrafast demagnetization time constant τ_demag \[s\].
     ///
     /// Characteristic timescale for spin-electron energy transfer, typically 100–300 fs.
     pub demag_time_s: f64,
 
-    /// Re-magnetization time constant τ_remag [s].
+    /// Re-magnetization time constant τ_remag \[s\].
     ///
     /// Timescale over which the magnetization recovers after demagnetization, 1–10 ps.
     pub remag_time_s: f64,
@@ -290,7 +290,7 @@ impl OpticalMagneticMaterial {
         }
     }
 
-    /// Coercive field expressed as a magnetic flux density μ₀ H_c [T].
+    /// Coercive field expressed as a magnetic flux density μ₀ H_c \[T\].
     ///
     /// Converts from SI field units [A/m] to Tesla for comparison with applied fields
     /// and published AOS threshold tables.

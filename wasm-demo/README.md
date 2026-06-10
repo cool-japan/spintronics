@@ -162,7 +162,7 @@ with exchange interaction between neighboring spins.
 
 ## License
 
-Same as parent project (MIT OR Apache-2.0)
+Apache-2.0
 
 ## References
 
