@@ -28,6 +28,14 @@ pub enum SpinWaveMode {
     BackwardVolume,
     /// Forward Volume Magnetostatic Wave: M perpendicular to film plane
     ForwardVolume,
+    /// Surface-localized spin wave in semi-infinite ferromagnetic media (v0.6.0)
+    ///
+    /// Exponentially localized at a free ferromagnetic surface, described by
+    /// the semi-infinite Damon-Eshbach theory. The penetration depth is 1/k
+    /// modified by exchange stiffness corrections.
+    ///
+    /// Reference: Rado & Weertman, J. Phys. Chem. Solids 11, 315 (1959)
+    SurfaceLocalized,
 }
 
 impl std::fmt::Display for SpinWaveMode {
@@ -36,6 +44,9 @@ impl std::fmt::Display for SpinWaveMode {
             SpinWaveMode::DamonEshbach => write!(f, "Damon-Eshbach (DE) surface mode"),
             SpinWaveMode::BackwardVolume => write!(f, "Backward Volume MSW (BVMSW)"),
             SpinWaveMode::ForwardVolume => write!(f, "Forward Volume MSW (FVMSW)"),
+            SpinWaveMode::SurfaceLocalized => {
+                write!(f, "Surface-localized spin wave (semi-infinite)")
+            },
         }
     }
 }
@@ -116,7 +127,49 @@ impl SpinWaveModeCalculator {
             SpinWaveMode::DamonEshbach => self.damon_eshbach_frequency(h_ext, k),
             SpinWaveMode::BackwardVolume => self.bvmsw_frequency(h_ext, k),
             SpinWaveMode::ForwardVolume => self.fvmsw_frequency(h_ext, k),
+            SpinWaveMode::SurfaceLocalized => self.surface_localized_frequency(h_ext, k),
         }
+    }
+
+    /// Surface-localized mode frequency for semi-infinite media (v0.6.0)
+    ///
+    /// For a semi-infinite ferromagnet, the Damon-Eshbach surface mode has frequency:
+    ///
+    /// ω² = (ω_H + D k²)(ω_H + ω_M + D k²)
+    ///
+    /// where D = 2A/Ms is the exchange stiffness parameter. This is the exchange-
+    /// corrected version of the purely magnetostatic Damon-Eshbach formula.
+    ///
+    /// Reference: Rado & Weertman, J. Phys. Chem. Solids 11, 315 (1959)
+    ///
+    /// # Arguments
+    /// * `h_ext` - External magnetic field \[T\]
+    /// * `k` - In-plane wavevector magnitude \[rad/m\]
+    pub fn surface_localized_frequency(&self, h_ext: f64, k: f64) -> Result<f64> {
+        if h_ext < 0.0 {
+            return Err(error::invalid_param(
+                "h_ext",
+                "external field must be non-negative",
+            ));
+        }
+
+        let omega_h = GAMMA * h_ext;
+        let omega_m = self.omega_m_per_field;
+        // Exchange stiffness D = 2A/Ms (same units as lambda_ex × omega_m)
+        let lambda_ex = 2.0 * self.exchange_a / (MU_0 * self.ms);
+        let d_k2 = omega_m * lambda_ex * k * k;
+
+        let term1 = omega_h + d_k2;
+        let term2 = omega_h + omega_m + d_k2;
+        let omega_sq = term1 * term2;
+
+        if omega_sq < 0.0 {
+            return Err(error::numerical_error(
+                "negative frequency squared in surface-localized mode",
+            ));
+        }
+
+        Ok(omega_sq.sqrt())
     }
 
     /// Damon-Eshbach surface mode dispersion
@@ -305,11 +358,25 @@ impl SpinWaveModeCalculator {
                         (decay + growth) / (1.0 + (-kd).exp())
                     }
                 },
-                SpinWaveMode::BackwardVolume | SpinWaveMode::ForwardVolume => {
-                    // Volume modes: approximately uniform for the fundamental (n=0)
-                    // Higher-order modes have cos(n*pi*z/d) profiles
-                    // For n=0 fundamental mode:
+                SpinWaveMode::BackwardVolume => {
+                    // BVMSW fundamental (n=1): cos(π z / d) standing wave profile
+                    // Maximum amplitude at surfaces (z=0, z=d), node at center (z=d/2)
+                    use std::f64::consts::PI;
+                    (PI * z / d).cos()
+                },
+                SpinWaveMode::ForwardVolume => {
+                    // FVMSW fundamental: approximately uniform (n=0 mode)
                     1.0
+                },
+                SpinWaveMode::SurfaceLocalized => {
+                    // Surface-localized mode: exponential decay from surface (z=0)
+                    // Penetration depth is 1/k (from dipolar boundary condition)
+                    let kd = k.abs() * d;
+                    if kd < 1e-12 {
+                        1.0
+                    } else {
+                        (-k.abs() * z).exp()
+                    }
                 },
             };
             profile.push((z, amplitude));
@@ -318,7 +385,9 @@ impl SpinWaveModeCalculator {
         Ok(profile)
     }
 
-    /// Compare frequencies of all three mode types at given field and wavevector
+    /// Compare frequencies of all mode types at given field and wavevector
+    ///
+    /// Includes DE, BVMSW, FVMSW, and the semi-infinite SurfaceLocalized mode (v0.6.0).
     ///
     /// # Returns
     /// A vector of (mode, frequency) pairs sorted by frequency (ascending)
@@ -327,6 +396,7 @@ impl SpinWaveModeCalculator {
             SpinWaveMode::DamonEshbach,
             SpinWaveMode::BackwardVolume,
             SpinWaveMode::ForwardVolume,
+            SpinWaveMode::SurfaceLocalized,
         ];
 
         let mut results = Vec::new();
@@ -426,18 +496,42 @@ mod tests {
     }
 
     #[test]
-    fn test_mode_profile_volume_uniform() {
+    fn test_mode_profile_volume_cosine() {
+        // BackwardVolume mode profile is cos(π z/d) — n=1 standing wave
         let calc = yig_calculator();
         let profile = calc
-            .mode_profile(SpinWaveMode::BackwardVolume, 1e6, 50)
+            .mode_profile(SpinWaveMode::BackwardVolume, 1e6, 101)
             .expect("valid profile");
 
-        // Volume mode fundamental should be approximately uniform
+        assert_eq!(profile.len(), 101);
+        // At z=0: cos(0) = 1.0
+        let surface_amp = profile[0].1;
+        assert!(
+            (surface_amp - 1.0).abs() < 1e-10,
+            "BackwardVolume mode at z=0 should be +1: {surface_amp}"
+        );
+        // At z=d (index 100): cos(π) = -1.0
+        let bottom_amp = profile[100].1;
+        assert!(
+            (bottom_amp + 1.0).abs() < 1e-10,
+            "BackwardVolume mode at z=d should be -1: {bottom_amp}"
+        );
+    }
+
+    #[test]
+    fn test_mode_profile_fvmsw_uniform() {
+        // ForwardVolume mode fundamental should be approximately uniform (n=0)
+        let calc = yig_calculator();
+        let profile = calc
+            .mode_profile(SpinWaveMode::ForwardVolume, 1e6, 50)
+            .expect("valid profile");
+
+        // FVMSW fundamental is uniform
         let first = profile[0].1;
         let mid = profile[25].1;
         assert!(
             (first - mid).abs() < 0.01,
-            "Volume mode should be uniform: first={first}, mid={mid}"
+            "FVMSW mode should be uniform: first={first}, mid={mid}"
         );
     }
 
@@ -465,6 +559,64 @@ mod tests {
         let de = SpinWaveMode::DamonEshbach;
         let display = format!("{de}");
         assert!(display.contains("Damon-Eshbach"));
+
+        let sl = SpinWaveMode::SurfaceLocalized;
+        let display_sl = format!("{sl}");
+        assert!(display_sl.contains("Surface-localized") || display_sl.contains("surface"));
+    }
+
+    #[test]
+    fn test_surface_localized_frequency() {
+        let calc = yig_calculator();
+        let h_ext = 0.1;
+        let k = 1e6;
+        let omega = calc
+            .surface_localized_frequency(h_ext, k)
+            .expect("valid parameters");
+        assert!(
+            omega > 0.0,
+            "Surface-localized mode frequency must be positive: {omega}"
+        );
+    }
+
+    #[test]
+    fn test_surface_localized_mode_profile_decays() {
+        let calc = yig_calculator();
+        let k = 1e7;
+        let n_points = 50;
+        let profile = calc
+            .mode_profile(SpinWaveMode::SurfaceLocalized, k, n_points)
+            .expect("valid profile");
+
+        // Surface amplitude (z=0) should be greater than deeper amplitudes
+        let surface_amp = profile[0].1;
+        let deep_amp = profile[n_points - 1].1;
+        assert!(
+            surface_amp > deep_amp,
+            "Surface-localized profile should decay: surface={surface_amp}, deep={deep_amp}"
+        );
+    }
+
+    #[test]
+    fn test_backward_volume_mode_profile_cosine() {
+        let calc = yig_calculator();
+        let k = 1e6;
+        let n_points = 101;
+        let profile = calc
+            .mode_profile(SpinWaveMode::BackwardVolume, k, n_points)
+            .expect("valid profile");
+
+        // n=1 cosine: amplitude at z=0 should be +1, at z=d should be -1
+        let amp_surface = profile[0].1;
+        let amp_bottom = profile[n_points - 1].1;
+        assert!(
+            amp_surface > 0.9,
+            "BVMSW surface amplitude (z=0) should be ~+1: {amp_surface}"
+        );
+        assert!(
+            amp_bottom < -0.9,
+            "BVMSW bottom amplitude (z=d) should be ~-1: {amp_bottom}"
+        );
     }
 
     #[test]

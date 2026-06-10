@@ -54,7 +54,7 @@ impl PyLlbMaterial {
     /// Create a new LLB material with explicit parameters.
     ///
     /// Args:
-    ///     curie_temp: Curie temperature T_C [K]
+    ///     curie_temp: Curie temperature T_C \[K\]
     ///     alpha: Base Gilbert damping constant (dimensionless)
     ///     spin_s: Quantum spin number S (e.g. 0.5 for spin-1/2)
     ///     ms_0: Zero-temperature saturation magnetization [A/m]
@@ -99,7 +99,7 @@ impl PyLlbMaterial {
     /// Returns 0.0 for T >= T_C or T <= 0.
     ///
     /// Args:
-    ///     temperature: Temperature [K]
+    ///     temperature: Temperature \[K\]
     ///
     /// Returns:
     ///     Dimensionless equilibrium magnetization in [0, 1]
@@ -113,7 +113,7 @@ impl PyLlbMaterial {
     /// - T ≥ T_C:  α_∥ = 2α · T/(5T_C)
     ///
     /// Args:
-    ///     temperature: Temperature [K]
+    ///     temperature: Temperature \[K\]
     pub fn alpha_parallel(&self, temperature: f64) -> f64 {
         self.inner.alpha_parallel(temperature)
     }
@@ -124,12 +124,12 @@ impl PyLlbMaterial {
     /// - T ≥ T_C:  α_⊥ = 2α · T/(5T_C)
     ///
     /// Args:
-    ///     temperature: Temperature [K]
+    ///     temperature: Temperature \[K\]
     pub fn alpha_perp(&self, temperature: f64) -> f64 {
         self.inner.alpha_perp(temperature)
     }
 
-    /// Curie temperature T_C [K]
+    /// Curie temperature T_C \[K\]
     #[getter]
     pub fn curie_temp(&self) -> f64 {
         self.inner.curie_temp
@@ -204,9 +204,9 @@ impl PyLlbSolver {
     ///
     /// Args:
     ///     material: LlbMaterial with Curie temperature, damping, spin number, M_s
-    ///     dt: Integration time step [s]
-    ///     temperature: Simulation temperature [K]
-    ///     h_ext: External applied field (hx, hy, hz) [T]
+    ///     dt: Integration time step \[s\]
+    ///     temperature: Simulation temperature \[K\]
+    ///     h_ext: External applied field (hx, hy, hz) \[T\]
     #[new]
     pub fn new(material: &PyLlbMaterial, dt: f64, temperature: f64, h_ext: [f64; 3]) -> Self {
         let h = Vector3::new(h_ext[0], h_ext[1], h_ext[2]);
@@ -245,7 +245,7 @@ impl PyLlbSolver {
     ///     dict with keys:
     ///       'mx', 'my', 'mz': list of float — trajectory components
     ///       'm_magnitude': list of float — |m(t)| at each snapshot
-    ///       'time': list of float — time stamps [s]
+    ///       'time': list of float — time stamps \[s\]
     ///       'equilibrium_m': float — m_e(T) for the simulation temperature
     pub fn run(
         &self,
@@ -281,19 +281,19 @@ impl PyLlbSolver {
         Ok(dict.into())
     }
 
-    /// Integration time step dt [s]
+    /// Integration time step dt \[s\]
     #[getter]
     pub fn dt(&self) -> f64 {
         self.inner.dt
     }
 
-    /// Simulation temperature [K]
+    /// Simulation temperature \[K\]
     #[getter]
     pub fn temperature(&self) -> f64 {
         self.inner.temperature
     }
 
-    /// External field h_ext as (hx, hy, hz) tuple [T]
+    /// External field h_ext as (hx, hy, hz) tuple \[T\]
     #[getter]
     pub fn h_ext(&self) -> (f64, f64, f64) {
         (self.inner.h_ext.x, self.inner.h_ext.y, self.inner.h_ext.z)

@@ -94,10 +94,10 @@ fn simd_to_numpy<'py>(py: Python<'py>, batch: &SimdBatch) -> Bound<'py, PyArray2
 ///
 /// Args:
 ///     m: (N, 3) numpy array of magnetization vectors (row-major, each row is m_i)
-///     h_eff: (N, 3) numpy array of effective field vectors [T]
+///     h_eff: (N, 3) numpy array of effective field vectors \[T\]
 ///     alpha: Gilbert damping constant (dimensionless)
 ///     gamma: Gyromagnetic ratio [rad/(s·T)], default ≈ 1.761e11
-///     dt: Integration time step [s]
+///     dt: Integration time step \[s\]
 ///
 /// Returns:
 ///     (N, 3) numpy array of updated magnetization vectors (unit length)
@@ -140,10 +140,10 @@ pub fn batch_rk4_step<'py>(
 ///
 /// Args:
 ///     m: (N, 3) numpy array of magnetization vectors (initial state)
-///     h_eff: (N, 3) numpy array of effective field vectors [T] (constant)
+///     h_eff: (N, 3) numpy array of effective field vectors \[T\] (constant)
 ///     alpha: Gilbert damping constant (dimensionless)
 ///     gamma: Gyromagnetic ratio [rad/(s·T)]
-///     dt: Integration time step [s]
+///     dt: Integration time step \[s\]
 ///     num_steps: Number of RK4 iterations to perform
 ///
 /// Returns:

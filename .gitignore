@@ -18,6 +18,9 @@ Cargo.lock
 *.swo
 *~
 
+# Claude AI config
+**/.claude/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -32,3 +35,8 @@ Thumbs.db
 test_*
 performance_*
 /examples/*/target/
+
+# Rustc ICE dumps
+rustc-ice-*.txt
+
+target

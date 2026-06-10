@@ -5,7 +5,7 @@
 **齊藤英治教授グループ (東京大学 / 理研CEMS) の先駆的研究成果に基づく実装**
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue)]()
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)]()
 [![Rust Version](https://img.shields.io/badge/rust-2021-orange)]()
 
 ## 🚀 概要
@@ -315,7 +315,7 @@ Rustのゼロコスト抽象化とコンパイル時最適化により、イン�
 
 ## 📄 ライセンス
 
-このプロジェクトは MIT OR Apache-2.0 のデュアルライセンスです。
+このプロジェクトは Apache-2.0 ライセンスの下で提供されています。
 
 ## 📧 コンタクト
 
@@ -338,4 +338,4 @@ Rustのゼロコスト抽象化とコンパイル時最適化により、イン�
 
 **Copyright © 2025 COOLJAPAN OÜ (Team KitaSan)**
 
-Licensed under MIT OR Apache-2.0
+Licensed under Apache-2.0

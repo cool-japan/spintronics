@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.3.0 COMPLETE
-**Last Updated**: 2026-03-13 - v0.3.0 released
-**Status**: 718 tests passing, ~40K lines (Rust code: 30K+)
+**Version**: 0.3.1
+**Last Updated**: 2026-06-10 - v0.3.1 released
+**Status**: 1829 lib + 111 doc tests passing, ~95K lines (Rust code: ~80K+)
 
 ---
 
@@ -155,61 +155,336 @@
 - [x] Brillouin function and equilibrium_magnetization(T)
 - [x] Temperature-dependent longitudinal and transverse damping
 
-### Quantum Effects (Stretch Goals — deferred to v0.4.0)
-- [ ] Magnon quantization in confined geometries
-- [ ] Zero-point fluctuations at T=0
-- [ ] Quantum spin Hall effect in 2D TIs
-- [ ] Magnon-photon coupling strength (cavity QED regime)
+### Quantum Effects (v0.4.0 — COMPLETE)
+- [x] Magnon quantization in confined geometries — `quantum::ZeroPointFluctuations`
+- [x] Zero-point fluctuations at T=0 — `ZeroPointFluctuations::zero_point_amplitude`
+- [x] Quantum spin Hall effect in 2D TIs (Kane-Mele model — completed in v0.5.0)
+- [x] Magnon-photon coupling strength (cavity QED regime) — `TavisCummings`, `MagnonPolariton`
 
-### Non-Equilibrium Transport (Stretch Goals — deferred to v0.4.0)
-- [ ] Non-equilibrium Green's function (NEGF) formalism
-- [ ] Keldysh formalism for time-dependent transport
-- [ ] Shot noise in spin transport
-- [ ] Spin accumulation dynamics with diffusion-drift equations
+### Non-Equilibrium Transport (v0.4.0 — COMPLETE)
+- [x] Non-equilibrium Green's function (NEGF) formalism — `negf::GreenFunction`
+- [x] Keldysh formalism for time-dependent transport — `negf::KeldyshSolver`
+- [x] Shot noise in spin transport — `negf::ShotNoise`, Fano factor
+- [x] Spin accumulation dynamics with diffusion-drift equations — `negf::SpinAccumulation1D`
 
 ---
 
-## v0.4.0 - ROADMAP
+## v0.4.0 - COMPLETE (2026-05-17)
 
-**Target**: Q4 2026
-**Theme**: Research Features, ML Integration, Ecosystem Expansion
+**Released**: 2026-05-17
+**Theme**: Quantum Magnonics, NEGF Transport, Topological Bands, Cavity Extensions
+**Tests**: 917 passing, 0 failures, 0 warnings
+**Code Size**: ~46K total lines (~36K Rust code)
 
-### Machine Learning Integration
-- [ ] Automatic differentiation for parameter optimization
-- [ ] Gradient-based parameter fitting from experimental data
-- [ ] Neural network potentials for exchange interactions
-- [ ] ML-based surrogate models for fast parameter exploration
+### Math Primitives
+- [x] `Complex` — canonical complex number type promoted from `magnon::bec` — `math::complex`
+- [x] `CMatrix` — N×N dense complex matrix, Gauss-Jordan inverse, TQLI eigendecomposition — `math::matrix`
 
-### Language Bindings
-- [ ] Julia bindings via julia-rs
-- [ ] C/C++ bindings via cbindgen
-- [ ] R bindings for statistical analysis
+### Quantum Magnonics
+- [x] `HolsteinPrimakoff` — linear/quadratic HP transform, YIG/AFM presets — `quantum::holstein_primakoff`
+- [x] `BogoliubovTransform` — analytical Bogoliubov diagonalization, vacuum occupation — `quantum::bogoliubov`
+- [x] `ZeroPointFluctuations` — zero-point amplitude, Casimir free energy — `quantum::zero_point`
 
-### Data Export Formats
-- [ ] NetCDF export (CF conventions)
-- [ ] XDMF for ParaView integration
-- [ ] VTI (VTK ImageData) for uniform grids
-- [ ] Zarr format for cloud-native storage
+### NEGF Non-Equilibrium Transport
+- [x] `Hamiltonian1D`, `LeadSelfEnergy`, `SanchoRubio` — tight-binding + leads — `negf::green_function`
+- [x] `GreenFunction`, `TransportCalculator` — Landauer transmission, I-V, DOS — `negf::green_function`
+- [x] `KeldyshSolver` — Keldysh lesser/greater GFs, non-equilibrium density — `negf::keldysh`
+- [x] `ShotNoise` — zero-freq noise, Fano factor, Johnson-Nyquist — `negf::shot_noise`
+- [x] `SpinAccumulation1D` — FTCS + implicit (Thomas) spin diffusion — `negf::accumulation`
 
-### Magnonics & Photonics
-- [ ] Magnon-photon hybridization (polaritons)
-- [ ] Brillouin light scattering simulation
-- [ ] Microwave-to-optical conversion
-- [ ] Magnonic frequency combs
+### Topological Magnon Bands
+- [x] `MagnonBandModel` — Haldane honeycomb, Kagome, square-DMI — `topomagnon::band_model`
+- [x] `BerryCurvature` — sum-over-states + finite-diff curvature, BZ integration — `topomagnon::berry_curvature`
+- [x] `ChernNumber` — Fukui-Hatsugai-Suzuki discrete method, Wilson loop — `topomagnon::chern_number`
+- [x] `EdgeModes` — strip diagonalization, IPR localization, chiral velocity — `topomagnon::edge_modes`
+- [x] `MagnonHallConductivity` — Matsumoto-Murakami thermal Hall σ_xy — `topomagnon::magnon_hall`
+
+### Cavity Extensions
+- [x] `TavisCummings` — g√N collective coupling, Dicke superradiance — `cavity::tavis_cummings`
+- [x] `MagnonPolariton` + `MultiModePolariton` — Hopfield diagonalization — `cavity::polariton`
+- [x] `BrillouinScattering`, `MicrowaveToOptical`, `MagnonicFrequencyComb` — `cavity::optomagnonic`
+
+### Random Anisotropy
+- [x] `RandomAnisotropy` — Imry-Ma, Harris, Marsaglia axes, LLG field — `material::random_anisotropy`
+
+### Examples (6 new)
+- [x] `magnon_zero_point`, `negf_transport`, `tavis_cummings_dicke`
+- [x] `magnon_polariton`, `topological_magnon_haldane`, `random_anisotropy_disorder`
+
+## v0.5.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Non-Collinear Magnetism, Multiferroics, Topological QSH, Nonlinear Magnons
+**Tests**: 996 passing, 0 failures, 0 warnings
+**Code Size**: ~52K total lines (~42K Rust code)
+
+### Non-Collinear Magnetism (`src/noncollinear/`)
+- [x] Spin spirals: cycloidal, helical, conical, fan structure — `SpinSpiral`
+- [x] Luttinger-Tisza ground-state search — `LuttingerTisza`
+- [x] Exchange Fourier transform J(q), frustration ratio, ordering temperature
+- [x] TbMnO₃ preset, J1-J2 chain, ferromagnet, antiferromagnet presets
+
+### Multiferroics / Magnetoelectric Coupling (`src/multiferroic/`)
+- [x] Linear ME tensor α_ij with Dzyaloshinskii bound — `MagnetoelectricTensor`
+- [x] Presets: BiFeO₃, TbMnO₃, Cr₂O₃
+- [x] KNB mechanism P ∝ e_ij × (S_i × S_j) — `KnbMechanism`
+- [x] Inverse ME: E-field control of magnetisation — `InverseMagnetoelectric`
+- [x] Free functions: DM polarization, exchange striction, toroidal moment
+
+### Quantum Spin Hall / Kane-Mele (`src/topomagnon/qsh.rs`)
+- [x] Full 4-band Bloch Hamiltonian — `KaneMeleModel`
+- [x] Z2 invariant via Fukui-Hatsugai on honeycomb BZ parallelogram
+- [x] Rashba and staggered potential phase boundaries
+- [x] Helical edge states in strip geometry
+
+### Nonlinear Magnon Physics (`src/magnon/nonlinear.rs`)
+- [x] Four-magnon scattering vertex T_kk — `FourMagnonScattering`
+- [x] Suhl instability threshold and parametric growth rate
+- [x] Parametric amplification gain — `ParametricAmplification`
+- [x] Nonlinear FMR linewidth and bistability — `NonlinearFmrLinewidth`
+
+### Examples (4 new)
+- [x] `spin_spiral_tbmno3.rs` — LT ground-state + KNB polarization
+- [x] `bife_o3_multiferroic.rs` — ME coupling + DM + toroidal moments
+- [x] `kane_mele_qsh.rs` — Z2 phase diagram + edge states
+- [x] `nonlinear_magnon_suhl.rs` — Suhl instability + parametric amp
+
+---
+
+## v0.6.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Spin Wave Extensions, HOTI, Axion Electrodynamics, Data Formats, ML Autodiff
+**Tests**: 1200 passing, 0 failures, 0 warnings
+**Code Size**: ~65K total lines (~53K Rust code)
+
+### Spin Wave Theory Extensions
+- [x] `DamonEshbachDetailed` — full DE dispersion, non-reciprocity, surface localization (src/spinwave/damon_eshbach.rs)
+- [x] `BackwardVolumeMSW` — BVMSW dispersion, negative group velocity, crossover wavevector (src/spinwave/bvmsw.rs)
+- [x] `SurfaceSpinWave` — semi-infinite medium, Rado-Weertman boundary condition (src/spinwave/surface.rs)
+- [x] `SpectralMagnonSolver` — FFT/CMatrix eigenmodes, DOS, spectral weight, mode decomposition (src/magnon/spectral.rs)
 
 ### Advanced Topological Phenomena
-- [ ] Magnetic monopoles in spin ice
-- [ ] Emergent electrodynamics from Berry curvature
-- [ ] Topological magnon bands
-- [ ] Chiral edge modes in magnonic systems
+- [x] `WilsonLoop` — multi-band Wilson loop, link matrices, Wannier centers, nested polarization
+- [x] `BbhModel` — BBH 4-band HOTI, quadrupole moment, topological corner states
+- [x] `BreathingKagomeModel` — 3-band kagome, corner Z₃ polarization
+- [x] `CornerStateSolver` — OBC×OBC finite-cluster corner state spectrum + IPR localization
+- [x] `MagnonBandModel3D` — 3D cubic Haldane + pyrochlore presets
+- [x] `AxionElectrodynamics` — 3D Berry-curvature θ-term (Chern-Simons form), α_TME, axion response
+- [x] `AxionMagnonPhoton` — axion-mediated magnon-photon coupling, Faraday rotation, cooperativity
+
+### Data Export Formats
+- [x] `VtiWriter` — VTK ImageData (XML + base64 binary), feature `vti` (src/visualization/vti.rs)
+- [x] `XdmfWriter` — XDMF v3.0 (XML + raw f64 binary), feature `xdmf` (src/visualization/xdmf.rs)
+- [x] `NetCdfWriter`/`NetCdfReader` — pure-Rust NetCDF3 Classic (XDR binary), feature `netcdf` (src/visualization/netcdf.rs)
+- [x] `ZarrStore`/`ZarrArray` — pure-Rust Zarr v2 (JSON+binary chunks), feature `zarr` (src/visualization/zarr.rs)
+
+### ML Autodiff (`#[cfg(feature = "autodiff")]`)
+- [x] `Tape` / `Var<'t>` — reverse-mode AD tape; arithmetic ops + sin/cos/exp/ln/sqrt/tanh/powi/powf
+- [x] `Sgd` (with momentum), `Adam` (Kingma & Ba 2014), `LBfgs` (two-loop BFGS)
+- [x] `ParameterFitter` — closure-based gradient fitting; `FitResult`
+- [x] Differentiable physics: `kittel_frequency_diff`, `zeeman_energy_diff`, `exchange_energy_diff`, `dmi_energy_diff`, `anisotropy_energy_diff`
+
+### Examples (6 new, total 41)
+- [x] `damon_eshbach_nonreciprocity.rs`, `backward_volume_magnons.rs`, `hoti_corner_states.rs`
+- [x] `axion_magnon_photon.rs`, `data_export_formats.rs`, `autodiff_parameter_fitting.rs`
+
+## v0.7.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: ML Phase 2, Advanced Spin Waves, Stiff/Diffusion Integrators, Experimental Validation
+**Tests**: 1329 passing, 0 failures, 0 warnings
+**Code Size**: ~71K total lines (~58K Rust code)
+
+### ML Enhancements / Phase 2 (`#[cfg(feature = "autodiff")]`)
+- [x] `Mlp`, `Layer`, `Activation` enum (`Relu`, `Tanh`, `Sigmoid`, `Gelu`, `Linear`) — feed-forward NN with Xavier/He init (`src/autodiff/neural.rs`)
+- [x] `NeuralExchange` — trainable J(r), rescales r to [-1,1] for stable training
+- [x] `NeuralAnisotropy` — trainable K(m_x, m_y, m_z) surrogate
+- [x] `LlgPinn` / `PinnTrainer` — physics-informed NN for LLG with FD time derivative on tape (`src/autodiff/pinn.rs`)
+- [x] `SpinConfig` (spherical coords), `EnergyFunctional`, `MagneticStructureOptimizer`, `find_fm_ground_state`, `find_afm_ground_state` (`src/autodiff/structure_opt.rs`)
+
+### Advanced Spin Wave Theory
+- [x] `NanodiskSpinWaves` — radial Bessel × azimuthal modes, mode spectrum, group velocity, propagation length (`src/spinwave/nanodisk.rs`)
+- [x] `MagnonicCrystal1D` / `MagnonicCrystal2D` — plane-wave band structure, band gap, group velocity (`src/spinwave/magnonic_crystal.rs`)
+- [x] `SemiInfiniteDamonEshbach` — single-surface DE in semi-infinite media (`src/spinwave/semi_infinite_de.rs`)
+
+### Stiff/Diffusion Integrators
+- [x] `ImplicitMidpointNewton` — A-stable 2nd-order with finite-diff Jacobian + Gauss elimination (`src/dynamics/integrators/implicit_midpoint.rs`)
+- [x] `CrankNicolsonDiffusion` — unconditionally stable, Dirichlet/Neumann/Periodic BC via Thomas algorithm (`src/dynamics/integrators/crank_nicolson.rs`)
+- [x] `SpinDiffusionCrankNicolson` — specialized for ∂μ_s/∂t = D∇²μ_s − μ_s/τ_sf
+- [x] Resolves v0.3.0-deferred items: implicit midpoint with Newton iteration; Crank-Nicolson for diffusion-dominated systems
+
+### Experimental Validation Refactor
+- [x] `src/validation.rs` → `src/validation/` directory (backward-compatible via `pub use parameter_checks::*`)
+- [x] `Demidov2006Validation` — DE dispersion + non-reciprocity vs PRL 96, 097202 (2006)
+- [x] `Saitoh2006Validation` — Pt spin Hall angle + ISHE polarity + linear scaling vs APL 88, 182509 (2006)
+- [x] `Uchida2008Validation` — LSSE linear thermal response + polarity vs Nature 455, 778 (2008)
+- [x] `ValidationResult` type with max/mean relative error, n_points, tolerance, pass flag
+
+### Examples (6 new, total 47)
+- [x] `neural_exchange_training.rs` — NeuralExchange + Adam (FD gradient demo)
+- [x] `nanodisk_modes.rs` — YIG 100 nm disk fundamental at ~2.2 GHz
+- [x] `implicit_midpoint_stiff_demo.rs` — Stiff LLG comparison vs explicit Euler
+- [x] `pinn_llg_solver.rs` — LlgPinn on Larmor precession
+- [x] `magnonic_crystal_bandgap.rs` — 1D NiFe/CoFeB crystal (~57% relative band gap)
+- [x] `experimental_validation_demo.rs` — Run all 3 landmark paper validations
+
+---
+
+## v0.8.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: Stochastic Methods, Advanced ML Phase 3, More Validations, Property-Based Testing
+**Tests**: 1403 lib + 27 proptest + 103 doctests passing, 0 failures, 0 warnings
+**Code Size**: ~76K total lines (~63K Rust code)
+
+### Stochastic Methods Improvements (`#[cfg(feature = "scirs2")]`)
+- [x] `HeunAdaptive` — Heun-Euler embedded pair with PI controller, frozen-noise rejection retry (`src/stochastic/heun_adaptive.rs`)
+- [x] `ImplicitMilstein` — Newton + 3×3 FD Jacobian + optional Milstein correction for multiplicative noise (`src/stochastic/implicit_milstein.rs`)
+- [x] `PimcSimulation` — worldline path-integral MC for finite-T Heisenberg chains, Chain1D / Ring1D lattices, Trotter rigidity coupling, Marsaglia spin proposals (`src/stochastic/pimc.rs`)
+
+### Advanced ML Phase 3 (`#[cfg(feature = "autodiff")]`)
+- [x] `EquivariantLinear`, `EquivariantMlp`, `EquivariantConfig` — Cartesian-tensor O(3)-equivariant NN layers; rotation invariance preserved to machine precision (`src/autodiff/equivariant.rs`)
+- [x] `random_so3`, `rotate_vector` — Marsaglia + Rodrigues helpers for testing equivariance
+- [x] `ActiveLearner`, `ActiveLearningConfig`, `QueryStrategy` (UncertaintySampling / QueryByCommittee / RandomBaseline), `ActiveLearnResult` — active learning with ensemble bootstrap and `fit(oracle, pool)` loop (`src/autodiff/active_learning.rs`)
+
+### More Experimental Validations
+- [x] `Mosendz2010Validation` — Mosendz et al. PRL 104, 046601 (2010): V_ISHE vs Pt thickness, Δα_eff linewidth enhancement, g↑↓ ≈ 2.1×10¹⁹ m⁻², refined θ_SH ≈ 0.013 (`src/validation/experimental/mosendz_2010.rs`)
+- [x] `Liu2012Validation` — Liu et al. Science 336, 555 (2012): β-Ta θ_SH ≈ -0.12 (negative!), critical J_c, polarity, thickness scaling (`src/validation/experimental/liu_2012.rs`)
+
+### Property-Based Testing (first `tests/` integration suite, `proptest = "1.6"`)
+- [x] `tests/property_conservation.rs` — 12 properties × 32 cases: |m|=1 under RK4/Heun/Euler, Zeeman energy at α=0, damping alignment, Larmor sign reversal, dm/dt orthogonality, cross-product anti-commutativity, triple product cyclic, Lagrange identity, normalize idempotent
+- [x] `tests/property_symmetries.rs` — 15 properties × 32 cases: SO(3) matrix orthogonality + determinant + trace bounded, SO(3) invariants (dot, magnitude), cross-product equivariance, exchange/Zeeman/anisotropy invariance, calc_dm_dt equivariance, time-reversal at α=0, linearity in H, parity, rotation composition + inverse
+- [x] Total: 27 property tests × 32 cases = 864 randomized trials per `cargo test` run
+
+### Examples (5 new, total 52)
+- [x] `heun_adaptive_thermal_llg.rs` — Permalloy at T=300 K, adaptive dt 96–276 fs
+- [x] `pimc_heisenberg_chain.rs` — 1D Heisenberg ring vs β: paramagnetic → aligned
+- [x] `equivariant_nn_demo.rs` — 4-spin EquivariantMlp; rotation drift 4.4×10⁻¹⁶
+- [x] `active_learning_demo.rs` — QueryByCommittee 24× better than RandomBaseline on sin(5x)·exp(-x²)
+- [x] `validation_landmark_suite.rs` — 5 papers / 12 of 15 quantitative checks pass
+
+---
+
+## v0.9.0 - COMPLETE (2026-05-17)
+
+**Released**: 2026-05-17
+**Theme**: ML Phase 4 (Graph NN + Bayesian Opt), Garello 2013 + Boona 2014 validations, GPU device abstraction skeleton
+**Tests**: 1463 lib + 27 proptest + 103 doctests passing, 0 failures, 0 warnings
+**Code Size**: ~80K total lines (~67K Rust code)
+
+### Advanced ML Phase 4 (`#[cfg(feature = "autodiff")]`)
+- [x] `LatticeGraph`, `GraphMessagePassingLayer`, `GraphMlp`, `NodeFeatures` — equivariant graph NN message passing on arbitrary lattice topology; chain_1d, ring_1d, square_lattice_2d builders; rotation invariance to 2.8e-14 (`src/autodiff/graph_nn.rs`)
+- [x] `GaussianProcess`, `GpConfig`, `BayesianOptimizer`, `BayesianOptConfig`, `AcquisitionStrategy` (EI / UCB / PosteriorVariance), `BayesianOptResult` — BO with RBF-kernel GP, Cholesky + jitter, custom erf via Abramowitz-Stegun (`src/autodiff/bayesian_opt.rs`)
+
+### More Experimental Validations (total: 7 papers)
+- [x] `Garello2013Validation` — Nat. Nanotechnol. 8, 587 (2013): angular-harmonic SOT decomposition Pt/Co/AlOx
+- [x] `Boona2014Validation` — MRS Bulletin 39, 426 (2014): LSSE in granular YIG/Pt
+- Previously: Demidov 2006, Saitoh 2006, Uchida 2008 (v0.7.0); Mosendz 2010, Liu 2012 (v0.8.0)
+
+### GPU Acceleration Skeleton (feature `cuda`)
+- [x] `Device` trait — object-safe `Box<dyn Device>` abstraction (`src/gpu/mod.rs`)
+- [x] `CpuDevice` — always available; wraps existing CPU LLG with frozen-field RK4 (~92 ns/spin/step) (`src/gpu/cpu.rs`)
+- [x] `CudaDevice` — `#[cfg(feature = "cuda")]` skeleton; constructs OK with available=false; all ops return numerical_error pending v1.0.0 CUDA kernels (`src/gpu/cuda.rs`)
+- [x] `available_devices()`, `select_best_device()` — auto-enumeration
+- [x] Feature `cuda = []` — no external deps yet (pure plumbing)
+
+### Examples (4 new, total 56)
+- [x] `graph_nn_lattice.rs` — rotation invariance to 2.8e-14
+- [x] `bayesian_opt_materials.rs` — BO converges within 0.026 of true optimum in 20 evals
+- [x] `validation_full_suite.rs` — 18/23 checks across 7 landmark papers
+- [x] `gpu_device_demo.rs` — 100 spins × 200 steps in 1.8 ms; scaling sweep
+
+---
+
+## v0.5.0 - COMPLETE (2026-05-31)
+
+**Released**: 2026-05-31
+**Theme**: SMR/STNO/AOS/SAW Physics, ML Phase 5, RL, Micromagnetics, New Validations
+**Tests**: 1689 lib + 42 proptest + 109 doctests passing, 0 failures, 0 warnings
+**Code Size**: ~95K total lines (~80K Rust code)
+
+### New Physics Effect Modules
+- [x] `SpinHallMagnetoresistance`, `UnidirectionalSmr` — SMR/USMR with Chen (PRB 2013) formula, angular scans, Pt/YIG & W/YIG & Pt/Co presets (`src/effect/smr.rs`)
+- [x] `SpinTorqueOscillator`, `SpinTorqueOscillatorConfig` — Slonczewski STT auto-oscillation, threshold current, Slavin–Tiberkevich linewidth, Adler locking, Permalloy preset (`src/effect/stno.rs`)
+- [x] `CircularHelicity`, `LaserPulseParams`, `OpticalMagneticMaterial`, `OpticalSwitching`, `OpticalSwitchResult` — Inverse Faraday Effect, HDS, ultrafast demag model; GdFeCo, Co, Py presets (`src/effect/optical_switching.rs`)
+- [x] `AcSpinPumping`, `SpinBattery` — backflow-corrected G_r_eff; DC/2ω spin current at FMR; Δα enhancement; ISHE voltage; YIG/Pt preset (`src/transport/ac_pumping.rs`)
+- [x] `PiezoSubstrate`, `SawMagnetoelastic`, `SawSource`, `SawMagnetoacoustics`, `SawSpinWaveExcitation` — SAW magnetoacoustics; resonant precession (Lorentzian); acoustic spin pumping; LiNbO₃/GaAs/ZnO presets (`src/mech/saw.rs`)
+
+### ML Phase 5 (`#[cfg(feature = "autodiff")]`)
+- [x] `DiffusionModel`, `NoiseSchedule`, `SpinTexture` — DDPM with 2-layer MLP denoiser + manual backprop; Adam training; reverse diffusion; topological charge validation (`src/autodiff/diffusion_model.rs`)
+- [x] `QuantumClassicalOptimizer`, `MagnonNeuralNetwork`, `MagnonHamiltonianParams`, `QuantumClassicalResult` — MLP → Bogoliubov (A_k, B_k) → ε_k = √(A_k²−B_k²); central FD gradients; Adam training (`src/autodiff/quantum_classical.rs`)
+
+### RL for SOT Switching
+- [x] `SotSwitchingEnv`, `CemPolicy`, `SotRlOptimizer`, `SotRlResult`, `SotSwitchingConfig` — PMA macrospin LLG+SOT environment; CEM for pulse optimization; CoFeB/Pt preset (`src/ai/rl.rs`)
+
+### Micromagnetics Infrastructure
+- [x] `NewellTensor`, `DemagField` — analytic Newell (1993) demag; 8-corner f-function; direct O(N²) convolution (`src/micromagnetics/demag.rs`)
+- [x] `MicromagneticGrid`, `GridConfig`, `LlgResult` — FD exchange + demag + Zeeman + anisotropy; per-cell LLG RK4 (`src/micromagnetics/grid.rs`)
+- [x] `StandardProblem3`, `Sp3Config`, `Sp3Result`, `StableState` — muMAG SP#3 flower↔vortex energy comparison (`src/validation/standard_problems/sp3.rs`)
+
+### Experimental Validations (total: 11 papers)
+- [x] `Nakayama2013Validation` — Pt/YIG SMR angular scan + ratio vs PRL 110, 206601 (2013) (`src/validation/experimental/nakayama_2013.rs`)
+- [x] `Avci2015Validation` — Pt/Co USMR current linearity + coefficient vs Nat. Phys. 11, 570 (2015) (`src/validation/experimental/avci_2015.rs`)
+- [x] `Woo2016Validation` — skyrmion diameter in Pt/CoFeB/MgO vs Nat. Mater. 15, 501 (2016) (`src/validation/experimental/woo_2016.rs`)
+- [x] `Cornelissen2015Validation` — nonlocal magnon transport, λ_m=9.4 μm vs Nat. Phys. 11, 1022 (2015) (`src/validation/experimental/cornelissen_2015.rs`)
+
+### Property-Based Testing Phase 2
+- [x] `tests/property_physics.rs` — 15 property tests × 32 cases = 480 trials: SMR symmetries, USMR antisymmetry, STNO norm conservation + torque perpendicularity, AC pumping inequalities
+
+### Examples (6 new, total 62)
+- [x] `smr_angular_scan.rs` — SMR angular scan + USMR + Nakayama/Avci validations
+- [x] `stno_auto_oscillation.rs` — STNO auto-oscillation, linewidth, injection locking
+- [x] `ac_spin_pumping_battery.rs` — YIG/Pt spin pumping DC/2ω + ISHE voltage
+- [x] `rl_sot_switching.rs` — CEM RL agent for SOT pulse protocol
+- [x] `diffusion_skyrmion_gen.rs` — DDPM training + topological charge (autodiff)
+- [x] `variational_magnon_nn.rs` — quantum-classical hybrid NN (autodiff)
+
+---
+
+## v1.0.0 - ROADMAP (Stable Release)
+
+**Target**: Q3 2027
+**Theme**: Stable API, Workspace Split, Real CUDA Kernels, Language Bindings
+
+### Language Bindings (FFI foundation)
+- [ ] C/C++ bindings via cbindgen (foundation for FFI to other languages)
+- [ ] Build script `build.rs` for automatic `spintronics.h` generation
+- [ ] Example C program calling LLG solver + Vector3
+- [ ] Julia bindings via julia-rs or jlrs (builds on C ABI)
+- [ ] R bindings via Rcpp (builds on C ABI)
 
 ### Workspace Restructuring
-- [ ] Split into workspace with multiple crates:
-  - `spintronics-core` - Core physics and materials
-  - `spintronics-solver` - Numerical solvers
-  - `spintronics-io` - I/O and visualization
-  - `spintronics-python` - Python bindings
-  - `spintronics-cli` - Command-line tools
+- [ ] Split monolithic crate into workspace with multiple crates:
+  - `spintronics-core` — Core physics and materials
+  - `spintronics-solver` — Numerical solvers (LLG, integrators)
+  - `spintronics-spinwave` — Spin wave theory + magnonics
+  - `spintronics-topomagnon` — Topological magnon bands + HOTI + axion
+  - `spintronics-autodiff` — ML autodiff + neural potentials + PINN + equivariant + graph NN
+  - `spintronics-io` — I/O and visualization (VTK, HDF5, NetCDF, Zarr)
+  - `spintronics-gpu` — Device abstraction + CUDA / ROCm kernels
+  - `spintronics-python` — Python bindings
+  - `spintronics-c` — C bindings
+  - `spintronics-cli` — Command-line tools
+
+### Real GPU Kernels (drop the v0.9.0 skeleton)
+- [ ] CUDA kernels via `cudarc` crate
+- [ ] LLG RK4 kernel (one block per spin)
+- [ ] Zeeman / exchange / DMI effective field kernels
+- [ ] Async device-host transfers with stream synchronisation
+- [ ] ROCm equivalent via `rocm-rs`
+- [ ] Benchmark vs OOMMF, mumax3 (target 10–100× speedup on >1M spins)
+
+### API Stabilisation
+- [ ] Comprehensive API review for v1.0
+- [ ] Migration guide for v0.x → v1.0 breaking changes
+- [ ] semver-check in CI
+- [ ] Long-term support announcements
+
+### Advanced ML Phase 5
+- [ ] Hybrid quantum-classical NN for magnetic Hamiltonians
+- [ ] Diffusion models for skyrmion lattice generation
+- [ ] Reinforcement learning for SOT switching protocol design
 
 ---
 
@@ -339,6 +614,7 @@
 | v0.1.0 | 2025 | Core Physics & Materials | COMPLETE |
 | v0.2.0 | Dec 2025 | Python Bindings, HDF5, Memory Optimization | COMPLETE |
 | v0.3.0 | 2026-03-13 | Advanced Physics, Performance, Simulation Infrastructure | COMPLETE |
+| v0.3.1 | 2026-06-10 | DemagField optimization, hamiltonian_at Result, scirs2 0.5.0 | COMPLETE |
 | v0.4.0 | Q4 2026 | Research Features, ML, Ecosystem Expansion | Planned |
 | v1.0.0 | 2027 | API Stabilization, Production-Grade | Planned |
 
@@ -397,6 +673,6 @@
 ---
 
 **Maintained by**: COOLJAPAN OU (Team KitaSan)
-**License**: MIT OR Apache-2.0
+**License**: Apache-2.0
 **Repository**: https://github.com/cool-japan/spintronics
 **Contact**: See CONTRIBUTING.md for communication channels

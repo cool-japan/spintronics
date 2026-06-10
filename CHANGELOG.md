@@ -5,7 +5,29 @@ All notable changes to the spintronics library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.1] - 2026-06-10
+
+### Changed
+
+- `DemagField::compute` (`src/micromagnetics/demag.rs`) — inner O(N²) convolution loop
+  refactored to use direct flat kernel-array indexing (`kidx = row_base + u_base − jx`),
+  eliminating the former Option-returning `get_n_xx/yy/zz` helper dispatch. Results are
+  bit-for-bit identical to the previous implementation (verified by a new regression test).
+  When the `parallel` feature is enabled, all target cells are computed concurrently via
+  `rayon::into_par_iter`, providing multi-core speedup to the demag convolution.
+- `BbhModel::hamiltonian_at(kx, ky)` (`src/topomagnon/hoti.rs`) — return type changed from
+  `CMatrix` to `Result<CMatrix>`, propagating matrix-dimension errors through `?` instead of
+  panicking on shape mismatch. **Breaking change**: callers that previously used the return
+  value directly must now handle the `Result` (add `.unwrap()` or `?`-propagate).
+- `StandardProblem3` test (`src/validation/standard_problems/sp3.rs`) —
+  `test_large_cube_vortex_stable` reduced from 100 to 25 relaxation steps to stay within the
+  CI time budget on the O(N²) Newell-tensor demag path; test comments clarified.
+- `scirs2-core` updated from `0.3.1` to `0.4.4`; `default-features = false` added with explicit
+  `["std", "array", "random", "parallel"]` feature list to avoid pulling in unused optional
+  sub-crate dependencies.
+- `scirs2-spatial` updated from `0.3.1` to `0.4.4` with `default-features = false`.
+- Workspace version tracking unified: top-level `Cargo.toml` and `demo/Cargo.toml` now use
+  `version.workspace = true` instead of an explicit version string.
 
 ## [0.3.0] - 2026-03-13
 
@@ -340,3 +362,8 @@ This project follows [Semantic Versioning](https://semver.org/):
 - [Repository](https://github.com/cool-japan/spintronics)
 - [Documentation](https://docs.rs/spintronics)
 - [crates.io](https://crates.io/crates/spintronics)
+
+[0.3.1]: https://github.com/cool-japan/spintronics/releases/tag/v0.3.1
+[0.3.0]: https://github.com/cool-japan/spintronics/releases/tag/v0.3.0
+[0.2.0]: https://github.com/cool-japan/spintronics/releases/tag/v0.2.0
+[0.1.0]: https://github.com/cool-japan/spintronics/releases/tag/v0.1.0

@@ -443,94 +443,13 @@ impl ParametricPumping {
 // Gross-Pitaevskii Equation Solver
 // ============================================================================
 
-/// A complex number representation for the condensate wavefunction.
+/// Complex number type — use [`crate::math::Complex`] instead.
 ///
-/// ψ = re + i·im
-#[derive(Debug, Clone, Copy)]
-pub struct Complex {
-    /// Real part
-    pub re: f64,
-    /// Imaginary part
-    pub im: f64,
-}
-
-impl Complex {
-    /// Create a new complex number.
-    pub fn new(re: f64, im: f64) -> Self {
-        Self { re, im }
-    }
-
-    /// Create from polar form: r·e^(iθ)
-    pub fn from_polar(r: f64, theta: f64) -> Self {
-        Self {
-            re: r * theta.cos(),
-            im: r * theta.sin(),
-        }
-    }
-
-    /// Squared modulus |ψ|²
-    pub fn norm_sq(&self) -> f64 {
-        self.re * self.re + self.im * self.im
-    }
-
-    /// Modulus |ψ|
-    pub fn norm(&self) -> f64 {
-        self.norm_sq().sqrt()
-    }
-
-    /// Phase angle arg(ψ)
-    pub fn phase(&self) -> f64 {
-        self.im.atan2(self.re)
-    }
-
-    /// Complex conjugate
-    pub fn conj(&self) -> Self {
-        Self {
-            re: self.re,
-            im: -self.im,
-        }
-    }
-
-    /// Multiplication
-    pub fn mul(&self, other: &Self) -> Self {
-        Self {
-            re: self.re * other.re - self.im * other.im,
-            im: self.re * other.im + self.im * other.re,
-        }
-    }
-
-    /// Scalar multiplication
-    pub fn scale(&self, s: f64) -> Self {
-        Self {
-            re: self.re * s,
-            im: self.im * s,
-        }
-    }
-
-    /// Addition
-    pub fn add(&self, other: &Self) -> Self {
-        Self {
-            re: self.re + other.re,
-            im: self.im + other.im,
-        }
-    }
-
-    /// Subtraction
-    pub fn sub(&self, other: &Self) -> Self {
-        Self {
-            re: self.re - other.re,
-            im: self.im - other.im,
-        }
-    }
-
-    /// Multiply by i
-    pub fn mul_i(&self) -> Self {
-        Self {
-            re: -self.im,
-            im: self.re,
-        }
-    }
-}
+/// This re-export is provided for backwards compatibility with v0.3.0 code
+/// that imported `spintronics::magnon::bec::Complex`.
+#[deprecated(since = "0.4.0", note = "use spintronics::math::Complex instead")]
+#[allow(deprecated)]
+pub use crate::math::Complex;
 
 /// 1D Gross-Pitaevskii equation solver for magnon condensate dynamics.
 ///

@@ -55,9 +55,25 @@
 pub mod csv;
 pub mod hdf5;
 pub mod json;
+#[cfg(feature = "netcdf")]
+pub mod netcdf;
+#[cfg(feature = "vti")]
+pub mod vti;
 pub mod vtk;
+#[cfg(feature = "xdmf")]
+pub mod xdmf;
+#[cfg(feature = "zarr")]
+pub mod zarr;
 
 pub use csv::CsvWriter;
 pub use hdf5::{Hdf5Reader, Hdf5Writer};
 pub use json::{JsonWriter, SimulationData};
+#[cfg(feature = "netcdf")]
+pub use netcdf::{NetCdfData, NetCdfDimension, NetCdfReader, NetCdfVariable, NetCdfWriter};
+#[cfg(feature = "vti")]
+pub use vti::{FieldData as VtiFieldData, VtiWriter};
 pub use vtk::VtkWriter;
+#[cfg(feature = "xdmf")]
+pub use xdmf::{XdmfTimeStep, XdmfWriter};
+#[cfg(feature = "zarr")]
+pub use zarr::{ZarrArray, ZarrDtype, ZarrStore};

@@ -24,6 +24,7 @@
 
 pub mod dmi;
 pub mod domain_wall;
+pub mod dw_dynamics;
 pub mod hopfion;
 pub mod hopfion_dynamics;
 pub mod prelude;
@@ -32,6 +33,7 @@ pub mod topology;
 
 pub use dmi::{DmiParameters, DmiType};
 pub use domain_wall::{DomainWall, WallType};
+pub use dw_dynamics::{DwMaterial, DwSotDynamics, DwSttDynamics, WalkerBreakdown};
 pub use hopfion::{
     HopfFibration, HopfInvariant, Hopfion, HopfionEnergy, HopfionEnergyParams, HopfionStability,
 };

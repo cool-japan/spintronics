@@ -1,11 +1,11 @@
 [package]
 name = "spintronics"
-version = "0.3.0"
+version.workspace = true
 edition = "2021"
 rust-version = "1.70.0"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
 description = "Pure Rust library for simulating spin dynamics, spin current generation, and conversion phenomena in magnetic and topological materials"
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/cool-japan/spintronics"
 keywords = ["spintronics", "magnetism", "physics", "simulation", "materials"]
@@ -34,10 +34,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # Core system: RNG, statistical distributions, physical computing utilities, parallelization
 # Note: Optional for WASM builds (not needed for basic simulations)
-scirs2-core = { version = "0.3.1", features = ["random", "parallel"], optional = true }
+scirs2-core = { version = "0.5.0", default-features = false, features = ["std", "array", "random", "parallel"], optional = true }
 
 # FEM (Finite Element Method) support - disabled for WASM
-scirs2-spatial = { version = "0.3.1", optional = true }
+scirs2-spatial = { version = "0.5.0", default-features = false, optional = true }
 
 # Parallel computing support (v0.3.0)
 rayon = { version = "1.10", optional = true }
@@ -53,6 +53,9 @@ numpy = { version = "0.25", optional = true }
 # HDF5 file format support (v0.2.0)
 hdf5 = { version = "0.8", optional = true }
 
+# base64 encoding for VTI/ParaView binary appended data (v0.6.0)
+base64 = { version = "0.22", optional = true }
+
 # WebAssembly support
 wasm-bindgen = { version = "0.2", optional = true }
 wasm-bindgen-futures = { version = "0.4", optional = true }
@@ -64,6 +67,7 @@ getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.6"
 
 [features]
 default = ["fem", "scirs2", "serde"]
@@ -75,6 +79,16 @@ hdf5 = ["dep:hdf5"]
 parallel = ["rayon"]
 wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook", "getrandom"]
 
+# v0.6.0 features
+vti      = ["dep:base64"]          # VTK ImageData (XML + base64 binary) export
+xdmf     = ["hdf5"]               # XDMF (XML descriptor + HDF5 heavy data)
+netcdf   = []                     # Pure-Rust NetCDF3 Classic writer (no external dep)
+zarr     = []                     # Pure-Rust Zarr v2 writer (no external dep)
+autodiff = []                     # Reverse-mode autodiff tape (no external dep)
+
+# v0.9.0 features
+cuda     = []                     # GPU acceleration skeleton (CUDA, currently CPU-fallback only)
+
 [[example]]
 name = "yig_pt_pumping"
 path = "examples/yig_pt_pumping.rs"
@@ -82,6 +96,132 @@ path = "examples/yig_pt_pumping.rs"
 [[example]]
 name = "magnon_propagation"
 path = "examples/magnon_propagation.rs"
+
+[[example]]
+name = "spin_spiral_tbmno3"
+path = "examples/spin_spiral_tbmno3.rs"
+
+[[example]]
+name = "bife_o3_multiferroic"
+path = "examples/bife_o3_multiferroic.rs"
+
+[[example]]
+name = "kane_mele_qsh"
+path = "examples/kane_mele_qsh.rs"
+
+[[example]]
+name = "nonlinear_magnon_suhl"
+path = "examples/nonlinear_magnon_suhl.rs"
+
+[[example]]
+name = "damon_eshbach_nonreciprocity"
+path = "examples/damon_eshbach_nonreciprocity.rs"
+
+[[example]]
+name = "backward_volume_magnons"
+path = "examples/backward_volume_magnons.rs"
+
+[[example]]
+name = "hoti_corner_states"
+path = "examples/hoti_corner_states.rs"
+
+[[example]]
+name = "axion_magnon_photon"
+path = "examples/axion_magnon_photon.rs"
+
+[[example]]
+name = "data_export_formats"
+path = "examples/data_export_formats.rs"
+
+[[example]]
+name = "autodiff_parameter_fitting"
+path = "examples/autodiff_parameter_fitting.rs"
+
+[[example]]
+name = "neural_exchange_training"
+path = "examples/neural_exchange_training.rs"
+
+[[example]]
+name = "nanodisk_modes"
+path = "examples/nanodisk_modes.rs"
+
+[[example]]
+name = "implicit_midpoint_stiff_demo"
+path = "examples/implicit_midpoint_stiff_demo.rs"
+
+[[example]]
+name = "pinn_llg_solver"
+path = "examples/pinn_llg_solver.rs"
+
+[[example]]
+name = "magnonic_crystal_bandgap"
+path = "examples/magnonic_crystal_bandgap.rs"
+
+[[example]]
+name = "experimental_validation_demo"
+path = "examples/experimental_validation_demo.rs"
+
+[[example]]
+name = "heun_adaptive_thermal_llg"
+path = "examples/heun_adaptive_thermal_llg.rs"
+
+[[example]]
+name = "pimc_heisenberg_chain"
+path = "examples/pimc_heisenberg_chain.rs"
+
+[[example]]
+name = "equivariant_nn_demo"
+path = "examples/equivariant_nn_demo.rs"
+
+[[example]]
+name = "active_learning_demo"
+path = "examples/active_learning_demo.rs"
+
+[[example]]
+name = "validation_landmark_suite"
+path = "examples/validation_landmark_suite.rs"
+
+[[example]]
+name = "graph_nn_lattice"
+path = "examples/graph_nn_lattice.rs"
+
+[[example]]
+name = "bayesian_opt_materials"
+path = "examples/bayesian_opt_materials.rs"
+
+[[example]]
+name = "validation_full_suite"
+path = "examples/validation_full_suite.rs"
+
+[[example]]
+name = "gpu_device_demo"
+path = "examples/gpu_device_demo.rs"
+
+[[example]]
+name = "smr_angular_scan"
+path = "examples/smr_angular_scan.rs"
+
+[[example]]
+name = "stno_auto_oscillation"
+path = "examples/stno_auto_oscillation.rs"
+
+[[example]]
+name = "ac_spin_pumping_battery"
+path = "examples/ac_spin_pumping_battery.rs"
+
+[[example]]
+name = "rl_sot_switching"
+path = "examples/rl_sot_switching.rs"
+
+[[example]]
+name = "diffusion_skyrmion_gen"
+path = "examples/diffusion_skyrmion_gen.rs"
+required-features = ["autodiff"]
+
+[[example]]
+name = "variational_magnon_nn"
+path = "examples/variational_magnon_nn.rs"
+required-features = ["autodiff"]
 
 [[bench]]
 name = "llg_benchmark"
@@ -99,7 +239,7 @@ harness = false
 members = ["demo", "py"]
 
 [workspace.package]
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0"

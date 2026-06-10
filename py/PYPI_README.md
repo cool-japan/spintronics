@@ -77,6 +77,6 @@ maturin develop --release
 
 ## License
 
-MIT OR Apache-2.0
+Apache-2.0
 
 Copyright (c) 2025 COOLJAPAN OÜ (Team KitaSan)
