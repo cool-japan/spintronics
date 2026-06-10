@@ -233,7 +233,7 @@ impl BbhModel {
     /// H(k) = (λ_x + γ_x cos kx)·Γ₁ + γ_x sin kx·Γ₂
     ///       + (λ_y + γ_y cos ky)·Γ₃ + γ_y sin ky·Γ₄
     /// ```
-    pub fn hamiltonian_at(&self, kx: f64, ky: f64) -> CMatrix {
+    pub fn hamiltonian_at(&self, kx: f64, ky: f64) -> Result<CMatrix> {
         let [g1, g2, g3, g4] = Self::gamma_matrices();
         let ax = self.lambda_x + self.gamma_x * kx.cos();
         let bx = self.gamma_x * kx.sin();
@@ -241,13 +241,12 @@ impl BbhModel {
         let by_ = self.gamma_y * ky.sin();
 
         // H = ax·Γ₁ + bx·Γ₂ + ay·Γ₃ + by·Γ₄
-        g1.scale_real(ax)
-            .add(&g2.scale_real(bx))
-            .unwrap()
-            .add(&g3.scale_real(ay))
-            .unwrap()
-            .add(&g4.scale_real(by_))
-            .unwrap()
+        let h = g1
+            .scale_real(ax)
+            .add(&g2.scale_real(bx))?
+            .add(&g3.scale_real(ay))?
+            .add(&g4.scale_real(by_))?;
+        Ok(h)
     }
 
     // -----------------------------------------------------------------------
@@ -260,7 +259,7 @@ impl BbhModel {
     ///
     /// Propagates errors from the Hermitian eigendecomposition.
     pub fn energy_bands(&self, kx: f64, ky: f64) -> Result<Vec<f64>> {
-        let h = self.hamiltonian_at(kx, ky);
+        let h = self.hamiltonian_at(kx, ky)?;
         let (evals, _) = h.hermitian_eigendecomposition()?;
         Ok(evals)
     }
@@ -350,7 +349,7 @@ impl BbhModel {
             let mut all_states: Vec<[Vec<Complex>; 2]> = Vec::with_capacity(nky + 1);
             for iky in 0..=nky {
                 let ky = 2.0 * PI * (iky as f64) / (nky as f64);
-                let h = self.hamiltonian_at(kx, ky);
+                let h = self.hamiltonian_at(kx, ky)?;
                 let (_, vecs) = h.hermitian_eigendecomposition()?;
                 let s0 = vecs.column(occupied[0]);
                 let s1 = vecs.column(occupied[1]);
@@ -869,7 +868,7 @@ mod tests {
         let m = BbhModel::topological_phase();
         for kx in [-1.0, 0.0, 0.5, PI / 3.0] {
             for ky in [0.0, 1.0, PI] {
-                let h = m.hamiltonian_at(kx, ky);
+                let h = m.hamiltonian_at(kx, ky).unwrap();
                 let hd = h.conj_transpose();
                 let diff = h.sub(&hd).unwrap();
                 assert!(
