@@ -6,6 +6,11 @@
 
 ---
 
+## Stubs to implement (added 2026-06-12 by /cooljapan-stub-check)
+
+- [ ] `spintronics`: `src/magnon/nonlinear.rs:471` — replace placeholder pump_h (0.1 mT) with physics-derived pump field for nonlinear magnon simulations
+  - Priority: P2 | Scope: small | Hint: none
+
 ## v0.2.0 - COMPLETE (December 2025)
 
 **Release Date**: December 2025
