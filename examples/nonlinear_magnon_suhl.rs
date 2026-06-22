@@ -155,8 +155,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let omega_pump = f_pump_hz; // omega in rad/s (f_pump_hz is actually omega — see magnon_frequency)
     let alpha_pa = 3.0e-5_f64;
     let ms_pa = 1.4e5_f64;
-    // Pass pump angular freq omega_pump so signal/idler = omega_pump/2
-    let pa = ParametricAmplification::degenerate_from_yig(omega_pump, alpha_pa, ms_pa);
+    // Pass pump angular freq omega_pump so signal/idler = omega_pump/2.
+    // The preset's pump field is the physics-derived threshold h_th = α·ω_p/(γ·Ms),
+    // so it sits exactly at marginal stability. Operate it at twice-critical
+    // (ξ = h_p/h_th = 2) to demonstrate above-threshold parametric gain.
+    let pa = ParametricAmplification::degenerate_from_yig(omega_pump, alpha_pa, ms_pa)
+        .with_supercriticality(2.0)
+        .expect("twice-critical pump is a valid operating point");
 
     let h_thresh = pa.threshold_pump_field();
     let gain_coeff = pa.gain_coefficient();

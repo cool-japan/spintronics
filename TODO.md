@@ -1,15 +1,39 @@
 # TODO List for Spintronics Library
 
 **Version**: 0.3.2
-**Last Updated**: 2026-06-10 - v0.3.2 in development
-**Status**: 1846 tests passing (workspace), ~95K lines (Rust code: ~80K+)
+**Last Updated**: 2026-06-22 - v0.3.2 in development
+**Status**: 1551 lib + 107 doctests + 58 proptest passing (main crate), 0 warnings, ~95K lines (Rust code: ~80K+)
 
 ---
 
 ## Stubs to implement (added 2026-06-12 by /cooljapan-stub-check)
 
-- [ ] `spintronics`: `src/magnon/nonlinear.rs:471` — replace placeholder pump_h (0.1 mT) with physics-derived pump field for nonlinear magnon simulations
-  - Priority: P2 | Scope: small | Hint: none
+- [x] `spintronics`: `src/magnon/nonlinear.rs` — replaced placeholder pump_h (0.1 mT) with the
+  physics-derived degenerate parametric **threshold field** `h_th = √(γ_s·γ_i)/κ = α·ω_p/(γ_gyro·Ms)`
+  in `ParametricAmplification::degenerate_from_yig`. Added the `with_supercriticality(ξ)` builder so
+  the preset (which now sits at marginal stability) can be moved to any operating point ξ = h_p/h_th.
+  3 new tests (threshold identity, α/ω_p/Ms scaling, supercriticality operating point); example
+  `nonlinear_magnon_suhl` updated to twice-critical operation. (2026-06-22, P2, done)
+
+### Build hygiene fixes (2026-06-22)
+- [x] Added `required-features = ["autodiff"]` to 7 previously-ungated autodiff examples
+  (`autodiff_parameter_fitting`, `neural_exchange_training`, `pinn_llg_solver`, `equivariant_nn_demo`,
+  `active_learning_demo`, `graph_nn_lattice`, `bayesian_opt_materials`) so `cargo build --examples`
+  no longer fails under default features.
+- [x] Fixed dead-code warning for `temp_path` in `data_export_formats` example via a precise
+  `cfg_attr(not(any(feature = "vti"/"netcdf"/"zarr")), allow(dead_code))`.
+- Verified: `cargo clippy --all-targets -- -D warnings` clean for both default and `autodiff` features.
+
+### Binary OVF I/O implemented (2026-06-22 by /stub-check)
+- [x] `spintronics`: `src/io/ovf.rs` — implemented binary OVF read/write, replacing the
+  `Err("Binary OVF format not yet implemented")` stub. Supports `Binary4_1_0` (OVF 1.0, **big-endian**),
+  `Binary4_2_0` and `Binary8_2_0` (OVF 2.0, **little-endian**) per the OOMMF OVF spec; control/check
+  values `1234567.0_f32` / `123456789012345.0_f64` validated on read to catch byte-order mismatch;
+  byte-oriented reader with truncation guards (text path unchanged). Header writing refactored into
+  shared `write_header_1_0/2_0` helpers. +5 round-trip/error tests (io::ovf now 9 tests). File 1162 lines.
+- Remaining intentional/blocked stubs (NOT implemented, correctly so): CUDA backend (`src/gpu/cuda.rs`,
+  needs `cudarc` + GPU hardware → v1.0.0 roadmap); HDF5 feature-off fallback (`src/visualization/hdf5.rs`,
+  correct feature-gating, full impl active under `--features hdf5`).
 
 ## v0.2.0 - COMPLETE (December 2025)
 

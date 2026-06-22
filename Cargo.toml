@@ -136,10 +136,12 @@ path = "examples/data_export_formats.rs"
 [[example]]
 name = "autodiff_parameter_fitting"
 path = "examples/autodiff_parameter_fitting.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "neural_exchange_training"
 path = "examples/neural_exchange_training.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "nanodisk_modes"
@@ -152,6 +154,7 @@ path = "examples/implicit_midpoint_stiff_demo.rs"
 [[example]]
 name = "pinn_llg_solver"
 path = "examples/pinn_llg_solver.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "magnonic_crystal_bandgap"
@@ -172,10 +175,12 @@ path = "examples/pimc_heisenberg_chain.rs"
 [[example]]
 name = "equivariant_nn_demo"
 path = "examples/equivariant_nn_demo.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "active_learning_demo"
 path = "examples/active_learning_demo.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "validation_landmark_suite"
@@ -184,10 +189,12 @@ path = "examples/validation_landmark_suite.rs"
 [[example]]
 name = "graph_nn_lattice"
 path = "examples/graph_nn_lattice.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "bayesian_opt_materials"
 path = "examples/bayesian_opt_materials.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "validation_full_suite"

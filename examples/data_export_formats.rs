@@ -111,6 +111,12 @@ fn file_size_bytes(path: &PathBuf) -> u64 {
     fs::metadata(path).map(|m| m.len()).unwrap_or(0)
 }
 
+// Used only by the vti / netcdf / zarr feature blocks below; suppress the
+// dead-code lint solely in the configuration where none of them are enabled.
+#[cfg_attr(
+    not(any(feature = "vti", feature = "netcdf", feature = "zarr")),
+    allow(dead_code)
+)]
 fn temp_path(name: &str) -> PathBuf {
     std::env::temp_dir().join(name)
 }
