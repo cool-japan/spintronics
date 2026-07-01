@@ -13,14 +13,16 @@ publish = false
 spintronics = { path = "..", default-features = false, features = ["serde"] }
 
 # Web framework
-axum = "0.7"
+axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["fs", "trace", "cors"] }
+tower-http = { version = "0.7", features = ["fs", "trace", "cors"] }
 
 # Templating
-askama = "0.12"
-askama_axum = "0.4"
+# NOTE: askama 0.13 removed the built-in web-framework integration crates
+# (askama_axum is now a deprecated tombstone). Templates are bridged to axum
+# responses manually via `Html(template.render()?)` in `main.rs`.
+askama = "0.16"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -32,4 +34,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [dev-dependencies]
 reqwest = "0.13"
-hyper = "1.8"
+hyper = "1.10"

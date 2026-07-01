@@ -22,7 +22,7 @@ use crate::vector3::Vector3;
 /// print(f"YIG saturation magnetization: {yig.ms} A/m")
 /// print(f"YIG damping: {yig.alpha}")
 /// ```
-#[pyclass(name = "Ferromagnet")]
+#[pyclass(name = "Ferromagnet", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyFerromagnet {
     inner: Ferromagnet,
@@ -183,7 +183,7 @@ impl PyFerromagnet {
 /// interface = SpinInterface.yig_pt()
 /// print(f"Spin mixing conductance: {interface.g_r} 1/(Ohm*m^2)")
 /// ```
-#[pyclass(name = "SpinInterface")]
+#[pyclass(name = "SpinInterface", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PySpinInterface {
     inner: SpinInterface,

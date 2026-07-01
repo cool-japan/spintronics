@@ -1,6 +1,7 @@
 //! Python bindings for high-level simulation workflows
 
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 use super::vector::PyVector3;
 use crate::constants::GAMMA;
@@ -84,7 +85,12 @@ impl PySpinPumpingSimulation {
     ///
     /// Returns:
     ///     Dictionary with simulation results
-    pub fn run(&mut self, duration: f64, n_steps: usize) -> PyResult<PyObject> {
+    pub fn run<'py>(
+        &mut self,
+        py: Python<'py>,
+        duration: f64,
+        n_steps: usize,
+    ) -> PyResult<Bound<'py, PyDict>> {
         let dt = duration / n_steps as f64;
         let alpha = self.ferromagnet.alpha;
 
@@ -140,19 +146,17 @@ impl PySpinPumpingSimulation {
         let peak_js = js_vals.iter().cloned().fold(0.0_f64, f64::max);
 
         // Build result dictionary
-        Python::with_gil(|py| {
-            let dict = pyo3::types::PyDict::new(py);
-            dict.set_item("times", times)?;
-            dict.set_item("mx", mx_vals)?;
-            dict.set_item("my", my_vals)?;
-            dict.set_item("mz", mz_vals)?;
-            dict.set_item("spin_current", js_vals)?;
-            dict.set_item("voltage", voltage_vals)?;
-            dict.set_item("peak_voltage", peak_voltage)?;
-            dict.set_item("avg_voltage", avg_voltage)?;
-            dict.set_item("peak_spin_current", peak_js)?;
-            Ok(dict.into())
-        })
+        let dict = PyDict::new(py);
+        dict.set_item("times", times)?;
+        dict.set_item("mx", mx_vals)?;
+        dict.set_item("my", my_vals)?;
+        dict.set_item("mz", mz_vals)?;
+        dict.set_item("spin_current", js_vals)?;
+        dict.set_item("voltage", voltage_vals)?;
+        dict.set_item("peak_voltage", peak_voltage)?;
+        dict.set_item("avg_voltage", avg_voltage)?;
+        dict.set_item("peak_spin_current", peak_js)?;
+        Ok(dict)
     }
 
     /// Get current magnetization

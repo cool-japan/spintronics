@@ -1,4 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
+
 use spintronics::dynamics::{anisotropy_energy, exchange_energy};
 use spintronics::prelude::*;
 use spintronics::simd::{batch_evolve_rk4, SimdBatch};

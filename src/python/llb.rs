@@ -43,7 +43,7 @@ use crate::vector3::Vector3;
 /// ni    = LlbMaterial.nickel()  # T_C = 631  K, α = 0.064
 /// cofeb = LlbMaterial.cofeb()   # T_C = 1000 K, α = 0.005
 /// ```
-#[pyclass(name = "LlbMaterial")]
+#[pyclass(name = "LlbMaterial", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyLlbMaterial {
     inner: LlbMaterial,
@@ -247,13 +247,13 @@ impl PyLlbSolver {
     ///       'm_magnitude': list of float — |m(t)| at each snapshot
     ///       'time': list of float — time stamps \[s\]
     ///       'equilibrium_m': float — m_e(T) for the simulation temperature
-    pub fn run(
+    pub fn run<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         m0: [f64; 3],
         num_steps: usize,
         record_every: usize,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Bound<'py, PyDict>> {
         let m0_vec = Vector3::new(m0[0], m0[1], m0[2]);
         let result: LlbResult = self
             .inner
@@ -278,7 +278,7 @@ impl PyLlbSolver {
         dict.set_item("equilibrium_m", result.equilibrium_m)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
-        Ok(dict.into())
+        Ok(dict)
     }
 
     /// Integration time step dt \[s\]

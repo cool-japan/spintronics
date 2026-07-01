@@ -68,7 +68,7 @@ fn vec_to_arr(v: &Vector3<f64>) -> [f64; 3] {
 /// - `spin_seebeck`: spin Seebeck coefficient S_s [A/(m·K)]
 /// - `hall_angle`: anomalous Hall angle θ_H (dimensionless)
 /// - `thermal_conductivity`: κ [W/(m·K)]
-#[pyclass(name = "OnsagerMatrix")]
+#[pyclass(name = "OnsagerMatrix", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyOnsagerMatrix {
     inner: OnsagerMatrix,
@@ -231,12 +231,12 @@ impl PyOnsagerMatrix {
     /// Returns:
     ///     dict with keys 'charge_current', 'spin_current', 'heat_current'
     ///     (each is a list of 3 floats)
-    pub fn all_currents(
+    pub fn all_currents<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         grad_t: [f64; 3],
         e_field: [f64; 3],
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Bound<'py, PyDict>> {
         let currents = self
             .inner
             .all_currents(&arr_to_vec(grad_t), &arr_to_vec(e_field));
@@ -252,7 +252,7 @@ impl PyOnsagerMatrix {
         dict.set_item("heat_current", vec_to_arr(&currents.heat_current).to_vec())
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
-        Ok(dict.into())
+        Ok(dict)
     }
 
     /// Python repr string for OnsagerMatrix.
@@ -300,7 +300,7 @@ impl PyOnsagerMatrix {
 /// print(f"Nernst voltage: {result['nernst_voltage']:.4e} V/m")
 /// print(f"Spin Seebeck current: {result['spin_seebeck_current']}")
 /// ```
-#[pyclass(name = "SpinCaloritronicsMaterial")]
+#[pyclass(name = "SpinCaloritronicsMaterial", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PySpinCaloritronicsMaterial {
     inner: SpinCaloritronicsMaterial,
@@ -383,12 +383,12 @@ impl PySpinCaloritronicsMaterial {
     ///       'spin_nernst_current': list\[float\] — j_s^SN proxy [A/m²]
     ///       'reciprocity_satisfied': bool — Onsager error < 1e-10
     ///       'total_heat_current': list\[float\] — total j_Q [W/m²]
-    pub fn compute_all(
+    pub fn compute_all<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         grad_t: [f64; 3],
         j_spin: [f64; 3],
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Bound<'py, PyDict>> {
         let result = self
             .inner
             .compute_all(&arr_to_vec(grad_t), &arr_to_vec(j_spin))
@@ -417,7 +417,7 @@ impl PySpinCaloritronicsMaterial {
         )
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
 
-        Ok(dict.into())
+        Ok(dict)
     }
 
     /// Python repr string for SpinCaloritronicsMaterial.
