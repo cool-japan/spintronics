@@ -34,5 +34,6 @@ pub use solver::MagnonSolver;
 pub use spectral::SpectralMagnonSolver;
 pub use spin_density_wave::{
     condensation_energy, elastic_energy, enhanced_susceptibility, resistivity_anomaly,
-    total_sdw_energy, ChromiumSdw, SdwGapSolver, SdwPolarization, SpinDensityWave,
+    total_sdw_energy, ChromiumSdw, SdwGapSolver, SdwPolarization, SdwRelaxationDynamics,
+    SpinDensityWave,
 };

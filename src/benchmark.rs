@@ -16,12 +16,6 @@
 //! - Compare computed values with experiments
 //! - Ensure physical correctness
 
-// Note: imports for future use in more complex benchmarks
-#[allow(unused_imports)]
-use crate::constants::*;
-#[allow(unused_imports)]
-use crate::vector3::Vector3;
-
 /// Experimental benchmark data
 #[derive(Debug, Clone)]
 pub struct Benchmark {

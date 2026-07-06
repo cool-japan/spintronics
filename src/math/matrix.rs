@@ -275,22 +275,29 @@ impl CMatrix {
         Ok(result)
     }
 
-    /// Hermitian eigendecomposition via Householder tridiagonalization + implicit QL.
+    /// Hermitian eigendecomposition via the cyclic Jacobi eigenvalue algorithm.
     ///
-    /// Assumes `self` is Hermitian (A = A†). Uses the standard two-phase approach:
+    /// Assumes `self` is Hermitian (A = A†). Repeatedly applies complex Jacobi
+    /// rotations to annihilate the largest off-diagonal pair, converging to a diagonal
+    /// form:
     ///
-    /// 1. **Householder tridiagonalization** (Golub & Van Loan §8.3): reduce A to a
-    ///    real symmetric tridiagonal T by a sequence of complex Householder reflectors,
-    ///    accumulating the unitary Q such that A = Q T Q†.
-    /// 2. **Implicit QL with Wilkinson shift** (Golub & Van Loan §8.4): diagonalize T
-    ///    using real Givens rotations with cubic convergence.
+    /// 1. For each off-diagonal `A[p][q]` (`p < q`), first apply a diagonal phase
+    ///    correction (`column q *= e^{-iφ}`, `row q *= e^{+iφ}`, `φ = arg(A[p][q])`) so
+    ///    the pivot becomes real; this reduces the complex Hermitian problem to a real
+    ///    symmetric 2×2 rotation at every step.
+    /// 2. Apply the standard real Jacobi rotation (stable `tan(θ)` formula, Numerical
+    ///    Recipes §11.1) to zero the now-real pivot, updating the two affected
+    ///    rows/columns and accumulating the rotation into the eigenvector matrix.
+    /// 3. Repeat in cyclic sweeps over all `(p, q)` pairs until the off-diagonal
+    ///    Frobenius norm falls below a relative tolerance.
     ///
     /// Returns `(eigenvalues, eigenvectors)` where eigenvalues are sorted ascending and
     /// the k-th column of `eigenvectors` is the k-th eigenvector.
     ///
     /// # Errors
     ///
-    /// Returns `NumericalError` if the QL iteration does not converge within 30·n steps.
+    /// Returns `NumericalError` if the sweep loop does not converge within a generous
+    /// fixed number of sweeps.
     pub fn hermitian_eigendecomposition(&self) -> Result<(Vec<f64>, Self)> {
         hermitian_eig_impl(self)
     }
@@ -317,304 +324,60 @@ impl CMatrix {
 }
 
 // ---------------------------------------------------------------------------
-// Hermitian eigendecomposition: Householder tridiagonalization + implicit QL
+// Hermitian eigendecomposition: cyclic Jacobi eigenvalue algorithm
 // ---------------------------------------------------------------------------
+//
+// NOTE (historical): an earlier version of this file implemented Householder
+// tridiagonalization + implicit-QL (Golub & Van Loan §8.3-8.4). That implementation
+// computed correct eigenVALUES but subtly incorrect eigenVECTORS for every n >= 3 input
+// with a nonzero off-diagonal: each Householder step re-labelled its produced
+// sub-diagonal magnitude as +sigma (always non-negative, for the real symmetric
+// tridiagonal form expected by QL) while the accumulated unitary Q was built from the
+// reflector's *actual* (possibly differently-signed/phased) output, with no compensating
+// phase correction applied to Q at intermediate steps (only the very last sub-diagonal
+// had such a correction). The result: Q did not actually satisfy `A = Q T Q†`, so
+// `hermitian_eigendecomposition` returned eigenvectors failing `H v_k = λ_k v_k` for any
+// non-trivial (non-diagonal) matrix of size >= 3, even though `hermitian_eig_impl`'s
+// *eigenvalues* were exactly correct (the tridiagonal QL recursion for eigenvalues alone
+// does not depend on Q at all). This was never caught by this file's own tests (which
+// only checked eigenvalue correctness for n<=3, and eigenvector orthonormality — not the
+// eigenvalue equation itself — at n=2), nor exercised by any consumer module that only
+// used eigenvalues. It was found while cross-checking `frustrated::rvb`'s exact-
+// diagonalization ground state against the total-spin-squared invariant `S_tot^2 = 0`,
+// which requires a genuinely correct eigenVECTOR, not just the right eigenvalue.
+//
+// The cyclic Jacobi algorithm below has no such tridiagonalization phase-bookkeeping to
+// get wrong: every rotation is applied *symmetrically and consistently* to the working
+// matrix and the accumulated eigenvector matrix in the same step, so `V† A V → diagonal`
+// holds by construction at every intermediate sweep, not just at convergence.
 
-/// Householder tridiagonalization of a complex Hermitian matrix.
+/// Cyclic Jacobi eigenvalue algorithm for a complex Hermitian matrix.
 ///
-/// Returns `(d, e, q)` where:
-/// - `d[0..n]` is the real diagonal of the tridiagonal form.
-/// - `e[0..n]` is the real sub-diagonal, Householder convention:
-///   `e\[0\]=0` (unused), `e[i]` connects `d[i-1]` to `d[i]` for `i=1..n-1`.
-/// - `q` is the unitary matrix such that `A = Q T Q†`.
+/// For each off-diagonal pair `(p, q)`, `p < q`:
+/// 1. **Phase pre-rotation**: with `A[p][q] = r·e^{iφ}`, scale column `q` by `e^{-iφ}`
+///    and row `q` by `e^{+iφ}` (and accumulate the same into the eigenvector matrix `V`
+///    via its column `q`). This makes the pivot real (`= r >= 0`) without touching any
+///    other pivot, reducing the complex case to a real symmetric 2×2 rotation.
+/// 2. **Real Jacobi rotation**: the standard stable `tan(θ)` formula (Numerical Recipes
+///    §11.1, `JACOBI`) zeroes the now-real pivot `A[p][q]`, updating `A[p][p]`, `A[q][q]`,
+///    every other row/column `k ∉ {p,q}` (`A[k][p], A[k][q]` and their Hermitian mirrors),
+///    and accumulating the same rotation into `V`.
 ///
-/// Algorithm: Golub & Van Loan §8.3, complex Hermitian variant.
-/// For each column k = 0..n-2:
-///   1. Extract sub-column x = A[k+1:n, k].
-///   2. Form Householder reflector H = I - β v v† that maps x → -sign(x₀)|x| eₖ.
-///   3. Apply: A ← H A H†, Q ← Q H† (accumulate unitary).
-///   4. Record d[k] = A[k,k].re, e[k+1] = |x| (real, positive sub-diagonal).
+/// Repeated in cyclic sweeps (all `p<q` pairs) until the off-diagonal Frobenius norm
+/// falls below a relative tolerance. Returns `(eigenvalues, eigenvectors)` with
+/// eigenvalues sorted ascending and the k-th column of `eigenvectors` the k-th
+/// eigenvector — by construction, `V` accumulates exactly the product of all applied
+/// unitary rotations, so `A_original = V T V†` (T diagonal) holds at every step, not just
+/// asymptotically.
 ///
-/// The unitary Q satisfies Q† A_original Q = T (real symmetric tridiagonal).
-fn hermitian_householder_tridiag(h: &CMatrix, n: usize) -> (Vec<f64>, Vec<f64>, CMatrix) {
-    // Work copy of A (complex, n×n, row-major).
-    let mut a: Vec<Vec<Complex>> = (0..n)
-        .map(|i| (0..n).map(|j| h.get(i, j)).collect())
-        .collect();
-    // Q starts as identity; we accumulate reflectors into Q from the right.
-    let mut q: Vec<Vec<Complex>> = (0..n)
-        .map(|i| {
-            (0..n)
-                .map(|j| if i == j { Complex::ONE } else { Complex::ZERO })
-                .collect()
-        })
-        .collect();
-    let mut d = vec![0.0_f64; n];
-    let mut e = vec![0.0_f64; n]; // e[0] = 0 (unused)
-
-    // The Householder tridiagonalization uses n-2 reflectors (columns 0..n-3).
-    // For n<=2 the matrix is already tridiagonal; no reflectors are needed.
-    for k in 0..n.saturating_sub(2) {
-        // m = length of sub-column below position (k, k) = n - k - 1
-        let m = n - k - 1;
-
-        // x = A[k+1..n, k] (sub-column below diagonal in column k)
-        let x_orig: Vec<Complex> = (0..m).map(|i| a[k + 1 + i][k]).collect();
-        let sigma = x_orig.iter().map(|c| c.norm_sq()).sum::<f64>().sqrt();
-
-        // Record diagonal entry before modification
-        d[k] = a[k][k].re;
-
-        if sigma < 1e-15 {
-            // Sub-column already negligibly small; sub-diagonal is zero.
-            e[k + 1] = 0.0;
-            continue;
-        }
-
-        // Sub-diagonal of the tridiagonal is sigma (the norm of sub-column).
-        e[k + 1] = sigma;
-
-        // Householder vector: v = x + e^{i*arg(x[0])} * sigma * e_0
-        // Using the phase of x[0] ensures numerical stability (v[0] ≈ 2*sigma in magnitude).
-        let x0 = x_orig[0];
-        let phase = if x0.norm_sq() < 1e-300 {
-            Complex::ONE
-        } else {
-            Complex::from_polar(1.0, x0.phase())
-        };
-        let mut v: Vec<Complex> = x_orig.clone();
-        v[0] = x0.add(&phase.scale(sigma));
-        let v_norm_sq = v.iter().map(|c| c.norm_sq()).sum::<f64>();
-        let beta = if v_norm_sq < 1e-28 {
-            0.0
-        } else {
-            2.0 / v_norm_sq
-        };
-
-        // Apply H = I - β v v† to A[k+1:n, k+1:n] from both sides.
-        // H A H† = A - β v w† - β w v† + β² (v† w) v v†
-        // where w = A v  (UNSCALED matrix-vector product).
-        // Efficient form: A ← A - v p† - p v†
-        // where p = β w - (β/2)(v† w) v  (so that the β² term is absorbed).
-        //
-        // Derivation check:
-        //   v p† + p v† = β v w† - (β/2)(v†w) v v† + β w v† - (β/2)(v†w) v v†
-        //               = β v w† + β w v† - β(v†w) v v†
-        //   A - v p† - p v† = A - β v w† - β w v† + β(v†w) v v†  ✓ (matches H A H†)
-
-        // w = A[k+1:n, k+1:n] * v  (unscaled)
-        let mut w = vec![Complex::ZERO; m];
-        for i in 0..m {
-            for j in 0..m {
-                w[i] = w[i].add(&a[k + 1 + i][k + 1 + j].mul(&v[j]));
-            }
-        }
-        // v† w = sum_i conj(v[i]) * w[i]  (real for Hermitian A and real sigma)
-        let vt_w: Complex = v
-            .iter()
-            .zip(w.iter())
-            .map(|(vi, wi)| vi.conj().mul(wi))
-            .fold(Complex::ZERO, |acc, c| acc.add(&c));
-        // p_vec = β w - (β²/2)(v† w) v
-        // This is the standard efficient Householder update: A - v p† - p v† = H A H†.
-        let p_vec: Vec<Complex> = w
-            .iter()
-            .zip(v.iter())
-            .map(|(wi, vi)| wi.scale(beta).sub(&vt_w.scale(beta * beta * 0.5).mul(vi)))
-            .collect();
-        // A[k+1:n, k+1:n] -= v * p† + p * v†
-        for i in 0..m {
-            for j in 0..m {
-                let delta = v[i].mul(&p_vec[j].conj()).add(&p_vec[i].mul(&v[j].conj()));
-                a[k + 1 + i][k + 1 + j] = a[k + 1 + i][k + 1 + j].sub(&delta);
-            }
-        }
-
-        // Set the reduced column/row entries explicitly (numerical noise clean-up).
-        // After reduction, a[k+1, k] should be -sigma (the norm, with a sign from the reflector).
-        // We store it as -sigma (real, negative) to be consistent with the phase convention.
-        a[k + 1][k] = Complex::from_real(-sigma);
-        a[k][k + 1] = Complex::from_real(-sigma);
-        for i in 2..m + 1 {
-            a[k + i][k] = Complex::ZERO;
-            a[k][k + i] = Complex::ZERO;
-        }
-
-        // Update Q: Q ← Q * H† = Q * (I - β v v†)†  = Q * (I - β v v†) (H is Hermitian)
-        // For each row r of Q: Q[r, k+1:n] ← Q[r, k+1:n] - β (Q[r, k+1:n] · v) * v†
-        // dot_r = sum_j Q[r, k+1+j] * conj(v[j])
-        for q_row in q.iter_mut() {
-            let dot_r: Complex = (0..m)
-                .map(|j| q_row[k + 1 + j].mul(&v[j].conj()))
-                .fold(Complex::ZERO, |acc, c| acc.add(&c))
-                .scale(beta);
-            for j in 0..m {
-                q_row[k + 1 + j] = q_row[k + 1 + j].sub(&dot_r.mul(&v[j]));
-            }
-        }
-    }
-
-    // Extract the remaining diagonal and sub-diagonal entries.
-    // After the loop (k ran from 0 to n-3), the last 2×2 block a[n-2..n, n-2..n]
-    // is not yet necessarily real-sub-diagonal. The loop set d[0..n-3] and e[1..n-2].
-    // We still need:
-    //   d[n-2], d[n-1] from the last 2×2 diagonal entries.
-    //   e[n-1] = |a[n-1][n-2]| (sub-diagonal magnitude — may be complex if n<=2
-    //                            because the Householder loop didn't run for k=n-2).
-    //
-    // If n=2: no Householder ran, so a[1][0] = the original h[1][0] (complex in general).
-    // We phase-rotate column 1 of Q to make a[1][0] real positive.
-    if n >= 2 {
-        d[n - 2] = a[n - 2][n - 2].re;
-        let sub = a[n - 1][n - 2]; // sub-diagonal element (may be complex for n=2)
-        let sub_norm = sub.norm();
-        e[n - 1] = sub_norm;
-        // Phase-normalize: if sub is not real positive, apply a Givens phase rotation
-        // to Q[:,n-1] to make the sub-diagonal real positive in the eigenvector basis.
-        // This is a unitary transformation: Q[:,n-1] *= conj(sub / sub_norm).
-        // Equivalently: multiply Q[:,n-1] by e^{-i*arg(sub)}.
-        if sub_norm > 1e-15 {
-            let phase_conj = Complex::from_polar(1.0, -sub.phase());
-            for q_row in q.iter_mut() {
-                q_row[n - 1] = q_row[n - 1].mul(&phase_conj);
-            }
-        }
-    }
-    d[n - 1] = a[n - 1][n - 1].re;
-
-    // Build the CMatrix Q.
-    let mut q_mat = CMatrix::zeros(n);
-    for (i, q_row) in q.iter().enumerate() {
-        for (j, &val) in q_row.iter().enumerate() {
-            q_mat.set(i, j, val);
-        }
-    }
-    (d, e, q_mat)
-}
-
-/// Implicit QL algorithm with Wilkinson shift for a real symmetric tridiagonal.
+/// # Errors
 ///
-/// Direct translation of Numerical Recipes §11.3 TQLI (C edition), adapted for
-/// 0-indexed arrays and complex eigenvector accumulator `z`.
+/// Returns `NumericalError` if the sweep loop does not converge within `100` sweeps.
 ///
-/// **Convention** (matching NR after its internal e-shift):
-/// `e[i]` is the sub-diagonal element connecting `d[i]` to `d[i+1]`, for i=0..n-2.
-/// `e[n-1] = 0` (boundary). This is the NR-post-shift convention.
-///
-/// The Householder function returns `e_h[]` where `e_h[i]` connects `d[i-1]` to `d[i]`
-/// (i.e. e_h[1..n-1] are the sub-diagonals, e_h\[0\]=0). The caller must shift:
-/// `e\[i\] = e_h[i+1]` for i=0..n-2, `e[n-1]=0`.
-fn tridiag_ql_in_place(
-    d: &mut [f64],
-    e: &mut [f64],
-    z: &mut CMatrix,
-    n: usize,
-) -> crate::error::Result<()> {
-    if n <= 1 {
-        return Ok(());
-    }
-    // e[i] = sub-diagonal between d[i] and d[i+1]; e[n-1]=0.
-    // NR's TQLI inner loop structure (1-indexed NR → 0-indexed here):
-    //   for (l=1; l<=n; l++) {        →  for l in 0..n
-    //     for (m=l; m<=n-1; m++)      →  for m in l..n-1 (search)
-    //       if e[m]≈0 break           →  check e[m] (0-indexed, our convention)
-    //     shift from d[l], e[l], d[l+1] (NR: e[l], our e[l])
-    //     inner for (i=m-1; i>=l; i--):
-    //       f=s*e[i]; b=c*e[i]        →  f=s*e[i]; b=c*e[i]
-    //       e[i+1]=pythag(f,g)        →  e[i+1]=hypot(f,g)
-    //       ...
-    //     d[l]-=p; e[l]=g; e[m]=0
-
-    for l in 0..n {
-        let mut num_iter = 0_usize;
-        loop {
-            // Find m: first index in [l, n-1] where e[m] is negligible.
-            // e[m] connects d[m] and d[m+1].
-            let mut m = l;
-            while m < n - 1 {
-                let dd = d[m].abs() + d[m + 1].abs();
-                if (e[m].abs() + dd) == dd {
-                    break; // e[m] negligible → d[l..m] block is decoupled at m
-                }
-                m += 1;
-            }
-            // If m == l, e[l] is already negligible → d[l] is converged.
-            if m == l {
-                break;
-            }
-            if num_iter >= 60 {
-                return Err(crate::error::numerical_error(
-                    "tridiagonal QL iteration did not converge within 60 iterations",
-                ));
-            }
-            num_iter += 1;
-
-            // Wilkinson shift from the 2×2 block at the l-end: [d[l], e[l]; e[l], d[l+1]].
-            // NR formula (1-indexed):
-            //   g = (d[l+1] - d[l]) / (2 * e[l])
-            //   r = pythag(g, 1)
-            //   g = d[m] - d[l] + e[l] / (g + SIGN(r, g))
-            // NR's final g IS the initial g_var for the sweep (it equals d[m] - shift_eigenvalue).
-            let gg = (d[l + 1] - d[l]) / (2.0 * e[l]);
-            let r = gg.hypot(1.0);
-            // g_var_init = d[m] - d[l] + e[l]/(gg + sign(gg)*r) — this is NR's g after shift
-            let g_var_init = d[m] - d[l] + e[l] / (gg + if gg >= 0.0 { r } else { -r });
-
-            // Initialize QL sweep variables (NR: s=c=1, p=0).
-            let mut g_var = g_var_init;
-            let mut s = 1.0_f64;
-            let mut c = 1.0_f64;
-            let mut p = 0.0_f64;
-
-            // Inner QL sweep: i from m-1 down to l (inclusive).
-            // Each iteration annihilates one sub-diagonal e[i+1] while updating d[i+1], d[i].
-            let mut i = m;
-            while i > l {
-                i -= 1;
-                // f = s * e[i] — e[i] connects d[i] and d[i+1]
-                let f = s * e[i];
-                let b = c * e[i];
-                // New off-diagonal = pythag(f, g_var); store back into e[i+1].
-                let r_hyp = f.hypot(g_var);
-                e[i + 1] = r_hyp;
-                if r_hyp.abs() < 1e-300 {
-                    // Degenerate Givens; d[i+1] doesn't change (no rotation).
-                    d[i + 1] -= p;
-                    e[m] = 0.0;
-                    break;
-                }
-                s = f / r_hyp;
-                c = g_var / r_hyp;
-                // Update d[i+1].
-                g_var = d[i + 1] - p;
-                let r_var = (d[i] - g_var) * s + 2.0 * c * b;
-                p = s * r_var;
-                d[i + 1] = g_var + p;
-                // Update running g_var for next iteration.
-                g_var = c * r_var - b;
-
-                // Apply Givens rotation to eigenvector columns i and i+1.
-                // z[:, i+1] ← s * z[:, i] + c * z[:, i+1]
-                // z[:, i]   ← c * z[:, i] - s * z[:, i+1]
-                for row in 0..n {
-                    let zi = z.get(row, i);
-                    let zi1 = z.get(row, i + 1);
-                    z.set(row, i + 1, zi.scale(s).add(&zi1.scale(c)));
-                    z.set(row, i, zi.scale(c).sub(&zi1.scale(s)));
-                }
-            }
-            // Apply accumulated shift to d[l].
-            d[l] -= p;
-            // Store running g_var into e[l] (residual that will converge to 0).
-            e[l] = g_var;
-            // Zero out e[m] — the sweep was supposed to eliminate it.
-            e[m] = 0.0;
-        }
-    }
-    Ok(())
-}
-
-/// Main entry point: Householder + QL for complex Hermitian matrix.
+/// `p`, `q`, `k`, `row`/`col` index simultaneously into both the working matrix `a` and
+/// the accumulated eigenvector matrix `v` throughout — clippy's `needless_range_loop` is
+/// a false positive for this genuinely index-driven (not merely positional) algorithm.
+#[allow(clippy::needless_range_loop)]
 fn hermitian_eig_impl(h: &CMatrix) -> Result<(Vec<f64>, CMatrix)> {
     let n = h.n;
     if n == 0 {
@@ -627,30 +390,139 @@ fn hermitian_eig_impl(h: &CMatrix) -> Result<(Vec<f64>, CMatrix)> {
         return Ok((vec![e], v));
     }
 
-    // Phase 1: tridiagonalize.
-    // hermitian_householder_tridiag returns e_h where e_h[i] = sub-diagonal between
-    // d[i-1] and d[i] (e_h[0]=0 unused).
-    let (mut d, e_h, mut q) = hermitian_householder_tridiag(h, n);
-
-    // Convert from Householder convention (e_h[i] connects d[i-1]↔d[i]) to
-    // TQLI convention (e[i] connects d[i]↔d[i+1]), matching NR's post-shift e[].
-    // e[i] = e_h[i+1] for i=0..n-2; e[n-1] = 0.
-    let mut e: Vec<f64> = (0..n)
-        .map(|i| if i + 1 < n { e_h[i + 1] } else { 0.0 })
+    // Work copy of A (complex, n×n, dense) and the accumulated eigenvector matrix V
+    // (starts as identity).
+    let mut a: Vec<Vec<Complex>> = (0..n)
+        .map(|i| (0..n).map(|j| h.get(i, j)).collect())
+        .collect();
+    let mut v: Vec<Vec<Complex>> = (0..n)
+        .map(|i| {
+            (0..n)
+                .map(|j| if i == j { Complex::ONE } else { Complex::ZERO })
+                .collect()
+        })
         .collect();
 
-    // Phase 2: QL on real symmetric tridiagonal, updating Q.
-    tridiag_ql_in_place(&mut d, &mut e, &mut q, n)?;
+    let frobenius_scale = a
+        .iter()
+        .flatten()
+        .map(|c| c.norm_sq())
+        .sum::<f64>()
+        .sqrt()
+        .max(1.0);
+    let tol = 1e-14 * frobenius_scale;
+    const MAX_SWEEPS: usize = 100;
 
-    // Sort eigenvalues ascending and reorder eigenvectors
-    let mut pairs: Vec<(f64, usize)> = d.iter().copied().enumerate().map(|(i, v)| (v, i)).collect();
-    pairs.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    let mut converged = false;
+    for _sweep in 0..MAX_SWEEPS {
+        let mut off_diag_sq = 0.0_f64;
+        for p in 0..n {
+            for q in (p + 1)..n {
+                off_diag_sq += a[p][q].norm_sq();
+            }
+        }
+        if off_diag_sq.sqrt() < tol {
+            converged = true;
+            break;
+        }
 
-    let eigenvalues: Vec<f64> = pairs.iter().map(|(v, _)| *v).collect();
+        for p in 0..n {
+            for q in (p + 1)..n {
+                let apq = a[p][q];
+                if apq.norm() < 1e-300 {
+                    continue;
+                }
+
+                // Phase pre-rotation: make the (p,q) pivot real and non-negative.
+                let phi = apq.phase();
+                let phase_q = Complex::from_polar(1.0, -phi);
+                for row in a.iter_mut() {
+                    row[q] = row[q].mul(&phase_q);
+                }
+                let phase_q_conj = phase_q.conj();
+                for col in 0..n {
+                    a[q][col] = a[q][col].mul(&phase_q_conj);
+                }
+                for row in v.iter_mut() {
+                    row[q] = row[q].mul(&phase_q);
+                }
+
+                let app = a[p][p].re;
+                let aqq = a[q][q].re;
+                let r = a[p][q].re;
+                if r.abs() < 1e-300 {
+                    continue;
+                }
+
+                // Standard real-symmetric Jacobi rotation: t = tan(theta) solves
+                // r*t^2 - (aqq-app)*t - r = 0 (the root with |t| <= 1, for R = [[c,-s],[s,c]]
+                // and new_a[p][p] = app + t*r, new_a[q][q] = aqq - t*r — both derived and
+                // verified directly by hand against explicit 2x2 and 3x3 cases). Computed
+                // via the numerically stable "large root, then reciprocal" form to avoid
+                // cancellation (the magnitude matches Numerical Recipes §11.1; the sign
+                // here is fixed to match *this* file's R/diagonal-update convention, which
+                // is the opposite of NR's own d[p]-=h/d[q]+=h convention).
+                let tau = (aqq - app) / (2.0 * r);
+                let t = if tau >= 0.0 {
+                    -1.0 / (tau + (1.0 + tau * tau).sqrt())
+                } else {
+                    1.0 / (-tau + (1.0 + tau * tau).sqrt())
+                };
+                let c = 1.0 / (1.0 + t * t).sqrt();
+                let s = t * c;
+
+                a[p][p] = Complex::from_real(app + t * r);
+                a[q][q] = Complex::from_real(aqq - t * r);
+                a[p][q] = Complex::ZERO;
+                a[q][p] = Complex::ZERO;
+
+                // Rotate every other row/column k (both Hermitian mirror entries).
+                for k in 0..n {
+                    if k == p || k == q {
+                        continue;
+                    }
+                    let akp = a[k][p];
+                    let akq = a[k][q];
+                    let new_akp = akp.scale(c).add(&akq.scale(s));
+                    let new_akq = akq.scale(c).sub(&akp.scale(s));
+                    a[k][p] = new_akp;
+                    a[p][k] = new_akp.conj();
+                    a[k][q] = new_akq;
+                    a[q][k] = new_akq.conj();
+                }
+
+                // Accumulate the same rotation into the eigenvector matrix V.
+                for row in v.iter_mut() {
+                    let vip = row[p];
+                    let viq = row[q];
+                    row[p] = vip.scale(c).add(&viq.scale(s));
+                    row[q] = viq.scale(c).sub(&vip.scale(s));
+                }
+            }
+        }
+    }
+
+    if !converged {
+        return Err(crate::error::numerical_error(
+            "Jacobi eigenvalue sweep did not converge within 100 sweeps",
+        ));
+    }
+
+    // Sort eigenvalues ascending and reorder eigenvectors accordingly.
+    let diag: Vec<f64> = (0..n).map(|i| a[i][i].re).collect();
+    let mut pairs: Vec<(f64, usize)> = diag
+        .iter()
+        .copied()
+        .enumerate()
+        .map(|(i, e)| (e, i))
+        .collect();
+    pairs.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap_or(std::cmp::Ordering::Equal));
+
+    let eigenvalues: Vec<f64> = pairs.iter().map(|(e, _)| *e).collect();
     let mut eigenvectors = CMatrix::zeros(n);
-    for (col_out, (_, col_in)) in pairs.iter().enumerate() {
+    for (col_out, &(_, col_in)) in pairs.iter().enumerate() {
         for row in 0..n {
-            eigenvectors.set(row, col_out, q.get(row, *col_in));
+            eigenvectors.set(row, col_out, v[row][col_in]);
         }
     }
 
@@ -815,6 +687,60 @@ mod tests {
         assert!(approx_eq(vals[0], 1.0, 1e-10));
         assert!(approx_eq(vals[1], 2.0, 1e-10));
         assert!(approx_eq(vals[2], 3.0, 1e-10));
+    }
+
+    #[test]
+    fn test_hermitian_eigendecomposition_satisfies_eigenvalue_equation_3x3() {
+        // Regression test: an earlier Householder+QL implementation of
+        // `hermitian_eigendecomposition` computed correct eigenVALUES but subtly
+        // incorrect eigenVECTORS for every non-diagonal n>=3 Hermitian matrix (a
+        // sign/phase bookkeeping bug never caught by this file's own tests, which only
+        // checked eigenvalues for n<=3 or eigenvector orthonormality — not the
+        // eigenvalue equation itself — at n=2). This 3x3 matrix has an asymmetric
+        // diagonal (2, 1.5, 3) specifically because a symmetric-diagonal 2x2/3x3 case
+        // cannot distinguish a particular rotation-sign convention error from a correct
+        // one (both give the same result when the two diagonal entries being rotated
+        // are equal).
+        let h = CMatrix::from_rows(vec![
+            vec![cx(2.0, 0.0), cx(0.5, 0.0), cx(0.3, 0.0)],
+            vec![cx(0.5, 0.0), cx(1.5, 0.0), cx(0.2, 0.0)],
+            vec![cx(0.3, 0.0), cx(0.2, 0.0), cx(3.0, 0.0)],
+        ])
+        .unwrap();
+        let (vals, vecs) = h.hermitian_eigendecomposition().unwrap();
+        // Eigenvalues ascending.
+        assert!(vals[0] < vals[1] && vals[1] < vals[2]);
+        // H * v_k = lambda_k * v_k for every column k (the actual eigenvalue equation,
+        // not merely orthonormality or a trace/eigenvalue check).
+        let hv = h.matmul(&vecs).unwrap();
+        // `col` indexes `vals`, `vecs` (via `.get`), and `hv` (via `.get`) simultaneously.
+        #[allow(clippy::needless_range_loop)]
+        for col in 0..3 {
+            for row in 0..3 {
+                let lhs = hv.get(row, col);
+                let rhs = vecs.get(row, col).scale(vals[col]);
+                assert!(
+                    approx_eq(lhs.re, rhs.re, 1e-9) && approx_eq(lhs.im, rhs.im, 1e-9),
+                    "H v_{} != lambda_{} v_{} at row {}: {:?} vs {:?}",
+                    col,
+                    col,
+                    col,
+                    row,
+                    lhs,
+                    rhs
+                );
+            }
+        }
+        // Eigenvectors orthonormal.
+        for a in 0..3 {
+            for b in 0..3 {
+                let dot: Complex = (0..3)
+                    .map(|r| vecs.get(r, a).conj().mul(&vecs.get(r, b)))
+                    .fold(Complex::ZERO, |acc, c| acc.add(&c));
+                let expected = if a == b { 1.0 } else { 0.0 };
+                assert!(approx_eq(dot.re, expected, 1e-9) && approx_eq(dot.im, 0.0, 1e-9));
+            }
+        }
     }
 
     #[test]

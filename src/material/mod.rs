@@ -36,8 +36,8 @@ pub mod weyl;
 pub use antiferromagnet::{AfmStructure, Antiferromagnet};
 pub use defects::{DefectCollection, DefectSite, DefectType, DepinningParams, GrainBoundary};
 pub use disorder::{
-    DisorderConfig, DisorderType, GrainStructure, RandomAnisotropyModel, RandomFieldDisorder,
-    SurfaceRoughness, Xorshift64,
+    DisorderConfig, DisorderType, GradedInterface, GradingLaw, GrainStructure,
+    RandomAnisotropyModel, RandomFieldDisorder, SurfaceRoughness, Xorshift64,
 };
 pub use ferromagnet::Ferromagnet;
 pub use interface::SpinInterface;

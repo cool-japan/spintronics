@@ -27,6 +27,7 @@ pub mod domain_wall;
 pub mod dw_dynamics;
 pub mod hopfion;
 pub mod hopfion_dynamics;
+pub mod hopfion_stability_modes;
 pub mod prelude;
 pub mod skyrmion;
 pub mod topology;
@@ -38,5 +39,8 @@ pub use hopfion::{
     HopfFibration, HopfInvariant, Hopfion, HopfionEnergy, HopfionEnergyParams, HopfionStability,
 };
 pub use hopfion_dynamics::{HopfionDynamicsConfig, HopfionDynamicsResult, HopfionDynamicsSolver};
+pub use hopfion_stability_modes::{
+    CollectiveMode, CollectiveStepSizes, EigenmodeSpectrum, HopfionEigenmodeStability,
+};
 pub use skyrmion::{Chirality, Helicity, Skyrmion, SkyrmionLattice};
 pub use topology::{calculate_skyrmion_number, TopologicalCharge};

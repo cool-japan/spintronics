@@ -105,6 +105,12 @@ impl PySpinPumpingSimulation {
         let mut m = self.magnetization;
         let h = self.external_field;
 
+        // Tracks the magnetization as of the most recently recorded
+        // trajectory point (see below: the loop computes one trailing
+        // RK4 step past the last recorded sample, so `m` itself ends up
+        // one step ahead of the returned trajectory once the loop ends).
+        let mut last_recorded_m = m;
+
         // Spin current flow direction (from FM to NM, along interface normal)
         let js_flow = self.interface.normal;
 
@@ -114,6 +120,7 @@ impl PySpinPumpingSimulation {
             mx_vals.push(m.x);
             my_vals.push(m.y);
             mz_vals.push(m.z);
+            last_recorded_m = m;
 
             // Calculate dm/dt
             let dm_dt = calc_dm_dt(m, h, GAMMA, alpha);
@@ -144,6 +151,12 @@ impl PySpinPumpingSimulation {
         let peak_voltage = voltage_vals.iter().cloned().fold(0.0_f64, f64::max);
         let avg_voltage: f64 = voltage_vals.iter().sum::<f64>() / voltage_vals.len() as f64;
         let peak_js = js_vals.iter().cloned().fold(0.0_f64, f64::max);
+
+        // Persist the final evolved magnetization (matching the last point
+        // of the returned trajectory, i.e. `mx_vals`/`my_vals`/`mz_vals`
+        // last entries) so that `get_magnetization()` reflects the state
+        // after `run()`, consistent with `LlgSimulator::evolve()`.
+        self.magnetization = last_recorded_m;
 
         // Build result dictionary
         let dict = PyDict::new(py);

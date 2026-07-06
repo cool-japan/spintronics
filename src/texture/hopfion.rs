@@ -419,6 +419,31 @@ impl Hopfion {
         hopf_charge: i32,
         profile: ProfileFunction,
     ) -> Result<Self> {
+        Self::with_profile_and_offset(grid_size, radius, hopf_charge, profile, Vector3::zero())
+    }
+
+    /// Create a hopfion with a specified profile function and a rigid spatial
+    /// center offset
+    ///
+    /// Identical to [`Hopfion::with_profile`] except the toroidal-ansatz
+    /// center is displaced by `center_offset` \[m\] away from the grid's
+    /// geometric center (in the same Cartesian frame as [`Hopfion::grid_position`]).
+    /// `with_profile(..)` is exactly `with_profile_and_offset(.., Vector3::zero())`.
+    ///
+    /// This is used to construct rigidly-translated trial configurations for
+    /// collective-coordinate (translation-mode) stability analysis; see
+    /// [`crate::texture::hopfion_stability_modes::HopfionEigenmodeStability`].
+    ///
+    /// # Errors
+    /// Returns an error under the same conditions as [`Hopfion::with_profile`],
+    /// plus if any component of `center_offset` is non-finite.
+    pub fn with_profile_and_offset(
+        grid_size: (usize, usize, usize),
+        radius: f64,
+        hopf_charge: i32,
+        profile: ProfileFunction,
+        center_offset: Vector3<f64>,
+    ) -> Result<Self> {
         let (nx, ny, nz) = grid_size;
 
         if nx == 0 || ny == 0 || nz == 0 {
@@ -432,6 +457,16 @@ impl Hopfion {
             return Err(Error::InvalidParameter {
                 param: "radius".to_string(),
                 reason: "Radius must be positive and finite".to_string(),
+            });
+        }
+
+        if !center_offset.x.is_finite()
+            || !center_offset.y.is_finite()
+            || !center_offset.z.is_finite()
+        {
+            return Err(Error::InvalidParameter {
+                param: "center_offset".to_string(),
+                reason: "Center offset components must be finite".to_string(),
             });
         }
 
@@ -458,9 +493,11 @@ impl Hopfion {
         for iz in 0..nz {
             for iy in 0..ny {
                 for ix in 0..nx {
-                    let x = (ix as f64 - cx) * cell_size;
-                    let y = (iy as f64 - cy) * cell_size;
-                    let z = (iz as f64 - cz) * cell_size;
+                    // Subtracting center_offset rigidly translates the ansatz
+                    // by +center_offset: f_shifted(r) = f(r - center_offset).
+                    let x = (ix as f64 - cx) * cell_size - center_offset.x;
+                    let y = (iy as f64 - cy) * cell_size - center_offset.y;
+                    let z = (iz as f64 - cz) * cell_size - center_offset.z;
 
                     let m = Self::compute_magnetization_at_point(
                         x,

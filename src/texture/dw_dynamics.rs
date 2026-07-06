@@ -204,6 +204,7 @@ impl DwMaterial {
     /// The `name` field holds a `&'static str` which cannot be deserialised from
     /// arbitrary bytes, so it is skipped and replaced with this value on
     /// round-trip.
+    #[cfg(feature = "serde")]
     fn default_name() -> &'static str {
         "custom"
     }

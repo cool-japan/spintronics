@@ -346,7 +346,7 @@ impl<'a> WilsonLoop<'a> {
 ///
 /// Returns an error if the eigendecomposition fails. Falls back to identity if
 /// any singular value is below `1e-14`.
-fn polar_unitary(m: &CMatrix) -> Result<CMatrix> {
+pub(crate) fn polar_unitary(m: &CMatrix) -> Result<CMatrix> {
     let n = m.n();
 
     if n == 1 {
@@ -425,6 +425,47 @@ fn unitary_eig_phases(u: &CMatrix) -> Result<Vec<f64>> {
         .collect();
 
     Ok(phases)
+}
+
+// ---------------------------------------------------------------------------
+// Exact eigenphases of a 2×2 unitary matrix (used by the Z₂ Wilson-loop core)
+// ---------------------------------------------------------------------------
+
+/// Exactly extract both eigenphases of a 2×2 unitary matrix `W`, with no sign
+/// ambiguity (unlike [`unitary_eig_phases`], which is documented to lose sign
+/// information and is left as-is since it is used correctly elsewhere for
+/// magnitude-only checks).
+///
+/// For a 2×2 unitary `W` with eigenvalues `e^{iθ₁}`, `e^{iθ₂}`:
+///
+/// ```text
+/// det(W) = e^{i(θ₁+θ₂)}   ⟹   ξ = (θ₁+θ₂)/2 = ½·arg(det W)
+/// Ω = W·e^{-iξ}             has eigenvalues e^{i(θ₁-ξ)}, e^{i(θ₂-ξ)} = e^{±iφ}
+/// φ = arccos(clamp(Re(trace Ω)/2, -1, 1)) ∈ [0,π]
+/// ```
+///
+/// so `{θ₁, θ₂} = {ξ+φ, ξ-φ}` as an (unordered) set. This is exact because
+/// `det` and `trace` fully determine the characteristic polynomial of a 2×2
+/// matrix — the only remaining freedom is which of the two returned values
+/// is labelled first, which is harmless since callers only need the set.
+///
+/// Only `trace(Ω)` is needed (not the full matrix `Ω`), since `trace` is
+/// linear: `trace(W·e^{-iξ}) = trace(W)·e^{-iξ}`.
+///
+/// Assumes (but does not verify) that `w` is a 2×2 unitary matrix.
+pub(crate) fn unitary_2x2_eigenphases_exact(w: &CMatrix) -> (f64, f64) {
+    let det_w = w.get(0, 0).mul(&w.get(1, 1)).sub(&w.get(0, 1).mul(&w.get(1, 0)));
+    let xi = 0.5 * det_w.phase();
+
+    // trace(Ω) = trace(W) · e^{-iξ}
+    let trace_w = w.get(0, 0).add(&w.get(1, 1));
+    let phase_neg_xi = Complex::from_polar(1.0, -xi);
+    let trace_omega = trace_w.mul(&phase_neg_xi);
+
+    let c = (trace_omega.re * 0.5).clamp(-1.0, 1.0);
+    let phi = c.acos();
+
+    (xi + phi, xi - phi)
 }
 
 // ---------------------------------------------------------------------------

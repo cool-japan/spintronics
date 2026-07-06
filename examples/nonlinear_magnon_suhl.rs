@@ -33,8 +33,14 @@
 //!   excitation threshold", *Sov. Phys. Usp.* **17**, 896 (1975).
 //! - A. Chumak et al., "Magnon spintronics", *Nat. Phys.* **11**, 453 (2015).
 
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::prelude::*;
 
+// This example exercises `spintronics::magnon` (four-magnon scattering, Suhl
+// instability, parametric amplification), which is excluded from wasm32 builds
+// (see `#[cfg(not(target_arch = "wasm32"))]` on `pub mod magnon;` in
+// `src/lib.rs`), so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("=================================================================");
     println!("  Nonlinear Magnon Physics: Suhl Instability & Parametric Amp.");
@@ -290,3 +296,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

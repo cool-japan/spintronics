@@ -857,6 +857,227 @@ impl Simulation {
         })
     }
 
+    /// Run the simulation, invoking `callback` once per completed step
+    /// instead of collecting the full trajectory into memory.
+    ///
+    /// This performs *exactly* the same integration loop as
+    /// [`run`](Simulation::run) — same solver dispatch, same finite-value
+    /// checks, same renormalization behaviour per solver family — but instead
+    /// of accumulating `Vec<Vector3<f64>>` / `Vec<f64>` histories it calls
+    /// `callback(step_index, &magnetization, energy)` once per completed step
+    /// and never retains a growing collection internally. This makes it
+    /// suitable for very large `num_steps` or long-running simulations where
+    /// materializing the full [`SimulationResult`] trajectory would be
+    /// memory-prohibitive.
+    ///
+    /// `step_index` starts at `0` for the initial state (mirroring
+    /// `SimulationResult::trajectory[0]` / `energies[0]`) and increases by
+    /// one per integration step thereafter, so the sequence of
+    /// `(step_index, m, energy)` triples reported here is exactly the
+    /// row-by-row content of the [`SimulationResult`] that
+    /// [`run`](Simulation::run) would produce from an identically configured
+    /// builder.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::NumericalError`] if the magnetization becomes
+    /// non-finite during integration, or [`Error::ConfigurationError`] on an
+    /// internal solver-dispatch inconsistency (unreachable in practice). Any
+    /// `Err` returned by `callback` is propagated immediately, aborting the
+    /// integration at that step.
+    pub fn run_streaming<Cb>(&mut self, mut callback: Cb) -> Result<()>
+    where
+        Cb: FnMut(usize, &Vector3<f64>, f64) -> Result<()>,
+    {
+        // Report the initial state (step 0), matching
+        // `SimulationResult::trajectory[0]` / `energies[0]`, without ever
+        // allocating a Vec for it.
+        let e0 = self.compute_energy(self.magnetization);
+        callback(0, &self.magnetization, e0)?;
+
+        // Pre-extract all parameters needed by closures so that we avoid
+        // holding borrows on `self` inside loops that also mutate `self`.
+        let alpha = self.solver.alpha;
+        let gamma = self.solver.gamma;
+        let dt = self.solver.dt;
+        let h_ext = self.external_field;
+        let mat_ms = self.material.ms;
+        let mat_k = self.material.anisotropy_k;
+        let mat_easy = self.material.easy_axis;
+        let num_steps = self.num_steps;
+        let solver_kind = self.solver_kind;
+
+        // Closure: effective field from magnetization (captures copied primitives).
+        let eff_field = |m_eval: Vector3<f64>| -> Vector3<f64> {
+            use crate::constants::MU_0;
+            let projection = m_eval.dot(&mat_easy);
+            let h_anis = if mat_ms.abs() > 1.0e-30 {
+                mat_easy * (2.0 * mat_k * projection / (MU_0 * mat_ms))
+            } else {
+                Vector3::zero()
+            };
+            h_ext + h_anis
+        };
+
+        // Closure: LLG dm/dt.
+        let llg_rhs = |m_eval: Vector3<f64>| -> Vector3<f64> {
+            calc_dm_dt(m_eval, eff_field(m_eval), gamma, alpha)
+        };
+
+        // Dispatch based on solver kind (mirrors `run()` step-for-step).
+        match solver_kind {
+            SolverKind::Dp45 { tolerance } => {
+                let inner = DormandPrince45::new();
+                let mut adaptive = AdaptiveIntegrator::new(inner, tolerance, 4.0)
+                    .with_dt_min(1e-20)
+                    .with_dt_max(dt * 10.0);
+                let mut cur_dt = dt;
+                for step_idx in 0..num_steps {
+                    let m = self.magnetization;
+                    let state = vec![m];
+                    let rhs: RhsFn<'_> = &|s: &[Vector3<f64>], _t: f64| vec![llg_rhs(s[0])];
+                    let (output, used_dt) = adaptive.adaptive_step(&state, 0.0, cur_dt, rhs)?;
+                    cur_dt = output.suggested_dt.unwrap_or(used_dt);
+                    let new_m = output.new_state.into_iter().next().ok_or_else(|| {
+                        Error::NumericalError {
+                            description: format!(
+                                "DP45: empty output state at step {}",
+                                step_idx + 1
+                            ),
+                        }
+                    })?;
+                    Self::check_finite(new_m, step_idx + 1)?;
+                    let new_m = Self::renormalize(new_m);
+                    self.magnetization = new_m;
+                    let energy = self.compute_energy(new_m);
+                    callback(step_idx + 1, &new_m, energy)?;
+                }
+            },
+            SolverKind::Dp87 { tolerance } => {
+                let inner = DormandPrince87::new();
+                let mut adaptive = AdaptiveIntegrator::new(inner, tolerance, 7.0)
+                    .with_dt_min(1e-20)
+                    .with_dt_max(dt * 10.0);
+                let mut cur_dt = dt;
+                for step_idx in 0..num_steps {
+                    let m = self.magnetization;
+                    let state = vec![m];
+                    let rhs: RhsFn<'_> = &|s: &[Vector3<f64>], _t: f64| vec![llg_rhs(s[0])];
+                    let (output, used_dt) = adaptive.adaptive_step(&state, 0.0, cur_dt, rhs)?;
+                    cur_dt = output.suggested_dt.unwrap_or(used_dt);
+                    let new_m = output.new_state.into_iter().next().ok_or_else(|| {
+                        Error::NumericalError {
+                            description: format!(
+                                "DP87: empty output state at step {}",
+                                step_idx + 1
+                            ),
+                        }
+                    })?;
+                    Self::check_finite(new_m, step_idx + 1)?;
+                    let new_m = Self::renormalize(new_m);
+                    self.magnetization = new_m;
+                    let energy = self.compute_energy(new_m);
+                    callback(step_idx + 1, &new_m, energy)?;
+                }
+            },
+            SolverKind::Yoshida4 => {
+                // Symplectic leapfrog on (q=m, p=dm/dt).
+                let mut integrator = Yoshida4::new();
+                let mut p = llg_rhs(self.magnetization);
+                for step_idx in 0..num_steps {
+                    let q = self.magnetization;
+                    let state = vec![q, p];
+                    let rhs: RhsFn<'_> = &|s: &[Vector3<f64>], _t: f64| vec![s[1], llg_rhs(s[0])];
+                    let output = integrator.step(&state, 0.0, dt, rhs)?;
+                    let mut it = output.new_state.into_iter();
+                    let new_m = it.next().ok_or_else(|| Error::NumericalError {
+                        description: format!("Yoshida4: missing q at step {}", step_idx + 1),
+                    })?;
+                    p = it.next().unwrap_or_else(|| llg_rhs(new_m));
+                    Self::check_finite(new_m, step_idx + 1)?;
+                    let new_m = Self::renormalize(new_m);
+                    self.magnetization = new_m;
+                    let energy = self.compute_energy(new_m);
+                    callback(step_idx + 1, &new_m, energy)?;
+                }
+            },
+            SolverKind::ForestRuth => {
+                // Same (q, p) leapfrog convention as Yoshida4.
+                let mut integrator = ForestRuth::new();
+                let mut p = llg_rhs(self.magnetization);
+                for step_idx in 0..num_steps {
+                    let q = self.magnetization;
+                    let state = vec![q, p];
+                    let rhs: RhsFn<'_> = &|s: &[Vector3<f64>], _t: f64| vec![s[1], llg_rhs(s[0])];
+                    let output = integrator.step(&state, 0.0, dt, rhs)?;
+                    let mut it = output.new_state.into_iter();
+                    let new_m = it.next().ok_or_else(|| Error::NumericalError {
+                        description: format!("ForestRuth: missing q at step {}", step_idx + 1),
+                    })?;
+                    p = it.next().unwrap_or_else(|| llg_rhs(new_m));
+                    Self::check_finite(new_m, step_idx + 1)?;
+                    let new_m = Self::renormalize(new_m);
+                    self.magnetization = new_m;
+                    let energy = self.compute_energy(new_m);
+                    callback(step_idx + 1, &new_m, energy)?;
+                }
+            },
+            SolverKind::SemiImplicit {
+                tolerance,
+                max_iter,
+            } => {
+                let mut integrator = SemiImplicit::new(max_iter, tolerance);
+                for step_idx in 0..num_steps {
+                    let m = self.magnetization;
+                    let state = vec![m];
+                    let rhs: RhsFn<'_> = &|s: &[Vector3<f64>], _t: f64| vec![llg_rhs(s[0])];
+                    let output = integrator.step(&state, 0.0, dt, rhs)?;
+                    let new_m = output.new_state.into_iter().next().ok_or_else(|| {
+                        Error::NumericalError {
+                            description: format!(
+                                "SemiImplicit: empty output state at step {}",
+                                step_idx + 1
+                            ),
+                        }
+                    })?;
+                    Self::check_finite(new_m, step_idx + 1)?;
+                    let new_m = Self::renormalize(new_m);
+                    self.magnetization = new_m;
+                    let energy = self.compute_energy(new_m);
+                    callback(step_idx + 1, &new_m, energy)?;
+                }
+            },
+            // Legacy fixed-step solvers via LlgSolver
+            _ => {
+                for step_idx in 0..num_steps {
+                    let m = self.magnetization;
+
+                    let new_m = match solver_kind {
+                        SolverKind::Rk4 => self.solver.step_rk4(m, eff_field),
+                        SolverKind::Euler => self.solver.step_euler(m, eff_field(m)),
+                        SolverKind::Heun => self.solver.step_heun(m, eff_field),
+                        // All new variants are handled above. This arm is
+                        // unreachable at runtime but required for exhaustiveness.
+                        _ => {
+                            return Err(Error::ConfigurationError {
+                                description: "solver dispatch error: unexpected variant in \
+                                              legacy arm"
+                                    .to_string(),
+                            });
+                        },
+                    };
+
+                    Self::check_finite(new_m, step_idx + 1)?;
+                    self.magnetization = new_m;
+                    let energy = self.compute_energy(new_m);
+                    callback(step_idx + 1, &new_m, energy)?;
+                }
+            },
+        }
+
+        Ok(())
+    }
+
     /// Check that a magnetization vector has finite components.
     fn check_finite(m: Vector3<f64>, step: usize) -> Result<()> {
         if !m.x.is_finite() || !m.y.is_finite() || !m.z.is_finite() {
@@ -1350,5 +1571,187 @@ mod tests {
                 mag
             );
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Streaming API tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_run_streaming_matches_run_trajectory() {
+        // `run_streaming` must reproduce, step for step, exactly what `run()`
+        // collects into `SimulationResult` for an identically configured
+        // simulation (same material, field, solver, dt, num_steps, initial m).
+        fn build_sim() -> Simulation {
+            SimulationBuilder::new()
+                .material(Ferromagnet::yig())
+                .external_field(Vector3::new(0.0, 0.0, 0.1))
+                .solver_rk4()
+                .initial_magnetization(Vector3::new(1.0, 0.0, 0.0))
+                .time_step(1.0e-13)
+                .num_steps(40)
+                .build()
+                .expect("builder should succeed")
+        }
+
+        let mut sim_collected = build_sim();
+        let collected = sim_collected.run().expect("collected run() should succeed");
+
+        let mut sim_streamed = build_sim();
+        let mut streamed_m: Vec<Vector3<f64>> = Vec::new();
+        let mut streamed_e: Vec<f64> = Vec::new();
+        sim_streamed
+            .run_streaming(|step_index, m, energy| {
+                assert_eq!(
+                    step_index,
+                    streamed_m.len(),
+                    "callback must be invoked with strictly sequential step indices"
+                );
+                streamed_m.push(*m);
+                streamed_e.push(energy);
+                Ok(())
+            })
+            .expect("run_streaming should succeed");
+
+        assert_eq!(
+            streamed_m.len(),
+            collected.len(),
+            "streaming should report exactly as many steps as the collected trajectory"
+        );
+        assert_eq!(streamed_e.len(), collected.energies.len());
+
+        for (i, (m_stream, m_collect)) in streamed_m
+            .iter()
+            .zip(collected.trajectory.iter())
+            .enumerate()
+        {
+            assert!(
+                (m_stream.x - m_collect.x).abs() < 1.0e-12
+                    && (m_stream.y - m_collect.y).abs() < 1.0e-12
+                    && (m_stream.z - m_collect.z).abs() < 1.0e-12,
+                "trajectory mismatch at step {}: streamed {:?} vs collected {:?}",
+                i,
+                m_stream,
+                m_collect
+            );
+        }
+
+        for (i, (&e_stream, &e_collect)) in
+            streamed_e.iter().zip(collected.energies.iter()).enumerate()
+        {
+            let scale = e_collect.abs().max(1.0);
+            assert!(
+                (e_stream - e_collect).abs() < 1.0e-9 * scale,
+                "energy mismatch at step {}: streamed {} vs collected {}",
+                i,
+                e_stream,
+                e_collect
+            );
+        }
+
+        // The final magnetization reached via streaming must match the one
+        // reported by the collected run (both start from identical initial
+        // conditions and execute the identical integration loop).
+        assert!(
+            (sim_streamed.magnetization.x - collected.final_magnetization.x).abs() < 1.0e-12
+                && (sim_streamed.magnetization.y - collected.final_magnetization.y).abs() < 1.0e-12
+                && (sim_streamed.magnetization.z - collected.final_magnetization.z).abs() < 1.0e-12,
+            "final magnetization mismatch: streamed {:?} vs collected {:?}",
+            sim_streamed.magnetization,
+            collected.final_magnetization
+        );
+    }
+
+    #[test]
+    fn test_run_streaming_handles_large_run_with_constant_size_accumulator() {
+        // `run_streaming` must be usable for very large / long-running
+        // simulations without the caller needing an ever-growing collection.
+        // We drive it for far more steps than any *executed* trajectory
+        // elsewhere in this test module (the largest is 5000, in
+        // `test_energy_conservation_zero_damping`) using an accumulator whose
+        // size is fixed at compile time and independent of `num_steps`.
+        #[derive(Default)]
+        struct RunningStats {
+            count: usize,
+            checksum: f64,
+            max_abs_component: f64,
+        }
+
+        // The accumulator's footprint is a handful of scalars, regardless of
+        // how many steps are processed -- unlike `Vec<Vector3<f64>>`, whose
+        // size in `SimulationResult::trajectory` grows linearly with
+        // `num_steps`. This is the structural property that makes
+        // `run_streaming` suitable for large-N / long-run simulations: the
+        // hot loop below never calls `Vec::push`.
+        assert!(
+            std::mem::size_of::<RunningStats>() <= 32,
+            "accumulator must stay a small, fixed size independent of num_steps"
+        );
+
+        let num_steps = 200_000usize;
+        let mut sim = SimulationBuilder::new()
+            .material(Ferromagnet::yig())
+            .external_field(Vector3::new(0.0, 0.0, 0.1))
+            .solver_rk4()
+            .initial_magnetization(Vector3::new(1.0, 0.0, 0.0))
+            .time_step(1.0e-13)
+            .num_steps(num_steps)
+            .build()
+            .expect("builder should succeed");
+
+        let mut stats = RunningStats::default();
+        sim.run_streaming(|_step_index, m, energy| {
+            stats.count += 1;
+            stats.checksum += energy;
+            stats.max_abs_component = stats
+                .max_abs_component
+                .max(m.x.abs())
+                .max(m.y.abs())
+                .max(m.z.abs());
+            Ok(())
+        })
+        .expect("run_streaming over a large step count should succeed");
+
+        // Initial state (step 0) plus `num_steps` integration steps.
+        assert_eq!(stats.count, num_steps + 1);
+        assert!(stats.checksum.is_finite());
+        // Magnetization stays a unit vector throughout RK4 integration, so no
+        // component should ever exceed 1 (with a small numerical margin).
+        assert!(
+            stats.max_abs_component <= 1.0 + 1.0e-6,
+            "unexpected magnetization component magnitude {}",
+            stats.max_abs_component
+        );
+    }
+
+    #[test]
+    fn test_run_streaming_propagates_callback_error_and_aborts_early() {
+        // An `Err` returned by the callback must short-circuit the
+        // integration immediately rather than continuing to completion.
+        let mut sim = SimulationBuilder::new()
+            .material(Ferromagnet::yig())
+            .external_field(Vector3::new(0.0, 0.0, 0.1))
+            .solver_rk4()
+            .initial_magnetization(Vector3::new(1.0, 0.0, 0.0))
+            .time_step(1.0e-13)
+            .num_steps(1000)
+            .build()
+            .expect("builder should succeed");
+
+        let abort_after = 10usize;
+        let mut seen = 0usize;
+        let result = sim.run_streaming(|step_index, _m, _energy| {
+            seen += 1;
+            if step_index >= abort_after {
+                return Err(Error::ConfigurationError {
+                    description: "synthetic abort for test".to_string(),
+                });
+            }
+            Ok(())
+        });
+
+        assert!(result.is_err(), "callback error should propagate as Err");
+        // Steps 0..=abort_after inclusive are reported before aborting.
+        assert_eq!(seen, abort_after + 1);
     }
 }

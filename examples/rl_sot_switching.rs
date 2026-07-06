@@ -7,8 +7,13 @@
 //!
 //! Run with: cargo run --example rl_sot_switching
 
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::prelude::*;
 
+// This example exercises `spintronics::ai` (SOT-RL reservoir + CEM optimizer),
+// which is excluded from wasm32 builds (see `#[cfg(not(target_arch = "wasm32"))]`
+// on `pub mod ai;` in `src/lib.rs`), so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("=== RL-Optimized SOT Switching Protocol ===\n");
 
@@ -153,3 +158,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

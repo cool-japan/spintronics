@@ -5,11 +5,140 @@ All notable changes to the spintronics library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.2] - Unreleased
+## [0.3.2] - 2026-07-05
 
 ### Added
 
-- (nothing yet)
+#### Altermagnets (`src/altermagnet/`)
+- `AltermagnetBandModel`: momentum-resolved, two-sublattice k·p Bloch-Hamiltonian model
+  for collinear altermagnets, with `mnte()`, `crsb()`, and `ruo2()` presets, closed-form
+  Berry curvature, and Fermi-sea `crystal_hall_conductivity()` / `spin_hall_conductivity()`
+  integrals that are correctly zero without spin-orbit coupling and nonzero (with sign
+  flipping under Néel reversal) once an optional `lambda_soc` term is enabled
+- `AltermagnetSpinValve`: giant magnetoresistance without ferromagnetism, driven purely by
+  the relative crystal-axis angle between two zero-net-moment altermagnetic layers
+
+#### Orbitronics (`src/orbitronics/`)
+- `crystal_field` module: real-cubic-harmonic d-orbital angular-momentum operators and
+  octahedral/tetrahedral/tetragonal crystal-field + spin-orbit Hamiltonians
+- `d_orbital_moment` module: `CrystalFieldModel` with Hund's-rule free-ion terms,
+  high-spin/low-spin ground states, orbital quenching and spin-orbit-driven unquenching,
+  effective magnetic moments, and 12 preset 3d transition-metal ions spanning Ti³⁺ to
+  Cu²⁺, including both high-spin and low-spin configurations (e.g. Fe²⁺, Co³⁺)
+
+#### Frustrated Magnetism (`src/frustrated/`)
+- `rvb` module: resonating-valence-bond quantum spin-liquid solver — dimer-covering
+  enumeration, Sutherland loop-counting overlaps, a generalized-eigenproblem variational
+  ground state (Löwdin canonical orthogonalization), exact diagonalization (dense, plus a
+  matrix-free Lanczos solver in the S_z=0 sector for up to 16 sites), and spinon-pair /
+  deconfinement diagnostics (53 tests)
+- `transport` module (`FrustratedTransport`): per-plaquette scalar spin chirality →
+  emergent magnetic field → topological Hall response pipeline for triangular, kagome,
+  and pyrochlore lattices
+- `FrustratedLattice::set_umbrella_order()`: noncoplanar, canted 120-degree "umbrella"
+  spin-texture initializer
+- `TopologicalHall::emergent_field_from_solid_angle()` /
+  `::hall_resistivity_from_charge_density()`: generalized entry points for arbitrary
+  noncoplanar spin textures, not just discrete skyrmions
+
+#### Hopfions (`src/texture/`)
+- `hopfion_stability_modes`: collective-coordinate linear-stability (eigenmode) analysis
+  of relaxed hopfions, diagonalizing the Hessian of the total energy functional
+- `Hopfion::with_profile_and_offset()`: rigidly-translated hopfion ansatz, used to probe
+  the translation zero-modes
+
+#### Magnonics (`src/magnon/`)
+- `SdwRelaxationDynamics`: time-dependent Ginzburg-Landau (Model A) relaxational dynamics
+  for the spin-density-wave order-parameter amplitude, relaxing toward `SdwGapSolver`'s
+  self-consistent equilibrium gap
+- `ParametricAmplification::with_supercriticality(xi)`: rescale the parametric pump field
+  to a chosen operating point relative to threshold
+
+#### Straintronics (`src/mech/`)
+- `strain_driven_dynamics`: time-domain LLG driver coupling oscillating strain — surface
+  acoustic wave (`SawStrainDrive`) or AC piezoelectric (`PiezoAcStrainDrive`) — into a
+  magnetoelastic effective field, integrated with the existing Dormand-Prince adaptive
+  solver
+
+#### Materials (`src/material/`)
+- `GradedInterface` / `GradingLaw`: `Linear`, `Exponential`, and `ErrorFunction` grading
+  laws for spatially-varying Ms/A/K profiles across a compositionally graded or
+  interdiffused interface, with optional roughness-like jitter
+
+#### Simulation Infrastructure & I/O
+- `Simulation::run_streaming()` (`src/builder/mod.rs`): per-step callback execution for
+  large or long-running simulations, without materializing the full trajectory in memory
+- Binary OVF format read/write (`src/io/ovf.rs`): `Binary4_1_0` (OVF 1.0, big-endian) and
+  `Binary4_2_0` / `Binary8_2_0` (OVF 2.0, little-endian), with control-value validation to
+  catch byte-order mismatches or truncated files
+- `benches/material_benchmark.rs`, `benches/skyrmion_benchmark.rs`: criterion benchmarks
+  for material-preset creation and skyrmion-dynamics simulation cost
+
+#### Python Bindings
+- `LlbMaterial`, `LlbSolver`, `OnsagerMatrix`, `SpinCaloritronicsMaterial`,
+  `batch_rk4_step`, `batch_rk4_multistep` now fully typed and documented in
+  `python/spintronics/__init__.pyi`
+- New pytest suite under `py/tests/` covering vectors, materials, LLG/LLB solvers, spin
+  pumping, spin Hall, caloritronics, and batch SIMD evolution (168 tests)
+
+### Changed
+
+- `ParametricAmplification::degenerate_from_yig` (`src/magnon/nonlinear.rs`): the pump
+  field is now the physics-derived degenerate parametric threshold field
+  `h_th = α·ω_p/(γ·Ms)` instead of a hard-coded 0.1 mT placeholder; the preset now sits
+  exactly at marginal stability (use the new `with_supercriticality` to move off it)
+- Added a workspace-level `[workspace.dependencies]` table (COOLJAPAN workspace policy):
+  `scirs2-core`, `scirs2-spatial`, `rayon`, `serde`, `serde_json`, `pyo3`, `numpy`,
+  `hdf5`, `base64`, the `wasm-bindgen` family, `criterion`, and `proptest` are now
+  declared once and consumed via `.workspace = true` from the root crate, `demo/`, and
+  `py/`
+- Dependency updates: `scirs2-core`/`scirs2-spatial` 0.4.4 → 0.6.0, `pyo3`/`numpy` 0.25 →
+  0.29 (Python bindings migrated to the `Bound<'py, T>` API), `rayon` → 1.12, `criterion`
+  → 0.8 (benchmarks migrated from `criterion::black_box` to `std::hint::black_box`),
+  `proptest` → 1.11, `getrandom` → 0.4
+- `spintronics-demo`: `axum` 0.7 → 0.8, `tower-http` 0.6 → 0.7, `askama` 0.12 → 0.16 —
+  `askama_axum` is now a deprecated tombstone, so `demo/src/main.rs` bridges templates to
+  axum responses manually via a small `render_template` helper
+- `TODO.md`: reconciled roughly 22 items that were already shipped in prior releases
+  (deferred integrators, spin-wave-theory modes, disorder/defect models, the type-state
+  builder, GPU CPU fallback, autodiff RL/diffusion/quantum-classical modules,
+  property-based tests, experimental validations) from unchecked to checked; no
+  functional changes
+
+### Fixed
+
+- `CMatrix::hermitian_eigendecomposition` (`src/math/matrix.rs`): the Householder-
+  tridiagonalization + implicit-QL implementation returned correct eigenvalues but
+  subtly incorrect eigenvectors for any non-diagonal Hermitian matrix of size 3 or
+  larger (a phase/sign bookkeeping gap between the accumulated unitary and the
+  tridiagonal form). Replaced with a cyclic Jacobi algorithm, verified to machine
+  precision up to n=16. This transparently corrects every consumer that relies on
+  eigenvectors rather than just eigenvalues, including `topomagnon` edge-mode
+  localization, 3D band eigenvectors and Wilson-loop centers, `spinwave::magnonic_crystal`,
+  `cavity::polariton`, `magnon::spectral`, and the new orbitronics/RVB/hopfion-stability
+  modules
+- `SpinPumpingSimulation.run()` (Python binding, `src/python/simulation.rs`) did not
+  update the tracked magnetization state after evolving; `get_magnetization()` after
+  `.run()` now correctly reflects the evolved state, consistent with
+  `LlgSimulator.evolve()`
+- Cargo lib-name collision between the root `spintronics` crate and the `spintronics-py`
+  cdylib: the latter's `[lib] name` is now `spintronics_native` (maturin's
+  `module-name = "spintronics"` keeps the Python-facing import name unchanged)
+- 21 hardcoded `/tmp/...` test paths replaced with `std::env::temp_dir()` across
+  `src/visualization/{csv,vtk,json,hdf5}.rs` and `src/io/ovf.rs`
+- `.gitignore`: anchored the `test_*` / `performance_*` rules to the repository root
+  (`/test_*`, `/performance_*`) — the previous unanchored globs were silently excluding
+  `py/tests/test_*.py` source files from version control
+- `py/pyproject.toml` and `py/python/spintronics/__init__.py`: stale Python package
+  version `0.5.0` corrected to `0.3.2`, matching the workspace version
+- Build hygiene: 7 `autodiff`-feature examples now declare
+  `required-features = ["autodiff"]` so `cargo build --examples` succeeds under default
+  features; the `data_export_formats` example's `temp_path` helper gained a precise
+  `cfg_attr` to avoid a dead-code warning when none of the `vti`/`netcdf`/`zarr` features
+  are enabled
+- Removed 3 redundant `#[allow(dead_code)]` / `#[allow(unused_imports)]` attributes that
+  were not suppressing any active warning (`src/benchmark.rs`, `src/stochastic/thermal.rs`,
+  `src/visualization/xdmf.rs`)
 
 ## [0.3.1] - 2026-06-10
 
@@ -369,6 +498,7 @@ This project follows [Semantic Versioning](https://semver.org/):
 - [Documentation](https://docs.rs/spintronics)
 - [crates.io](https://crates.io/crates/spintronics)
 
+[0.3.2]: https://github.com/cool-japan/spintronics/releases/tag/v0.3.2
 [0.3.1]: https://github.com/cool-japan/spintronics/releases/tag/v0.3.1
 [0.3.0]: https://github.com/cool-japan/spintronics/releases/tag/v0.3.0
 [0.2.0]: https://github.com/cool-japan/spintronics/releases/tag/v0.2.0

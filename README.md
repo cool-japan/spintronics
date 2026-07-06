@@ -42,16 +42,16 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Unit Validation**: Runtime checks for physical quantity sanity
 - ✅ **Performance**: SIMD-accelerated spin operations and parallel lattice evolution
 - ✅ **25 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
-- ✅ **1846 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
+- ✅ **2012 Tests + 117 Doc Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
 
 ### Core Capabilities
-- ✅ **32 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
+- ✅ **34 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
 - ✅ **130+ Source Files**: Well-organized, modular codebase
 - ✅ **5 Experimental Validations**: Against landmark papers (Saitoh 2006, Woo 2016, etc.)
 - ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
 - ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
-- ✅ **Production Quality**: Zero warnings, 1846 tests passing
+- ✅ **Production Quality**: Zero warnings, 2012 tests + 117 doc tests passing
 
 ## ✨ Key Features
 
@@ -83,7 +83,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📦 Implemented Modules
 
-The library is organized into 32 physics-focused modules:
+The library is organized into 34 physics-focused modules:
 
 | Module | Physics Concept | Key Papers / Concepts |
 |--------|----------------|----------------------|
@@ -107,8 +107,8 @@ The library is organized into 32 physics-focused modules:
 | **units** | Unit Validation | 14 validators for physical quantities (v0.2.0) |
 | **visualization** | Data Export | HDF5, JSON, CSV, VTK formats (v0.2.0) |
 | **python** | Python Bindings | PyO3 integration for Python users (v0.2.0) |
-| **altermagnet** | Altermagnetism | Time-reversal symmetry breaking without net moment (v0.3.0) |
-| **orbitronics** | Orbital Hall Effect | Orbital current generation and orbital Hall effect (v0.3.0) |
+| **altermagnet** | Altermagnetism | Time-reversal symmetry breaking without net moment; k·p band model with Berry curvature and crystal/spin Hall conductivity, spin-valve GMR without ferromagnetism (v0.3.0; expanded v0.3.2) |
+| **orbitronics** | Orbital Hall Effect | Orbital current generation and orbital Hall effect; d-orbital local-moment magnetism via crystal-field and spin-orbit Hamiltonians (v0.3.0; expanded v0.3.2) |
 | **frustrated** | Frustrated Magnets | Kagome and triangular lattice antiferromagnets, spin ice (v0.3.0) |
 | **spinwave** | Spin Wave Dynamics | Spin wave dispersion and magnon dynamics (v0.3.0) |
 | **texture/hopfion** | Hopfion Topology | Hopfion topology and invariant calculation (v0.3.0) |
@@ -119,6 +119,8 @@ The library is organized into 32 physics-focused modules:
 | **simd** | SIMD Operations | SIMD-accelerated spin operations (v0.3.0) |
 | **parallel** | Parallel Lattice | Parallel spin lattice evolution (v0.3.0) |
 | **builder** | Simulation Builder | SimulationBuilder fluent API (v0.3.0) |
+| **frustrated/rvb** | RVB Spin Liquid | Resonating-valence-bond solver: dimer coverings, variational ground state, exact diagonalization, spinon/deconfinement diagnostics (v0.3.2) |
+| **frustrated/transport** | Frustration-to-Transport | Scalar spin chirality, emergent field, and topological Hall response for triangular/kagome/pyrochlore lattices (v0.3.2) |
 
 ### Module Architecture
 
@@ -350,7 +352,7 @@ cargo test        # Unit tests
 
 ### Test Coverage
 
-**Total: 1846 tests passing** (workspace)
+**Total: 2012 tests + 117 doc tests passing** (workspace)
 - ✅ **Unit Tests**: Core physics calculations
 - ✅ **Doc Tests**: Documentation examples
 - ✅ **Integration Tests**: Multi-module physics workflows
@@ -394,7 +396,7 @@ Minimal dependency footprint for fast compilation and easy integration:
 
 ```toml
 [dependencies]
-scirs2-core = { version = "0.5.0", default-features = false }
+scirs2-core = { version = "0.6.0", default-features = false }
 ```
 
 **scirs2-core** provides:
@@ -673,8 +675,23 @@ See `wasm-demo/` directory for complete interactive examples.
 
 ### Version 0.3.2 🚧 **IN DEVELOPMENT**
 
-**Quality & Maintenance**
-- 🔄 In development — contributions welcome
+**New Physics Modules**
+- ✅ Altermagnet band model: k·p Bloch Hamiltonian with Berry curvature, crystal Hall and spin Hall conductivity (`altermagnet::band_model`)
+- ✅ Altermagnetic spin valve: GMR without ferromagnetism from the relative crystal-axis angle (`altermagnet::spin_valve`)
+- ✅ d-orbital local-moment magnetism: crystal-field + spin-orbit Hamiltonians, Hund's-rule ground states, 12 preset 3d transition-metal ions (`orbitronics::crystal_field`, `orbitronics::d_orbital_moment`)
+- ✅ RVB quantum spin-liquid solver: dimer coverings, variational ground state, exact diagonalization, spinon/deconfinement diagnostics (`frustrated::rvb`)
+- ✅ Geometric frustration → transport: scalar spin chirality, emergent field, topological Hall response (`frustrated::transport`)
+- ✅ Graded/inhomogeneous material interfaces: Linear/Exponential/ErrorFunction Ms/A/K grading laws (`material::disorder::GradedInterface`)
+- ✅ Time-domain SAW / AC piezoelectric strain-driven LLG dynamics (`mech::strain_driven_dynamics`)
+- ✅ Spin-density-wave relaxational dynamics toward self-consistent equilibrium gap (`magnon::SdwRelaxationDynamics`)
+- ✅ Hopfion eigenmode stability: collective-coordinate linear-stability analysis (`texture::hopfion_stability_modes`)
+
+**Simulation Infrastructure**
+- ✅ Streaming simulation API: per-step callback without materializing the full trajectory (`Simulation::run_streaming`)
+- ✅ Material-preset and skyrmion-dynamics benchmarks (`material_benchmark`, `skyrmion_benchmark`)
+
+**Quality**
+- ✅ 2012 tests + 117 doc tests passing, 0 warnings
 
 ### Version 0.4.0+ (Future Enhancements)
 

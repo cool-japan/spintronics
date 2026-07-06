@@ -4,6 +4,9 @@ Type stubs for the spintronics Python extension module.
 These stubs cover all classes and constants exposed by the Rust/PyO3 bindings.
 """
 
+import numpy as np
+from numpy.typing import NDArray
+
 # ---------------------------------------------------------------------------
 # Physical constants
 # ---------------------------------------------------------------------------
@@ -467,3 +470,456 @@ class SpinPumpingSimulation:
         """Return the current magnetisation as a Vector3."""
 
     def __repr__(self) -> str: ...
+
+
+# ---------------------------------------------------------------------------
+# LlbMaterial
+# ---------------------------------------------------------------------------
+
+class LlbMaterial:
+    """Material parameters for the LLB (Landau-Lifshitz-Bloch) equation.
+
+    Encapsulates Curie temperature, Gilbert damping, quantum spin number,
+    and zero-temperature saturation magnetization needed for finite-temperature
+    spin dynamics.
+    """
+
+    def __init__(
+        self,
+        curie_temp: float,
+        alpha: float,
+        spin_s: float,
+        ms_0: float,
+    ) -> None:
+        """Create a new LLB material with explicit parameters.
+
+        Args:
+            curie_temp: Curie temperature T_C (K).
+            alpha: Base Gilbert damping constant (dimensionless).
+            spin_s: Quantum spin number S (e.g. 0.5 for spin-1/2).
+            ms_0: Zero-temperature saturation magnetization (A/m).
+        """
+
+    @property
+    def curie_temp(self) -> float:
+        """Curie temperature T_C (K)."""
+
+    @property
+    def alpha(self) -> float:
+        """Base Gilbert damping constant alpha (dimensionless)."""
+
+    @property
+    def spin_s(self) -> float:
+        """Quantum spin number S."""
+
+    @property
+    def ms_0(self) -> float:
+        """Zero-temperature saturation magnetization M_s (A/m)."""
+
+    def equilibrium_magnetization(self, temperature: float) -> float:
+        """Compute equilibrium magnetization m_e(T) via the self-consistent Brillouin equation.
+
+        Returns 0.0 for T >= T_C or T <= 0.
+
+        Args:
+            temperature: Temperature (K).
+
+        Returns:
+            Dimensionless equilibrium magnetization in [0, 1].
+        """
+
+    def alpha_parallel(self, temperature: float) -> float:
+        """Temperature-dependent longitudinal damping alpha_parallel(T).
+
+        - T < T_C: alpha_parallel = alpha * (2/5 + 3*T/(5*T_C))
+        - T >= T_C: alpha_parallel = 2*alpha * T/(5*T_C)
+
+        Args:
+            temperature: Temperature (K).
+        """
+
+    def alpha_perp(self, temperature: float) -> float:
+        """Temperature-dependent transverse damping alpha_perp(T).
+
+        - T < T_C: alpha_perp = alpha * T/T_C (minimum 1e-10)
+        - T >= T_C: alpha_perp = 2*alpha * T/(5*T_C)
+
+        Args:
+            temperature: Temperature (K).
+        """
+
+    @staticmethod
+    def iron() -> LlbMaterial:
+        """Iron (Fe) LLB material preset (T_C = 1043 K, alpha = 0.01, S = 1.0)."""
+
+    @staticmethod
+    def nickel() -> LlbMaterial:
+        """Nickel (Ni) LLB material preset (T_C = 631 K, alpha = 0.064, S = 0.3)."""
+
+    @staticmethod
+    def cofeb() -> LlbMaterial:
+        """CoFeB LLB material preset (T_C = 1000 K, alpha = 0.005, S = 0.5)."""
+
+    def __repr__(self) -> str: ...
+
+
+# ---------------------------------------------------------------------------
+# LlbSolver
+# ---------------------------------------------------------------------------
+
+class LlbSolver:
+    """LLB equation solver with 4th-order Runge-Kutta integration.
+
+    Unlike the standard LLG solver, the LLB solver allows |m| to change
+    over time via longitudinal relaxation. This is essential near and above
+    the Curie temperature T_C.
+    """
+
+    def __init__(
+        self,
+        material: LlbMaterial,
+        dt: float,
+        temperature: float,
+        h_ext: tuple[float, float, float],
+    ) -> None:
+        """Create a new LLB solver.
+
+        Args:
+            material: LlbMaterial with Curie temperature, damping, spin number, M_s.
+            dt: Integration time step (s).
+            temperature: Simulation temperature (K).
+            h_ext: External applied field (hx, hy, hz) (T).
+        """
+
+    @property
+    def dt(self) -> float:
+        """Integration time step dt (s)."""
+
+    @property
+    def temperature(self) -> float:
+        """Simulation temperature (K)."""
+
+    @property
+    def h_ext(self) -> tuple[float, float, float]:
+        """External field h_ext as (hx, hy, hz) tuple (T)."""
+
+    @property
+    def gamma(self) -> float:
+        """Gyromagnetic ratio (rad/(s·T))."""
+
+    def step(self, m: tuple[float, float, float]) -> list[float]:
+        """Advance the magnetization by one RK4 time step.
+
+        Note: Unlike LLG, |m| is NOT renormalized after each step. The LLB
+        equation explicitly evolves the magnetization magnitude.
+
+        Args:
+            m: Current magnetization vector (mx, my, mz).
+
+        Returns:
+            Updated magnetization vector [mx, my, mz] after one dt.
+        """
+
+    def run(
+        self,
+        m0: tuple[float, float, float],
+        num_steps: int,
+        record_every: int,
+    ) -> dict:
+        """Run the LLB simulation for num_steps time steps.
+
+        Args:
+            m0: Initial magnetization vector (mx, my, mz).
+            num_steps: Total number of integration steps.
+            record_every: Snapshot interval (1 = every step, N = every Nth step).
+
+        Returns:
+            Dictionary containing:
+            - ``mx``, ``my``, ``mz``: list of float — trajectory components
+            - ``m_magnitude``: list of float — |m(t)| at each snapshot
+            - ``time``: list of float — time stamps (s)
+            - ``equilibrium_m``: float — m_e(T) for the simulation temperature
+        """
+
+    def __repr__(self) -> str: ...
+
+
+# ---------------------------------------------------------------------------
+# OnsagerMatrix
+# ---------------------------------------------------------------------------
+
+class OnsagerMatrix:
+    """Onsager transport matrix for spin caloritronics.
+
+    Encodes the linear-response coupling between charge, spin, and heat
+    currents in a magnetic heterostructure using Onsager reciprocal relations.
+    """
+
+    def __init__(
+        self,
+        temperature: float,
+        conductivity: float,
+        seebeck: float,
+        spin_seebeck: float,
+        hall_angle: float,
+        thermal_conductivity: float,
+    ) -> None:
+        """Create an Onsager matrix with explicit parameters.
+
+        Args:
+            temperature: Temperature (K).
+            conductivity: Electrical conductivity sigma (S/m).
+            seebeck: Seebeck coefficient S_e (V/K).
+            spin_seebeck: Spin Seebeck coefficient S_s (A/(m·K)).
+            hall_angle: Anomalous Hall angle theta_H (dimensionless).
+            thermal_conductivity: Thermal conductivity kappa (W/(m·K)).
+        """
+
+    @property
+    def temperature(self) -> float:
+        """Temperature (K)."""
+
+    @property
+    def conductivity(self) -> float:
+        """Electrical conductivity sigma (S/m)."""
+
+    @property
+    def seebeck(self) -> float:
+        """Seebeck coefficient S_e (V/K)."""
+
+    @property
+    def spin_seebeck(self) -> float:
+        """Spin Seebeck coefficient S_s (A/(m·K))."""
+
+    @property
+    def hall_angle(self) -> float:
+        """Anomalous Hall angle theta_H (dimensionless)."""
+
+    @property
+    def thermal_conductivity(self) -> float:
+        """Thermal conductivity kappa (W/(m·K))."""
+
+    def reciprocity_error(self) -> float:
+        """Check Onsager reciprocity: returns the relative deviation from L_ij = T * L_ji.
+
+        For analytically constructed matrices this is zero by construction.
+        Values < 1e-10 indicate reciprocity is satisfied.
+        """
+
+    def spin_current_from_grad_t(
+        self, grad_t: tuple[float, float, float]
+    ) -> list[float]:
+        """Compute the spin current density from a temperature gradient (spin Seebeck effect).
+
+        j_s = S_s * sigma * grad(T)  (A/m^2)
+
+        Args:
+            grad_t: Temperature gradient vector (dT/dx, dT/dy, dT/dz) (K/m).
+
+        Returns:
+            Spin current density [jx, jy, jz] (A/m^2).
+        """
+
+    def heat_current_from_spin_current(
+        self, j_spin: tuple[float, float, float]
+    ) -> list[float]:
+        """Compute the heat current from a spin current (spin Peltier effect).
+
+        j_Q = Pi_s * j_s = T * S_s * j_s  (W/m^2)
+
+        Args:
+            j_spin: Spin current density (jx, jy, jz) (A/m^2).
+
+        Returns:
+            Heat current density [jQx, jQy, jQz] (W/m^2).
+        """
+
+    def nernst_voltage(self, grad_t: float) -> float:
+        """Compute the anomalous Nernst voltage per unit length.
+
+        nu = -S_e * theta_H * |grad(T)|  (V/m)
+
+        Args:
+            grad_t: Longitudinal temperature gradient magnitude (K/m).
+
+        Returns:
+            Transverse Nernst voltage (V/m).
+        """
+
+    def all_currents(
+        self,
+        grad_t: tuple[float, float, float],
+        e_field: tuple[float, float, float],
+    ) -> dict:
+        """Compute charge, spin, and heat currents simultaneously.
+
+        Full Onsager response:
+            j_c = sigma * (E + S_e * grad(T))      (A/m^2)
+            j_s = S_s * sigma * grad(T)             (A/m^2)
+            j_Q = T*S_e*sigma*E - kappa*grad(T)     (W/m^2)
+
+        Args:
+            grad_t: Temperature gradient (dT/dx, dT/dy, dT/dz) (K/m).
+            e_field: Electric field (Ex, Ey, Ez) (V/m).
+
+        Returns:
+            Dictionary containing:
+            - ``charge_current``: list of 3 floats — j_c (A/m^2)
+            - ``spin_current``: list of 3 floats — j_s (A/m^2)
+            - ``heat_current``: list of 3 floats — j_Q (W/m^2)
+        """
+
+    @staticmethod
+    def yig_pt(temperature: float) -> OnsagerMatrix:
+        """YIG/Pt bilayer preset at `temperature` (K)."""
+
+    @staticmethod
+    def fe_pt(temperature: float) -> OnsagerMatrix:
+        """Fe/Pt bilayer preset at `temperature` (K)."""
+
+    @staticmethod
+    def cofeb_pt(temperature: float) -> OnsagerMatrix:
+        """CoFeB/Pt bilayer preset at `temperature` (K)."""
+
+    def __repr__(self) -> str: ...
+
+
+# ---------------------------------------------------------------------------
+# SpinCaloritronicsMaterial
+# ---------------------------------------------------------------------------
+
+class SpinCaloritronicsMaterial:
+    """Unified spin caloritronic material: combines an Onsager matrix with a
+    heat current calculator for a single high-level computation.
+
+    This is the primary user-facing type for spin caloritronics calculations.
+    Use ``compute_all()`` to obtain all cross-effects simultaneously.
+
+    This class has no public constructor; obtain instances via the
+    ``yig_pt``, ``fe_pt``, ``cofeb_pt``, or ``from_onsager`` factory methods.
+    """
+
+    @property
+    def name(self) -> str:
+        """Human-readable material system label (e.g. "YIG/Pt", "Fe/Pt")."""
+
+    @property
+    def onsager(self) -> OnsagerMatrix:
+        """The underlying OnsagerMatrix as a Python object."""
+
+    def compute_all(
+        self,
+        grad_t: tuple[float, float, float],
+        j_spin: tuple[float, float, float],
+    ) -> dict:
+        """Compute all spin-caloritronic cross-effects.
+
+        Evaluates:
+        - Spin Seebeck current: j_s = S_s * sigma * grad(T)
+        - Spin Peltier heat: |Pi_s * j_s|
+        - Anomalous Nernst voltage: nu = -S_e * theta_H * |grad(T)|
+        - Spin Nernst current (proxy): theta_H * j_s^SSE
+        - Total heat current: -kappa*grad(T) + Pi_s*j_s
+        - Onsager reciprocity check
+
+        Args:
+            grad_t: Temperature gradient (dT/dx, dT/dy, dT/dz) (K/m).
+            j_spin: Injected spin current density (jx, jy, jz) (A/m^2).
+
+        Returns:
+            Dictionary containing:
+            - ``spin_seebeck_current``: list of float — j_s (A/m^2)
+            - ``peltier_heat``: float — |j_Q^sPeltier| (W/m^2)
+            - ``nernst_voltage``: float — anomalous Nernst nu (V/m)
+            - ``spin_nernst_current``: list of float — j_s^SN proxy (A/m^2)
+            - ``reciprocity_satisfied``: bool — Onsager error < 1e-10
+            - ``total_heat_current``: list of float — total j_Q (W/m^2)
+        """
+
+    @staticmethod
+    def yig_pt(temperature: float) -> SpinCaloritronicsMaterial:
+        """YIG/Pt bilayer preset at `temperature` (K)."""
+
+    @staticmethod
+    def fe_pt(temperature: float) -> SpinCaloritronicsMaterial:
+        """Fe/Pt bilayer preset at `temperature` (K)."""
+
+    @staticmethod
+    def cofeb_pt(temperature: float) -> SpinCaloritronicsMaterial:
+        """CoFeB/Pt bilayer preset at `temperature` (K)."""
+
+    @staticmethod
+    def from_onsager(onsager: OnsagerMatrix) -> SpinCaloritronicsMaterial:
+        """Create a material from an Onsager matrix.
+
+        The heat-current calculator is built automatically via Kelvin relations:
+            Pi   = T * S_e
+            Pi_s = T * S_s
+
+        Args:
+            onsager: OnsagerMatrix for the desired material system.
+        """
+
+    def __repr__(self) -> str: ...
+
+
+# ---------------------------------------------------------------------------
+# SIMD batch LLG evolution (numpy)
+# ---------------------------------------------------------------------------
+
+def batch_rk4_step(
+    m: NDArray[np.float64],
+    h_eff: NDArray[np.float64],
+    alpha: float,
+    gamma: float,
+    dt: float,
+) -> NDArray[np.float64]:
+    """Evolve N spins for one RK4 time step using SIMD batch processing.
+
+    Each spin evolves independently under its own effective field (no coupling).
+    The result is normalized so that |m_i| = 1 for every spin.
+
+    Args:
+        m: (N, 3) numpy array of magnetization vectors (row-major, each row is m_i).
+        h_eff: (N, 3) numpy array of effective field vectors (T).
+        alpha: Gilbert damping constant (dimensionless).
+        gamma: Gyromagnetic ratio (rad/(s·T)), typically about 1.761e11.
+        dt: Integration time step (s).
+
+    Returns:
+        (N, 3) numpy array of updated magnetization vectors (unit length).
+
+    Raises:
+        ValueError: If array shapes are incompatible or lengths differ.
+    """
+
+def batch_rk4_multistep(
+    m: NDArray[np.float64],
+    h_eff: NDArray[np.float64],
+    alpha: float,
+    gamma: float,
+    dt: float,
+    num_steps: int,
+) -> NDArray[np.float64]:
+    """Evolve N spins for ``num_steps`` RK4 time steps using SIMD batch processing.
+
+    ``h_eff`` is held constant throughout (static field approximation). This is
+    more efficient than calling ``batch_rk4_step`` in a loop because no
+    Python-to-Rust conversion overhead is incurred at each step.
+
+    The result is normalized so that |m_i| = 1 after all steps.
+
+    Args:
+        m: (N, 3) numpy array of magnetization vectors (initial state).
+        h_eff: (N, 3) numpy array of effective field vectors (T) (constant).
+        alpha: Gilbert damping constant (dimensionless).
+        gamma: Gyromagnetic ratio (rad/(s·T)).
+        dt: Integration time step (s).
+        num_steps: Number of RK4 iterations to perform.
+
+    Returns:
+        (N, 3) numpy array of final magnetization vectors (unit length).
+
+    Raises:
+        ValueError: If array shapes are incompatible or lengths differ.
+    """

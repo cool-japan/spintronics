@@ -26,6 +26,7 @@ pub mod coupled_dynamics;
 pub mod einstein_de_haas;
 pub mod magnetoelastic;
 pub mod saw;
+pub mod strain_driven_dynamics;
 pub mod straintronics;
 
 pub use barnett_effect::BarnettMagnetization;
@@ -38,5 +39,9 @@ pub use magnetoelastic::{
 pub use saw::{
     MagnetoelasticMaterial as SawMagnetoelastic, PiezoSubstrate, SawMagnetoacoustics, SawSource,
     SawSpinWaveExcitation,
+};
+pub use strain_driven_dynamics::{
+    PiezoAcStrainDrive, SawStrainDrive, StrainDrive, StrainDrivenLlgDriver, StrainDrivenStepSample,
+    StrainDrivenTrajectory, OPTIMAL_COUPLING_ANGLE_RAD,
 };
 pub use straintronics::{MultiferroicSwitchingResult, StraintronicDevice, VcmaParameters};

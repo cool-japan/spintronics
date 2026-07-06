@@ -22,11 +22,15 @@
 //! - Chromium-specific SDW properties (T_N = 311 K, spin-flip at 123 K)
 //! - Transport anomaly at the Neel temperature
 //! - SDW condensation and elastic energies
+//! - Time-dependent Ginzburg-Landau (TDGL) relaxational dynamics of the
+//!   order-parameter amplitude toward the self-consistent gap
 //!
 //! # References
 //!
 //! - Fawcett, Rev. Mod. Phys. 60, 209 (1988) -- comprehensive review of Cr SDW
 //! - Overhauser, Phys. Rev. 128, 1437 (1962) -- original SDW theory
+//! - Hohenberg & Halperin, Rev. Mod. Phys. 49, 435 (1977) -- Model A
+//!   (non-conserved, purely relaxational) order-parameter dynamics
 
 use std::f64::consts::PI;
 
@@ -666,6 +670,258 @@ pub fn enhanced_susceptibility(
 }
 
 // ============================================================================
+// TDGL Relaxational Dynamics
+// ============================================================================
+
+/// Time-dependent Ginzburg-Landau (TDGL) relaxational dynamics for the SDW
+/// order-parameter amplitude.
+///
+/// # Physical background
+///
+/// The machinery above ([`SdwGapSolver`], [`condensation_energy`],
+/// [`elastic_energy`]) describes the *equilibrium* SDW state at a given
+/// temperature but says nothing about how the order parameter reaches that
+/// equilibrium dynamically -- e.g. relaxing after a quench, or approaching
+/// equilibrium from an arbitrary initial condition. This is supplied by the
+/// standard "Model A" (non-conserved, purely dissipative) time-dependent
+/// Ginzburg-Landau equation of motion for the gap amplitude Δ (the modulus
+/// of the complex SDW order parameter Δe^{iφ}, in the same sense that
+/// [`SpinDensityWave::gap`] plays this role):
+///
+/// dΔ/dt = -Γ (∂F/∂Δ)
+///
+/// where Γ > 0 (`relaxation_rate`) is a phenomenological kinetic coefficient
+/// and F(Δ, T) is a Landau free energy functional whose *minimum*
+/// reproduces the self-consistent BCS-like gap already computed by
+/// [`SdwGapSolver::gap_at_temperature`].
+///
+/// # Free energy construction
+///
+/// F is the standard quartic (φ⁴) Landau functional
+///
+/// F(Δ, T) = (b/4) (Δ² - Δ_eq(T)²)²
+///
+/// where Δ_eq(T) = `gap_solver.gap_at_temperature(T)` is the pre-existing
+/// self-consistent equilibrium amplitude and b = `quartic_stiffness` > 0 is a
+/// fixed Landau quartic coefficient. Expanding the square gives exactly the
+/// textbook a(T)Δ²/2 + bΔ⁴/4 Landau expansion with quadratic coefficient
+/// a(T) = -b·Δ_eq(T)², i.e. the standard way a phenomenological Landau
+/// theory is calibrated against a microscopic (here BCS mean-field) result:
+/// a(T) < 0 for T < T_N, so Δ = 0 is an unstable local *maximum* (the
+/// paramagnetic state is unstable to SDW formation, as physically
+/// required), while a(T) = 0 identically once T ≥ T_N (Δ_eq = 0), leaving
+/// the pure positive quartic well (b/4)Δ⁴ whose unique minimum is at Δ = 0
+/// (no SDW above the Neel temperature).
+///
+/// The quartic term is implemented via the module's existing
+/// [`elastic_energy`] harmonic-energy formula applied to the auxiliary
+/// "generalized strain" x = Δ² - Δ_eq(T)² (a standard Landau-theory device:
+/// since F must be even in Δ by the Δ → -Δ symmetry of the order parameter,
+/// any smooth F is naturally a harmonic function of Δ² near its minimum):
+///
+/// F(Δ, T) = `elastic_energy`(b/2, Δ² - Δ_eq(T)²)
+///
+/// The physical *condensation* energy gained at a given Δ (reusing
+/// [`condensation_energy`] directly) is tracked separately, via
+/// [`SdwRelaxationDynamics::condensation_energy_at`], as a diagnostic. It is
+/// **not** summed into F above: doing so would shift F's minimum away from
+/// Δ_eq(T) by a T-independent offset (adding a raw -½N(0)Δ² term moves the
+/// stationary point to Δ² = Δ_eq(T)² + N(0)/(2b) rather than Δ_eq(T)²
+/// itself), which would silently detune the relaxation target away from the
+/// self-consistent gap. Keeping it as a separate report avoids that.
+///
+/// # References
+///
+/// - Standard Ginzburg-Landau theory of a continuous order-parameter
+///   transition, e.g. Chaikin & Lubensky, "Principles of Condensed Matter
+///   Physics", ch. 4.
+/// - Hohenberg & Halperin, Rev. Mod. Phys. 49, 435 (1977) -- Model A
+///   dynamics.
+#[derive(Debug, Clone)]
+pub struct SdwRelaxationDynamics {
+    /// Self-consistent BCS-like gap solver providing the equilibrium target
+    /// Δ_eq(T) = `gap_solver.gap_at_temperature(T)`.
+    pub gap_solver: SdwGapSolver,
+
+    /// Density of states at the Fermi level N(0) \[states/(eV·m³)\], used
+    /// only for the [`condensation_energy_at`](Self::condensation_energy_at)
+    /// diagnostic. Does not affect the relaxation dynamics itself.
+    pub density_of_states: f64,
+
+    /// Landau quartic stiffness b \[eV⁻²\] controlling the curvature of the
+    /// free-energy well around its minimum, and hence (together with
+    /// `relaxation_rate`) the relaxation timescale.
+    pub quartic_stiffness: f64,
+
+    /// TDGL relaxation rate Γ \[s⁻¹\].
+    pub relaxation_rate: f64,
+}
+
+impl SdwRelaxationDynamics {
+    /// Create new TDGL relaxational dynamics for an SDW order parameter.
+    ///
+    /// # Arguments
+    /// * `gap_solver` - self-consistent BCS-like gap solver (supplies the
+    ///   equilibrium target Δ_eq(T))
+    /// * `density_of_states` - N(0) \[states/(eV·m³)\], used only for the
+    ///   condensation-energy diagnostic
+    /// * `quartic_stiffness` - Landau quartic coefficient b \[eV⁻²\], must be
+    ///   positive
+    /// * `relaxation_rate` - TDGL relaxation rate Γ \[s⁻¹\], must be positive
+    ///
+    /// # Errors
+    /// Returns error for non-physical (non-positive) parameters.
+    pub fn new(
+        gap_solver: SdwGapSolver,
+        density_of_states: f64,
+        quartic_stiffness: f64,
+        relaxation_rate: f64,
+    ) -> Result<Self> {
+        if density_of_states <= 0.0 {
+            return Err(error::invalid_param(
+                "density_of_states",
+                "must be positive",
+            ));
+        }
+        if quartic_stiffness <= 0.0 {
+            return Err(error::invalid_param(
+                "quartic_stiffness",
+                "must be positive",
+            ));
+        }
+        if relaxation_rate <= 0.0 {
+            return Err(error::invalid_param("relaxation_rate", "must be positive"));
+        }
+
+        Ok(Self {
+            gap_solver,
+            density_of_states,
+            quartic_stiffness,
+            relaxation_rate,
+        })
+    }
+
+    /// Self-consistent equilibrium amplitude Δ_eq(T) \[eV\], i.e. the fixed
+    /// point that the relaxation dynamics converges to.
+    ///
+    /// Thin convenience wrapper around
+    /// `self.gap_solver.gap_at_temperature(temperature)`.
+    pub fn equilibrium_amplitude(&self, temperature: f64) -> f64 {
+        self.gap_solver.gap_at_temperature(temperature)
+    }
+
+    /// Landau free energy density F(Δ, T) = (b/4)(Δ² - Δ_eq(T)²)² \[eV²\]
+    /// (reduced units; see the struct-level documentation).
+    ///
+    /// This is the functional whose gradient drives the relaxational
+    /// dynamics in [`relax_to_equilibrium`](Self::relax_to_equilibrium). It
+    /// has a single global minimum F = 0 at Δ = Δ_eq(T) and, for T < T_N, an
+    /// unstable local maximum at Δ = 0.
+    ///
+    /// # Errors
+    /// Propagates errors from the underlying [`elastic_energy`] call (only
+    /// possible if `quartic_stiffness` were non-positive, which is already
+    /// excluded by [`SdwRelaxationDynamics::new`]).
+    pub fn free_energy_density(&self, amplitude: f64, temperature: f64) -> Result<f64> {
+        let eq = self.equilibrium_amplitude(temperature);
+        let strain = amplitude * amplitude - eq * eq;
+        elastic_energy(0.5 * self.quartic_stiffness, strain)
+    }
+
+    /// Gradient ∂F/∂Δ = b·Δ·(Δ² - Δ_eq(T)²) \[eV\] of the Landau free energy
+    /// with respect to the amplitude Δ.
+    pub fn free_energy_gradient(&self, amplitude: f64, temperature: f64) -> f64 {
+        let eq = self.equilibrium_amplitude(temperature);
+        self.quartic_stiffness * amplitude * (amplitude * amplitude - eq * eq)
+    }
+
+    /// Condensation energy density gained at amplitude Δ \[J/m³\], reusing
+    /// the module's existing BCS condensation-energy formula
+    /// ([`condensation_energy`]).
+    ///
+    /// This is a physical diagnostic tracked alongside, but independently
+    /// of, the reduced-unit Landau free energy used to drive the relaxation
+    /// dynamics -- see the struct-level documentation for why it is not
+    /// folded directly into [`free_energy_density`](Self::free_energy_density).
+    ///
+    /// # Errors
+    /// Propagates errors from [`condensation_energy`] (non-physical inputs).
+    pub fn condensation_energy_at(&self, amplitude: f64) -> Result<f64> {
+        condensation_energy(self.density_of_states, amplitude)
+    }
+
+    /// Right-hand side of the TDGL equation, dΔ/dt = f(Δ) = -Γ·∂F/∂Δ.
+    fn relaxation_rhs(&self, amplitude: f64, temperature: f64) -> f64 {
+        -self.relaxation_rate * self.free_energy_gradient(amplitude, temperature)
+    }
+
+    /// Integrate the TDGL relaxation dΔ/dt = -Γ·∂F/∂Δ starting from
+    /// `initial_amplitude` at fixed `temperature`, using classical 4th-order
+    /// Runge-Kutta (RK4).
+    ///
+    /// Returns the amplitude trajectory \[eV\] with
+    /// `trajectory[0] == initial_amplitude` and `trajectory[n_steps]` the
+    /// amplitude after `n_steps` steps of size `dt`. For stable `dt`, the
+    /// trajectory converges to `self.equilibrium_amplitude(temperature)` as
+    /// `n_steps` grows -- this is the self-consistent gap already computed
+    /// by [`SdwGapSolver::gap_at_temperature`].
+    ///
+    /// # Stability
+    /// This is an explicit integrator: `dt` must be small compared to the
+    /// natural relaxation timescale near equilibrium,
+    /// τ ≈ 1 / (2 Γ b Δ_eq(T)²), or the iteration becomes numerically
+    /// unstable (RK4's linear stability region is larger than explicit
+    /// Euler's, but still finite). Note that τ *diverges* as T → T_N
+    /// (Δ_eq → 0): this is the physically correct "critical slowing down"
+    /// of order-parameter relaxation near a continuous phase transition, and
+    /// callers relaxing close to T_N should budget more steps accordingly.
+    ///
+    /// # Arguments
+    /// * `initial_amplitude` - starting amplitude Δ(0) \[eV\], must be
+    ///   non-negative
+    /// * `temperature` - fixed bath temperature \[K\] for the relaxation
+    /// * `dt` - integration time step \[s\], must be positive
+    /// * `n_steps` - number of RK4 steps to take
+    ///
+    /// # Errors
+    /// Returns an error if `initial_amplitude` is negative or `dt` is not
+    /// positive.
+    pub fn relax_to_equilibrium(
+        &self,
+        initial_amplitude: f64,
+        temperature: f64,
+        dt: f64,
+        n_steps: usize,
+    ) -> Result<Vec<f64>> {
+        if initial_amplitude < 0.0 {
+            return Err(error::invalid_param(
+                "initial_amplitude",
+                "must be non-negative",
+            ));
+        }
+        if dt <= 0.0 {
+            return Err(error::invalid_param("dt", "must be positive"));
+        }
+
+        let mut trajectory = Vec::with_capacity(n_steps + 1);
+        trajectory.push(initial_amplitude);
+
+        let mut amplitude = initial_amplitude;
+        for _ in 0..n_steps {
+            let k1 = self.relaxation_rhs(amplitude, temperature);
+            let k2 = self.relaxation_rhs(amplitude + 0.5 * dt * k1, temperature);
+            let k3 = self.relaxation_rhs(amplitude + 0.5 * dt * k2, temperature);
+            let k4 = self.relaxation_rhs(amplitude + dt * k3, temperature);
+
+            amplitude += dt / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
+            trajectory.push(amplitude);
+        }
+
+        Ok(trajectory)
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -908,5 +1164,198 @@ mod tests {
         // Invalid gap solver parameters
         assert!(SdwGapSolver::new(0.0, 1.0, 311.0).is_err());
         assert!(SdwGapSolver::new(0.5, 0.0, 311.0).is_err());
+    }
+
+    // ========================================================================
+    // TDGL relaxational dynamics tests
+    // ========================================================================
+
+    /// Standard test-fixture `SdwRelaxationDynamics`, reusing the same
+    /// gap-solver parameters (coupling = 0.5, cutoff = 1 eV, T_N = 311 K) as
+    /// the static-SDW tests above.
+    fn test_relaxation_dynamics() -> SdwRelaxationDynamics {
+        let gap_solver =
+            SdwGapSolver::new(0.5, 1.0, 311.0).expect("SdwGapSolver::new should succeed");
+        SdwRelaxationDynamics::new(gap_solver, 1e28, 1.0, 1.0)
+            .expect("SdwRelaxationDynamics::new should succeed")
+    }
+
+    #[test]
+    fn test_sdw_relaxation_converges_to_self_consistent_gap() {
+        let dynamics = test_relaxation_dynamics();
+
+        let temperature = 150.0;
+        let target = dynamics.equilibrium_amplitude(temperature);
+        assert!(
+            target > 0.0,
+            "equilibrium amplitude should be positive well below T_N"
+        );
+
+        // Start well displaced below equilibrium (a small seed amplitude)
+        // and integrate for many decay times.
+        let initial = 0.05 * target;
+        let trajectory = dynamics
+            .relax_to_equilibrium(initial, temperature, 0.05, 50_000)
+            .expect("relax_to_equilibrium should succeed");
+
+        let relaxed = *trajectory
+            .last()
+            .expect("trajectory must contain at least the initial amplitude");
+        let rel_err = (relaxed - target).abs() / target;
+        assert!(
+            rel_err < 1e-6,
+            "relaxed amplitude {relaxed} should converge to the self-consistent gap {target} \
+             (relative error {rel_err})"
+        );
+
+        // Sanity: relaxing down from above equilibrium converges to the same point.
+        let trajectory_above = dynamics
+            .relax_to_equilibrium(1.8 * target, temperature, 0.05, 50_000)
+            .expect("relax_to_equilibrium should succeed");
+        let relaxed_above = *trajectory_above
+            .last()
+            .expect("trajectory must contain at least the initial amplitude");
+        let rel_err_above = (relaxed_above - target).abs() / target;
+        assert!(
+            rel_err_above < 1e-6,
+            "relaxing from above equilibrium should also converge to {target}, got {relaxed_above}"
+        );
+    }
+
+    #[test]
+    fn test_sdw_relaxation_free_energy_monotonically_decreases() {
+        let dynamics = test_relaxation_dynamics();
+        let temperature = 200.0;
+        let target = dynamics.equilibrium_amplitude(temperature);
+        assert!(
+            target > 0.0,
+            "equilibrium amplitude should be positive at T=200K"
+        );
+
+        // Pure relaxation (no driving), started both below and above the
+        // equilibrium amplitude.
+        for &initial in &[0.1 * target, 1.7 * target] {
+            let trajectory = dynamics
+                .relax_to_equilibrium(initial, temperature, 0.01, 2_000)
+                .expect("relax_to_equilibrium should succeed");
+
+            let free_energies: Vec<f64> = trajectory
+                .iter()
+                .map(|&amplitude| {
+                    dynamics
+                        .free_energy_density(amplitude, temperature)
+                        .expect("free_energy_density should succeed")
+                })
+                .collect();
+
+            for window in free_energies.windows(2) {
+                let (prev, next) = (window[0], window[1]);
+                assert!(
+                    next <= prev + 1e-15,
+                    "pure relaxation must not increase the free energy: {prev} -> {next} \
+                     (initial amplitude {initial})"
+                );
+            }
+
+            // The free energy should also have genuinely decreased overall
+            // (not merely stayed flat), confirming the dynamics actually moved.
+            let first = *free_energies.first().expect("non-empty trajectory");
+            let last = *free_energies.last().expect("non-empty trajectory");
+            assert!(
+                last < first,
+                "free energy should strictly decrease from {first} to {last} over the relaxation"
+            );
+        }
+    }
+
+    #[test]
+    fn test_sdw_relaxation_amplitude_vanishes_near_neel_temperature() {
+        let dynamics = test_relaxation_dynamics();
+
+        // The self-consistent target itself should continuously vanish
+        // approaching T_N (already exercised for `gap_at_temperature`
+        // directly in `test_sdw_gap_temperature_dependence`; re-verify the
+        // trend holds through the new `equilibrium_amplitude` wrapper too).
+        let t_well_below = dynamics.equilibrium_amplitude(100.0);
+        let t_mid = dynamics.equilibrium_amplitude(250.0);
+        let t_just_below = dynamics.equilibrium_amplitude(305.0);
+        let t_closer = dynamics.equilibrium_amplitude(309.0);
+
+        assert!(
+            t_well_below > t_mid,
+            "target should shrink monotonically approaching T_N"
+        );
+        assert!(
+            t_mid > t_just_below,
+            "target should shrink monotonically approaching T_N"
+        );
+        assert!(
+            t_just_below > t_closer,
+            "target should shrink monotonically approaching T_N"
+        );
+        assert!(
+            t_closer < 0.2 * t_well_below,
+            "target amplitude should be much smaller just below T_N than well below T_N"
+        );
+
+        // Now actually relax the dynamics (not just read off the target) at
+        // a temperature well below T_N and one just below T_N, confirming
+        // the *relaxed* amplitude reproduces the same vanishing trend.
+        // Critical slowing down (tau ~ 1/Delta_eq^2) means the near-T_N case
+        // needs many more steps to reach comparable relative convergence.
+        let seed = 0.05 * t_well_below;
+
+        let relaxed_well_below = *dynamics
+            .relax_to_equilibrium(seed, 100.0, 0.05, 50_000)
+            .expect("relax_to_equilibrium should succeed")
+            .last()
+            .expect("non-empty trajectory");
+
+        let relaxed_just_below = *dynamics
+            .relax_to_equilibrium(seed, 305.0, 0.05, 2_000_000)
+            .expect("relax_to_equilibrium should succeed")
+            .last()
+            .expect("non-empty trajectory");
+
+        assert!(
+            relaxed_just_below < relaxed_well_below,
+            "relaxed amplitude near T_N ({relaxed_just_below}) should be much smaller than \
+             well below T_N ({relaxed_well_below})"
+        );
+        assert!(
+            (relaxed_just_below - t_just_below).abs() / t_just_below < 1e-2,
+            "relaxed amplitude near T_N should converge close to its (small) self-consistent \
+             target: relaxed {relaxed_just_below}, target {t_just_below}"
+        );
+
+        // At and above T_N the target -- and hence the amplitude that
+        // relaxation converges to -- is exactly zero.
+        let at_tn = dynamics.equilibrium_amplitude(311.0);
+        let above_tn = dynamics.equilibrium_amplitude(400.0);
+        assert!(at_tn.abs() < 1e-15, "target must vanish exactly at T_N");
+        assert!(above_tn.abs() < 1e-15, "target must vanish above T_N");
+    }
+
+    #[test]
+    fn test_sdw_relaxation_dynamics_invalid_parameters() {
+        let gap_solver =
+            SdwGapSolver::new(0.5, 1.0, 311.0).expect("SdwGapSolver::new should succeed");
+
+        // Non-positive density of states, quartic stiffness, relaxation rate.
+        assert!(SdwRelaxationDynamics::new(gap_solver.clone(), 0.0, 1.0, 1.0).is_err());
+        assert!(SdwRelaxationDynamics::new(gap_solver.clone(), 1e28, 0.0, 1.0).is_err());
+        assert!(SdwRelaxationDynamics::new(gap_solver.clone(), 1e28, 1.0, 0.0).is_err());
+
+        let dynamics = SdwRelaxationDynamics::new(gap_solver, 1e28, 1.0, 1.0)
+            .expect("SdwRelaxationDynamics::new should succeed");
+
+        // Negative initial amplitude and non-positive time step must be rejected.
+        assert!(dynamics
+            .relax_to_equilibrium(-1.0, 150.0, 0.05, 10)
+            .is_err());
+        assert!(dynamics.relax_to_equilibrium(0.1, 150.0, 0.0, 10).is_err());
+        assert!(dynamics
+            .relax_to_equilibrium(0.1, 150.0, -0.05, 10)
+            .is_err());
     }
 }

@@ -252,7 +252,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(dead_code)]
     fn test_temperature_scaling() {
         let mut thermal_cold = ThermalField::new(100.0, 1.0e-24, 1.0e6, 0.01);
         let mut thermal_hot = ThermalField::new(600.0, 1.0e-24, 1.0e6, 0.01);

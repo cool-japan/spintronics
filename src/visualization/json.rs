@@ -255,6 +255,10 @@ impl JsonWriter {
 mod tests {
     use super::*;
 
+    fn temp_path(name: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(name)
+    }
+
     #[test]
     fn test_simulation_data_creation() {
         let data = SimulationData::new("test", "1.0");
@@ -305,7 +309,8 @@ mod tests {
         data.add_parameter("alpha", 0.001);
         data.add_time_point(0.0, vec![1.0, 0.0, 0.0]);
 
-        let result = JsonWriter::write("/tmp/test_sim.json", &data);
+        let path = temp_path("json_test_sim.json");
+        let result = JsonWriter::write(path.to_str().expect("path should be valid UTF-8"), &data);
         assert!(result.is_ok());
     }
 
@@ -314,7 +319,12 @@ mod tests {
         let times = vec![0.0, 1.0, 2.0];
         let data = vec![vec![1.0, 0.0], vec![0.5, 0.5], vec![0.0, 1.0]];
 
-        let result = JsonWriter::write_simple("/tmp/test_simple.json", &times, &data);
+        let path = temp_path("json_test_simple.json");
+        let result = JsonWriter::write_simple(
+            path.to_str().expect("path should be valid UTF-8"),
+            &times,
+            &data,
+        );
         assert!(result.is_ok());
     }
 
@@ -342,7 +352,8 @@ mod tests {
         // Scalar snapshot
         data.add_scalar_snapshot(0.0, "energy_density", vec![1.5, 2.3]);
 
-        let result = JsonWriter::write("/tmp/test_full.json", &data);
+        let path = temp_path("json_test_full.json");
+        let result = JsonWriter::write(path.to_str().expect("path should be valid UTF-8"), &data);
         assert!(result.is_ok());
     }
 }

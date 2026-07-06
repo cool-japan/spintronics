@@ -219,23 +219,31 @@ pub fn write_vector_field(
 mod tests {
     use super::*;
 
+    fn temp_path(name: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(name)
+    }
+
     #[test]
     fn test_csv_writer_creation() {
-        let writer = CsvWriter::new("/tmp/test_csv.csv");
+        let path = temp_path("csv_test_csv.csv");
+        let writer = CsvWriter::new(path.to_str().expect("path should be valid UTF-8"));
         assert!(writer.is_ok());
     }
 
     #[test]
     fn test_write_header() {
-        let mut writer =
-            CsvWriter::new("/tmp/test_header.csv").expect("CSV operation should succeed");
+        let path = temp_path("csv_test_header.csv");
+        let mut writer = CsvWriter::new(path.to_str().expect("path should be valid UTF-8"))
+            .expect("CSV operation should succeed");
         let result = writer.write_header(&["time", "mx", "my", "mz"]);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_write_row() {
-        let mut writer = CsvWriter::new("/tmp/test_row.csv").expect("CSV operation should succeed");
+        let path = temp_path("csv_test_row.csv");
+        let mut writer = CsvWriter::new(path.to_str().expect("path should be valid UTF-8"))
+            .expect("CSV operation should succeed");
         writer
             .write_header(&["x", "y", "z"])
             .expect("CSV operation should succeed");
@@ -245,8 +253,9 @@ mod tests {
 
     #[test]
     fn test_write_vectors() {
-        let mut writer =
-            CsvWriter::new("/tmp/test_vectors.csv").expect("CSV operation should succeed");
+        let path = temp_path("csv_test_vectors.csv");
+        let mut writer = CsvWriter::new(path.to_str().expect("path should be valid UTF-8"))
+            .expect("CSV operation should succeed");
         let vectors = vec![
             Vector3::new(1.0, 0.0, 0.0),
             Vector3::new(0.0, 1.0, 0.0),
@@ -262,8 +271,9 @@ mod tests {
         let mx = vec![1.0, 0.5, 0.0, -0.5];
         let my = vec![0.0, 0.5, 1.0, 0.5];
 
+        let path = temp_path("csv_test_time_series.csv");
         let result = write_time_series(
-            "/tmp/test_time_series.csv",
+            path.to_str().expect("path should be valid UTF-8"),
             &times,
             &[&mx, &my],
             &["mx", "my"],
@@ -274,14 +284,24 @@ mod tests {
     #[test]
     fn test_2d_grid() {
         let data = vec![1.0, 2.0, 3.0, 4.0];
-        let result = write_2d_grid("/tmp/test_grid.csv", &data, (2, 2));
+        let path = temp_path("csv_test_grid.csv");
+        let result = write_2d_grid(
+            path.to_str().expect("path should be valid UTF-8"),
+            &data,
+            (2, 2),
+        );
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_2d_grid_size_mismatch() {
         let data = vec![1.0, 2.0, 3.0];
-        let result = write_2d_grid("/tmp/test_error.csv", &data, (2, 2));
+        let path = temp_path("csv_test_error.csv");
+        let result = write_2d_grid(
+            path.to_str().expect("path should be valid UTF-8"),
+            &data,
+            (2, 2),
+        );
         assert!(result.is_err());
     }
 
@@ -293,14 +313,24 @@ mod tests {
             Vector3::new(0.0, 0.0, 1.0),
             Vector3::new(1.0, 1.0, 0.0),
         ];
-        let result = write_vector_field("/tmp/test_vfield.csv", &vectors, (2, 2, 1));
+        let path = temp_path("csv_test_vfield.csv");
+        let result = write_vector_field(
+            path.to_str().expect("path should be valid UTF-8"),
+            &vectors,
+            (2, 2, 1),
+        );
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_vector_field_size_mismatch() {
         let vectors = vec![Vector3::new(1.0, 0.0, 0.0)];
-        let result = write_vector_field("/tmp/test_vfield_error.csv", &vectors, (2, 2, 1));
+        let path = temp_path("csv_test_vfield_error.csv");
+        let result = write_vector_field(
+            path.to_str().expect("path should be valid UTF-8"),
+            &vectors,
+            (2, 2, 1),
+        );
         assert!(result.is_err());
     }
 }

@@ -198,14 +198,17 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("  g_N (N=256) = {:.3} MHz", g_n_sr / (two_pi * mhz));
     println!("  g_N / g_c = {:.4e}   (superradiant if > 1)", g_n_sr / g_c);
 
-    // Check a macroscopic YIG ensemble: N ~ 10^17 (1 mm sphere, ~4×10^17 spins)
-    let n_yig_macro: usize = 100_000_000_000_000_000; // 10^17
+    // Check a macroscopic YIG ensemble. A real 1 mm sphere has N ~ 4x10^17 spins,
+    // but `usize` is only 32-bit on wasm32-unknown-unknown (max ~4.3x10^9), so
+    // this demo uses N = 10^9 — still deep in the macroscopic/superradiant
+    // regime — to keep the literal portable across targets.
+    let n_yig_macro: usize = 1_000_000_000; // 10^9
     let tc_macro = TavisCummings::yig_ensemble(n_yig_macro);
     let g_n_macro = tc_macro.collective_coupling();
     let g_c_macro = tc_macro.superradiant_threshold();
     let above_threshold = g_n_macro > g_c_macro;
 
-    println!("\n  Macroscopic YIG ensemble (N = 10^17):");
+    println!("\n  Macroscopic YIG ensemble (N = 10^9):");
     println!(
         "    g_N = {:.4} GHz  (collective coupling)",
         g_n_macro / (two_pi * ghz)

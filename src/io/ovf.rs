@@ -956,13 +956,14 @@ mod tests {
 
         // Write to file
         let writer = OvfWriter::new(OvfFormat::Text2_0);
-        let path = "/tmp/test_ovf_2_0.ovf";
+        let mut path = std::env::temp_dir();
+        path.push("test_ovf_2_0.ovf");
         writer
-            .write(path, &ovf)
+            .write(&path, &ovf)
             .expect("OVF 2.0 write should succeed");
 
         // Read back
-        let ovf_read = OvfReader::read(path).expect("OVF 2.0 read should succeed");
+        let ovf_read = OvfReader::read(&path).expect("OVF 2.0 read should succeed");
 
         assert_eq!(ovf_read.mesh_size, (3, 3, 1));
         assert_eq!(ovf_read.data.len(), 9);
@@ -978,12 +979,13 @@ mod tests {
         ovf.set_vector(1, 1, 0, Vector3::new(0.0, 1.0, 0.0));
 
         let writer = OvfWriter::new(OvfFormat::Text1_0);
-        let path = "/tmp/test_ovf_1_0.ovf";
+        let mut path = std::env::temp_dir();
+        path.push("test_ovf_1_0.ovf");
         writer
-            .write(path, &ovf)
+            .write(&path, &ovf)
             .expect("OVF 1.0 write should succeed");
 
-        let ovf_read = OvfReader::read(path).expect("OVF 1.0 read should succeed");
+        let ovf_read = OvfReader::read(&path).expect("OVF 1.0 read should succeed");
         assert_eq!(ovf_read.mesh_size, (2, 2, 1));
     }
 

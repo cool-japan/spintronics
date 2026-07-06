@@ -19,11 +19,18 @@
 //!
 //! Run with: cargo run --release --example parallel_magnon_dynamics
 
+// This example exercises `spintronics::magnon` (multi-domain spin-chain
+// system, SIMD-optimized evolution), which is excluded from wasm32 builds
+// (see `#[cfg(not(target_arch = "wasm32"))]` on `pub mod magnon;` in
+// `src/lib.rs`), so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
+use spintronics::magnon::chain::ChainParameters;
+#[cfg(not(target_arch = "wasm32"))]
+use spintronics::prelude::*;
+#[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
 
-use spintronics::magnon::chain::ChainParameters;
-use spintronics::prelude::*;
-
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     println!("=== Parallel Multi-Domain Magnon Dynamics ===\n");
 
@@ -277,3 +284,6 @@ fn main() {
     println!("  • Magnonic circuit design");
     println!("  • High-throughput material screening");
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

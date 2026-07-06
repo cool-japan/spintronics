@@ -39,7 +39,6 @@ pub enum XdmfFieldData {
 }
 
 /// Type of the XDMF grid topology to emit.
-#[allow(dead_code)]
 pub enum XdmfGridType {
     /// Regular 3-D co-rectilinear mesh (ORIGIN_DXDYDZ)
     Uniform3D,

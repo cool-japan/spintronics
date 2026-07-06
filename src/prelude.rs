@@ -4,7 +4,10 @@
 //! for convenient access via `use spintronics::prelude::*;`
 
 // Altermagnet types
-pub use crate::altermagnet::{Altermagnet, AltermagnetTransport, AltermagneticSymmetry};
+pub use crate::altermagnet::{
+    Altermagnet, AltermagnetBandModel, AltermagnetTransport, AltermagneticSymmetry, Band, Spin,
+    SpinBands,
+};
 // ML enhancements (v0.7.0)
 #[cfg(feature = "autodiff")]
 pub use crate::autodiff::{
@@ -231,7 +234,8 @@ pub use crate::validation::standard_problems::{
 };
 // SAW magnetoacoustics (v0.5.0)
 pub use crate::mech::{PiezoSubstrate, SawMagnetoacoustics, SawMagnetoelastic, SawSource};
-// AI / neuromorphic computing (v0.4.0)
+// AI / neuromorphic computing (v0.4.0, not available on WASM)
+#[cfg(not(target_arch = "wasm32"))]
 pub use crate::ai::{
     CemPolicy, MagnonReservoir, SotRlOptimizer, SotRlResult, SotSwitchingConfig, SotSwitchingEnv,
 };
