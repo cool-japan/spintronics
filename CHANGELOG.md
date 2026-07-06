@@ -139,6 +139,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed 3 redundant `#[allow(dead_code)]` / `#[allow(unused_imports)]` attributes that
   were not suppressing any active warning (`src/benchmark.rs`, `src/stochastic/thermal.rs`,
   `src/visualization/xdmf.rs`)
+- `KaneMeleModel::hamiltonian_at` Rashba block (`src/topomagnon/qsh.rs`): fixed a
+  time-reversal-symmetry violation present whenever `lambda_r != 0` (up to ~0.3 residual
+  in `Θ·H(k)·Θ⁻¹ = H(−k)`), caused by assembling the spin-flip block from
+  `H[B↑,A↓](k) = -conj(H[A↑,B↓](k))` instead of the correct `-H[A↑,B↓](-k)`; this also
+  made the Rashba coupling unphysically vanish at the Dirac point K for every `λ_R`. Gap
+  closing at the literature Kane-Mele-Rashba critical ratio `λ_R = 2√3·λ_SO` is now
+  reproduced at K
+- `KaneMeleModel::z2_invariant` (`src/topomagnon/qsh.rs`) for `λ_R != 0`: replaced the
+  TRIM-point Pfaffian method — which used the wrong TRIM points for the honeycomb lattice,
+  a non-antiunitary time-reversal operator (missing complex conjugation), and an inherent
+  gauge dependence that persisted even after both of those were fixed — with a
+  gauge-invariant Wilson-loop / hybrid-Wannier-charge-center calculation
+  (`src/topomagnon/wilson.rs`, `src/topomagnon/qsh.rs`), validated against the textbook
+  Kane-Mele phase diagram and confirmed gauge-invariant under adversarial eigenbasis
+  remixing; the Pfaffian method is retained privately only as a fixed-gauge cross-check
 
 ## [0.3.1] - 2026-06-10
 

@@ -141,9 +141,7 @@ mod tests {
         let up = AltermagnetSpinHamiltonian::new(&model, Spin::Up);
         let (kx, ky) = (0.4, 0.15);
         let via_trait = up.hamiltonian_at(kx, ky).expect("valid");
-        let via_model = model
-            .hamiltonian_matrix(kx, ky, Spin::Up)
-            .expect("valid");
+        let via_model = model.hamiltonian_matrix(kx, ky, Spin::Up).expect("valid");
         for i in 0..2 {
             for j in 0..2 {
                 let a = via_trait.get(i, j);

@@ -27,7 +27,7 @@ use std::f64::consts::TAU;
 
 use proptest::prelude::*;
 use spintronics::altermagnet::{
-    AltermagnetBandModel, AltermagneticSymmetry, AltermagnetSpinHamiltonian, Band,
+    AltermagnetBandModel, AltermagnetSpinHamiltonian, AltermagneticSymmetry, Band,
     BlochHamiltonian, KuboBerry, Spin,
 };
 

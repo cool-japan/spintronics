@@ -229,7 +229,10 @@ mod tests {
             let closed = model.berry_curvature(kx, ky, Spin::Up, Band::Lower);
             let numeric = kubo.curvature_at(kx, ky, 0).expect("valid");
             assert!(closed.abs() < 1e-9, "closed form should vanish: {closed}");
-            assert!(numeric.abs() < 1e-6, "Kubo cross-check should vanish: {numeric}");
+            assert!(
+                numeric.abs() < 1e-6,
+                "Kubo cross-check should vanish: {numeric}"
+            );
         }
     }
 }

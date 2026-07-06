@@ -454,7 +454,10 @@ fn unitary_eig_phases(u: &CMatrix) -> Result<Vec<f64>> {
 ///
 /// Assumes (but does not verify) that `w` is a 2×2 unitary matrix.
 pub(crate) fn unitary_2x2_eigenphases_exact(w: &CMatrix) -> (f64, f64) {
-    let det_w = w.get(0, 0).mul(&w.get(1, 1)).sub(&w.get(0, 1).mul(&w.get(1, 0)));
+    let det_w = w
+        .get(0, 0)
+        .mul(&w.get(1, 1))
+        .sub(&w.get(0, 1).mul(&w.get(1, 0)));
     let xi = 0.5 * det_w.phase();
 
     // trace(Ω) = trace(W) · e^{-iξ}

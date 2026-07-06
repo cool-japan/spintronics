@@ -904,7 +904,9 @@ mod tests {
             .expect("parameters are valid");
             for &(kx, ky) in &[(0.4, 0.15), (-0.7, 0.9), (1.1, -0.3)] {
                 for spin in [Spin::Up, Spin::Down] {
-                    let h = model.hamiltonian_matrix(kx, ky, spin).expect("valid matrix");
+                    let h = model
+                        .hamiltonian_matrix(kx, ky, spin)
+                        .expect("valid matrix");
                     let (evals, _) = h
                         .hermitian_eigendecomposition()
                         .expect("2x2 Hermitian eigendecomposition always converges");

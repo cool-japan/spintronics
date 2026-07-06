@@ -132,9 +132,7 @@ fn honeycomb_reciprocal_vectors() -> ((f64, f64), (f64, f64)) {
 /// the corners of a rectangular `[-π,π]²` cell, which do not coincide with
 /// TRS-invariant momenta of this lattice except at `Γ`.
 ///
-/// Used by [`KaneMeleModel::z2_from_trim_pfaffian`] (a retired, test-only
-/// cross-check) and directly by regression tests; not on the
-/// [`KaneMeleModel::z2_invariant`] hot path, hence `#[allow(dead_code)]`.
+/// Used only by the retired [`KaneMeleModel::z2_from_trim_pfaffian`] cross-check and tests.
 #[allow(dead_code)]
 #[inline]
 fn honeycomb_trim_points() -> [(f64, f64); 4] {
@@ -423,28 +421,13 @@ impl KaneMeleModel {
         // (computed by `rashba_ab_coupling`). Hermitian-conjugating the real-space
         // A→B hopping term gives the spin-flipped element:
         //
-        //   H[B↑,A↓](k) = -R(-k)      (NOT -conj(R(k)) — R(k) is not real-analytic
-        //                               because of its overall factor of i)
+        //   H[B↑,A↓](k) = -R(-k)   (NOT -conj(R(k)) — R(k) is not real-analytic,
+        //                            due to its overall factor of i)
         //
-        // In the (A↑,B↑,A↓,B↓) basis the two 2×2 off-diagonal spin blocks are:
-        //
-        //   h_ud = [[  0,       R(k)   ],     (rows: A↑,B↑; cols: A↓,B↓)
-        //           [ -R(-k),    0     ]]
-        //
-        //   h_du = h_ud† = [[  0,           conj(-R(-k))  ],   (rows: A↓,B↓; cols: A↑,B↑)
-        //                   [  conj(R(k)),   0             ]]
-        //
-        // Matrix positions (global, basis A↑=0,B↑=1,A↓=2,B↓=3):
-        //   h_ud block (upper-right):
-        //     (0,2) = h_ud[A↑,A↓] = 0
-        //     (0,3) = h_ud[A↑,B↓] = R(k)
-        //     (1,2) = h_ud[B↑,A↓] = -R(-k)
-        //     (1,3) = h_ud[B↑,B↓] = 0
-        //   h_du block (lower-left) = conj-transpose of h_ud:
-        //     (2,0) = h_du[A↓,A↑] = 0
-        //     (2,1) = h_du[A↓,B↑] = conj(h_ud[B↑,A↓]) = conj(-R(-k))
-        //     (3,0) = h_du[B↓,A↑] = conj(h_ud[A↑,B↓]) = conj(R(k))
-        //     (3,1) = h_du[B↓,B↑] = 0
+        // In the (A↑,B↑,A↓,B↓) basis, global positions (A↑=0,B↑=1,A↓=2,B↓=3):
+        //   h_ud[A↑,B↓] = (0,3) = R(k)         h_du[A↓,B↑] = (2,1) = conj(-R(-k))
+        //   h_ud[B↑,A↓] = (1,2) = -R(-k)       h_du[B↓,A↑] = (3,0) = conj(R(k))
+        // (h_du = h_ud† enforces Hermiticity of the assembled matrix.)
 
         let mut h = CMatrix::zeros(4);
 
@@ -464,7 +447,7 @@ impl KaneMeleModel {
         // h_ud entries (upper-right):
         h.set(0, 3, r_ab); // h_ud[A↑,B↓] = R(k)
         h.set(1, 2, s_ab); // h_ud[B↑,A↓] = S(k) = -R(-k)
-                            // h_du entries (lower-left) = conj-transpose of h_ud:
+                           // h_du entries (lower-left) = conj-transpose of h_ud:
         h.set(2, 1, s_ab.conj()); // h_du[A↓,B↑] = conj(S(k))
         h.set(3, 0, r_ab.conj()); // h_du[B↓,A↑] = conj(R(k))
 
@@ -681,18 +664,15 @@ impl KaneMeleModel {
     /// # Why this method was replaced
     ///
     /// Even with the TRIM points and time-reversal operator corrected (both
-    /// fixed below and in [`apply_time_reversal`]), the Pfaffian sewing-matrix
-    /// construction has an inherent local-branch-choice gauge dependence: the
-    /// sign/phase of the two occupied-band eigenvectors returned by a generic
-    /// eigensolver at each TRIM point is arbitrary, and the Pfaffian δ_i
-    /// depends on that choice in a way that cannot be patched away by fixing
-    /// the sewing-matrix formula alone. Under an adversarial U(2) remix of
-    /// the occupied eigenbasis this method's answer changes (0/8 correct in
-    /// a stress test), whereas the Wilson-loop method is gauge-invariant by
-    /// construction (16/16 correct under the same stress test). In a *fixed*
-    /// (non-remixed) gauge — i.e. whatever basis the eigensolver happens to
-    /// return — this method still gives textbook-correct answers, which is
-    /// why it remains useful purely as a cross-check.
+    /// fixed below and in [`apply_time_reversal`]), the Pfaffian sewing matrix
+    /// has an inherent local-branch-choice gauge dependence — the sign/phase
+    /// of the occupied eigenvectors at each TRIM point is arbitrary, and δ_i
+    /// depends on that choice in a way no sewing-matrix formula fix can undo.
+    /// Under an adversarial U(2) remix of the occupied eigenbasis this
+    /// method's answer changes (0/8 in a stress test), whereas the
+    /// Wilson-loop method is gauge-invariant by construction (16/16 under the
+    /// same test). In a *fixed* (non-remixed) gauge it still gives
+    /// textbook-correct answers, hence its remaining use as a cross-check.
     ///
     /// Implements the Fu-Kane formula for Z₂ using time-reversal polarization.
     ///
@@ -817,9 +797,8 @@ impl KaneMeleModel {
     // -----------------------------------------------------------------------
 
     /// Z₂ via the Wilson-loop / hybrid Wannier-charge-center method (general
-    /// λ_R ≠ 0 case).
-    ///
-    /// Uses the recommended default resolution `n_s=120, n_u=60`; see
+    /// λ_R ≠ 0 case). Uses the recommended default resolution `n_s=120,
+    /// n_u=60`; see
     /// [`z2_wilson_loop_at_resolution`](Self::z2_wilson_loop_at_resolution)
     /// for the resolution-parametrised core used by tests.
     ///
@@ -832,29 +811,26 @@ impl KaneMeleModel {
     /// `{θ₁, θ₂}` is symmetric there; picking a reference angle in the larger
     /// of the two gaps between them at `s=0` and counting how many times the
     /// two (continuously-tracked) phase trajectories cross that reference as
-    /// `s` sweeps `0 → 1/2` gives Z₂ = (crossings mod 2). This is the
+    /// `s` sweeps `0 → 1/2` gives Z₂ = (crossings mod 2) — the
     /// Yu-Qi-Bernevig-Fang-Zhang / Soluyanov-Vanderbilt "largest gap" method,
     /// specialised to a 2-band occupied subspace.
     ///
-    /// Unlike [`z2_from_trim_pfaffian`](Self::z2_from_trim_pfaffian), this
-    /// method is gauge-invariant by construction: each Wilson-loop link
-    /// matrix is projected onto the unitary group via
-    /// [`wilson::polar_unitary`], and the closing link deliberately *reuses*
-    /// the already-computed state at `u=0` rather than re-diagonalising at
-    /// `u=1` — this makes the accumulated loop product similar (in the
-    /// linear-algebra sense) to itself under any per-point gauge choice, so
-    /// its trace and determinant (and hence the extracted eigenphases) do
-    /// not depend on that choice.
+    /// Unlike [`z2_from_trim_pfaffian`](Self::z2_from_trim_pfaffian), this is
+    /// gauge-invariant by construction: each link matrix is projected onto
+    /// the unitary group via [`wilson::polar_unitary`], and the closing link
+    /// deliberately *reuses* the already-computed state at `u=0` rather than
+    /// re-diagonalising at `u=1` — this makes the loop product similar (in
+    /// the linear-algebra sense) to itself under any per-point gauge choice,
+    /// so its trace/determinant (hence the extracted eigenphases) are
+    /// gauge-independent.
     ///
     /// # Errors
     ///
     /// Returns `NumericalError` if a self-consistency check fails: the Z₂
     /// parity is recomputed using the reference angle anchored at the
     /// *other* TRIM line (`s=1/2` instead of `s=0`), and again at doubled
-    /// `s`-resolution; if either recomputation disagrees with the primary
-    /// answer, this indicates the sampling resolution is insufficient to
-    /// resolve the phase confidently (typically because the system is very
-    /// close to a topological phase transition), and an honest error is
+    /// `s`-resolution. Disagreement signals insufficient sampling resolution
+    /// (typically very close to a phase transition), so an honest error is
     /// returned rather than a possibly-wrong guess.
     fn z2_from_wilson_loop(&self) -> Result<i32> {
         self.z2_wilson_loop_at_resolution(120, 60)
@@ -879,30 +855,23 @@ impl KaneMeleModel {
         let z2_other_trim = z2_parity_from_branches(&branch_a, &branch_b, last);
         if z2_primary != z2_other_trim {
             return Err(error::numerical_error(&format!(
-                "Z2 Wilson-loop self-check failed: reference angles anchored \
-                 at the two TRIM lines (s=0 giving Z2={z2_primary}, s=1/2 \
-                 giving Z2={z2_other_trim}) disagree. This indicates \
-                 insufficient sampling resolution (n_s={n_s}, n_u={n_u}) to \
-                 resolve the phase confidently, most likely because the \
-                 system is very close to a topological phase transition."
+                "Z2 Wilson-loop self-check failed: TRIM-anchored references \
+                 disagree (s=0 -> {z2_primary}, s=1/2 -> {z2_other_trim}) at \
+                 n_s={n_s}, n_u={n_u} — likely too close to a transition."
             )));
         }
 
         // Second self-check: doubling the s-resolution should not change the
-        // answer. (n_u is left unchanged, matching the derivation's finding
-        // that s-resolution — not u-resolution — is the sensitive direction
-        // near a phase transition.)
+        // answer. (n_u is left unchanged — s-resolution is the sensitive
+        // direction near a phase transition.)
         let (branch_a2, branch_b2) =
             self.wilson_branches(2 * n_s, n_u, |_psi: &mut Vec<Vec<Complex>>| {})?;
         let z2_doubled = z2_parity_from_branches(&branch_a2, &branch_b2, 0);
         if z2_doubled != z2_primary {
             return Err(error::numerical_error(&format!(
-                "Z2 Wilson-loop self-check failed: doubling the s-resolution \
-                 (n_s={n_s} -> {}) changes the answer (Z2={z2_primary} -> \
-                 {z2_doubled}). This indicates insufficient sampling \
-                 resolution to resolve the phase confidently, most likely \
-                 because the system is very close to a topological phase \
-                 transition.",
+                "Z2 Wilson-loop self-check failed: doubling s-resolution \
+                 (n_s={n_s} -> {}) changes the answer ({z2_primary} -> \
+                 {z2_doubled}) — likely too close to a transition.",
                 2 * n_s
             )));
         }
@@ -1176,9 +1145,7 @@ impl KaneMeleModel {
 /// ```
 /// so `Θ(v₀, v₁, v₂, v₃) = U·conj(v₀,v₁,v₂,v₃) = (+conj(v₂), +conj(v₃), −conj(v₀), −conj(v₁))`.
 ///
-/// Used by [`KaneMeleModel::z2_from_trim_pfaffian`] (a retired, test-only
-/// cross-check) and directly by regression tests; not on the
-/// [`KaneMeleModel::z2_invariant`] hot path, hence `#[allow(dead_code)]`.
+/// Used only by the retired [`KaneMeleModel::z2_from_trim_pfaffian`] cross-check and tests.
 #[allow(dead_code)]
 fn apply_time_reversal(u: &[Complex]) -> Vec<Complex> {
     debug_assert_eq!(u.len(), 4);
@@ -1275,9 +1242,7 @@ fn z2_parity_from_branches(branch_a: &[f64], branch_b: &[f64], at_index: usize) 
 
 /// Complex inner product ⟨a|b⟩ = Σ_i a_i* · b_i.
 ///
-/// Used by [`KaneMeleModel::z2_from_trim_pfaffian`] (a retired, test-only
-/// cross-check) and directly by regression tests; not on the
-/// [`KaneMeleModel::z2_invariant`] hot path, hence `#[allow(dead_code)]`.
+/// Used only by the retired [`KaneMeleModel::z2_from_trim_pfaffian`] cross-check and tests.
 #[allow(dead_code)]
 fn inner_product(a: &[Complex], b: &[Complex]) -> Complex {
     debug_assert_eq!(a.len(), b.len());
@@ -1754,8 +1719,12 @@ mod tests {
         let old0 = psi[0].clone();
         let old1 = psi[1].clone();
         for row in 0..old0.len() {
-            psi[0][row] = old0[row].mul(&v.get(0, 0)).add(&old1[row].mul(&v.get(1, 0)));
-            psi[1][row] = old0[row].mul(&v.get(0, 1)).add(&old1[row].mul(&v.get(1, 1)));
+            psi[0][row] = old0[row]
+                .mul(&v.get(0, 0))
+                .add(&old1[row].mul(&v.get(1, 0)));
+            psi[1][row] = old0[row]
+                .mul(&v.get(0, 1))
+                .add(&old1[row].mul(&v.get(1, 1)));
         }
     }
 
@@ -1932,9 +1901,7 @@ mod tests {
         let n_s = 40;
         let n_u = 24;
 
-        for &(lambda_v, lambda_r, label) in
-            &[(0.1, 0.05, "topological"), (0.8, 0.05, "trivial")]
-        {
+        for &(lambda_v, lambda_r, label) in &[(0.1, 0.05, "topological"), (0.8, 0.05, "trivial")] {
             let model = KaneMeleModel::new(1.0, 0.1, lambda_r, lambda_v).unwrap();
 
             let (clean_a, clean_b) = model
