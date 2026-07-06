@@ -524,12 +524,12 @@ impl KaneMeleModel {
     /// When Rashba is non-zero, S_z is not conserved and the two-band occupied
     /// subspace no longer decomposes by spin, so the spin-Chern method above
     /// does not apply. The Z₂ invariant is instead computed via
-    /// [`z2_from_wilson_loop`](Self::z2_from_wilson_loop): a Wilson-loop /
+    /// `z2_from_wilson_loop`: a Wilson-loop /
     /// hybrid Wannier-charge-center calculation that tracks the two
     /// occupied-band Wannier phases across half the Brillouin zone and counts
     /// how many times they cross a reference line anchored at a TRIM point.
     /// This method is gauge-invariant by construction (unlike the retired
-    /// TRIM-point Pfaffian approach, [`z2_from_trim_pfaffian`](Self::z2_from_trim_pfaffian),
+    /// TRIM-point Pfaffian approach, `z2_from_trim_pfaffian`,
     /// which has an inherent, unfixable gauge dependence — see its doc comment).
     ///
     /// # Returns

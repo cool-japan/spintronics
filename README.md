@@ -51,7 +51,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
 - ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
-- ✅ **Production Quality**: Zero warnings, 2012 tests + 117 doc tests passing
+- ✅ **Production Quality**: Zero warnings, 2059 tests + 118 doc tests passing
 
 ## ✨ Key Features
 
@@ -233,7 +233,6 @@ Available features:
 - `serde` - JSON/binary serialization
 - `fem` - Finite element method solver
 - `wasm` - WebAssembly support
-```
 
 Or install directly from the repository:
 
@@ -245,7 +244,7 @@ cargo build --release
 
 ## 💡 Examples
 
-The library includes **25 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
+The library includes **69 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
 
 ### 📚 Quick Start Examples (Beginner)
 
@@ -273,7 +272,7 @@ Reproduces the landmark Saitoh et al. (2006) experiment:
 - **Reservoir Computing** - Neuromorphic computing with magnons
 
 **See [`examples/README.md`](examples/README.md) for:**
-- Detailed descriptions of all 25 examples
+- Detailed descriptions of all 69 examples
 - Learning paths for different backgrounds
 - Difficulty ratings and prerequisites
 - Feature requirements and build commands
@@ -352,7 +351,7 @@ cargo test        # Unit tests
 
 ### Test Coverage
 
-**Total: 2012 tests + 117 doc tests passing** (workspace)
+**Total: 2059 tests + 118 doc tests passing** (workspace)
 - ✅ **Unit Tests**: Core physics calculations
 - ✅ **Doc Tests**: Documentation examples
 - ✅ **Integration Tests**: Multi-module physics workflows
@@ -686,12 +685,17 @@ See `wasm-demo/` directory for complete interactive examples.
 - ✅ Spin-density-wave relaxational dynamics toward self-consistent equilibrium gap (`magnon::SdwRelaxationDynamics`)
 - ✅ Hopfion eigenmode stability: collective-coordinate linear-stability analysis (`texture::hopfion_stability_modes`)
 
-**Simulation Infrastructure**
+**Simulation Infrastructure & I/O**
 - ✅ Streaming simulation API: per-step callback without materializing the full trajectory (`Simulation::run_streaming`)
+- ✅ Binary OVF format read/write: `Binary4_1_0` (OVF 1.0, big-endian) and `Binary4_2_0`/`Binary8_2_0` (OVF 2.0, little-endian), with control-value validation to catch byte-order mismatches or truncated files (`src/io/ovf.rs`)
 - ✅ Material-preset and skyrmion-dynamics benchmarks (`material_benchmark`, `skyrmion_benchmark`)
 
+**Python Bindings**
+- ✅ Complete `.pyi` type stubs for `LlbMaterial`, `LlbSolver`, `OnsagerMatrix`, `SpinCaloritronicsMaterial`, and the batch RK4 helpers (`batch_rk4_step`, `batch_rk4_multistep`)
+- ✅ New pytest suite (168 tests) covering vectors, materials, LLG/LLB solvers, spin pumping, spin Hall, and caloritronics
+
 **Quality**
-- ✅ 2012 tests + 117 doc tests passing, 0 warnings
+- ✅ 2059 tests + 118 doc tests passing, 0 warnings
 
 ### Version 0.4.0+ (Future Enhancements)
 

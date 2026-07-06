@@ -1,8 +1,8 @@
 # TODO List for Spintronics Library
 
 **Version**: 0.3.2
-**Last Updated**: 2026-07-05 - v0.3.2 in development
-**Status**: 1969 lib + 118 doctests + 65 proptest passing = 2034 nextest + 118 doctests (main crate, `cargo nextest run --all-features` / `cargo test --doc --all-features`), 0 warnings, ~95K lines (Rust code: ~80K+)
+**Last Updated**: 2026-07-06 - v0.3.2 in development
+**Status**: 1977 lib + 65 proptest passing = 2042 nextest (main crate, `cargo nextest run --all-features --workspace`) + 118 doctests passing, 5 ignored (`cargo test --all-features --doc`), 0 warnings, ~101K lines (Rust code: ~79.5K+)
 
 ---
 
