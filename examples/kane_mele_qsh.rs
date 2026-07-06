@@ -85,7 +85,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         0.2,
         0.3,
         0.35,
-        2.0_f64.sqrt() * 3.0_f64.sqrt() * 0.1,
+        2.0 * 3.0_f64.sqrt() * 0.1,
         0.4,
         0.5,
     ];

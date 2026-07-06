@@ -34,40 +34,58 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # Core system: RNG, statistical distributions, physical computing utilities, parallelization
 # Note: Optional for WASM builds (not needed for basic simulations)
-scirs2-core = { version = "0.5.0", default-features = false, features = ["std", "array", "random", "parallel"], optional = true }
+scirs2-core = { workspace = true, optional = true }
 
 # FEM (Finite Element Method) support - disabled for WASM
-scirs2-spatial = { version = "0.5.0", default-features = false, optional = true }
+scirs2-spatial = { workspace = true, optional = true }
 
 # Parallel computing support (v0.3.0)
-rayon = { version = "1.10", optional = true }
+rayon = { workspace = true, optional = true }
 
 # Serialization support (v0.2.0)
-serde = { version = "1.0", features = ["derive"], optional = true }
-serde_json = { version = "1.0", optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
 
 # Python bindings (v0.2.0)
-pyo3 = { version = "0.25", features = ["extension-module"], optional = true }
-numpy = { version = "0.25", optional = true }
+pyo3 = { workspace = true, optional = true }
+numpy = { workspace = true, optional = true }
 
 # HDF5 file format support (v0.2.0)
-hdf5 = { version = "0.8", optional = true }
+hdf5 = { workspace = true, optional = true }
 
 # base64 encoding for VTI/ParaView binary appended data (v0.6.0)
-base64 = { version = "0.22", optional = true }
+base64 = { workspace = true, optional = true }
 
 # WebAssembly support
-wasm-bindgen = { version = "0.2", optional = true }
-wasm-bindgen-futures = { version = "0.4", optional = true }
-js-sys = { version = "0.3", optional = true }
-web-sys = { version = "0.3", features = ["console", "Window", "Document"], optional = true }
-console_error_panic_hook = { version = "0.1", optional = true }
-getrandom = { version = "0.3", features = ["wasm_js"], optional = true }
+wasm-bindgen = { workspace = true, optional = true }
+wasm-bindgen-futures = { workspace = true, optional = true }
+js-sys = { workspace = true, optional = true }
+console_error_panic_hook = { workspace = true, optional = true }
+getrandom = { workspace = true, optional = true }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3"
-criterion = { version = "0.5", features = ["html_reports"] }
-proptest = "1.6"
+wasm-bindgen-test = { workspace = true }
+
+# proptest pulls in rusty-fork -> wait-timeout for subprocess-isolated test
+# execution, which has no wasm32 implementation at all (no process model on
+# wasm32-unknown-unknown) — this is an upstream limitation, not something a
+# Cargo feature can select around. It also drags in getrandom ^0.3 (via rand
+# 0.9 -> rand_core 0.9), a semver-major version distinct from the workspace's
+# own getrandom 0.4 pin (line 64/318), so it wouldn't inherit the "wasm_js"
+# feature either. Scope proptest to non-wasm32 dev-builds; the property tests
+# that use it (tests/property_*.rs) are cfg-gated out on wasm32 to match.
+#
+# criterion's default "rayon" feature also hard-errors at compile time on the
+# wasm family (`compile_error!("Rayon cannot be used when targeting
+# wasi32...")` in criterion's own lib.rs), so it gets a wasm32-specific
+# override below with "rayon" dropped; native builds keep the full default
+# feature set (rayon, plotters, cargo_bench_support) unchanged.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+proptest = { workspace = true }
+criterion = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support", "plotters", "html_reports"] }
 
 [features]
 default = ["fem", "scirs2", "serde"]
@@ -77,7 +95,7 @@ serde = ["dep:serde", "dep:serde_json"]
 python = ["pyo3", "numpy"]
 hdf5 = ["dep:hdf5"]
 parallel = ["rayon"]
-wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys", "console_error_panic_hook", "getrandom"]
+wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "console_error_panic_hook", "getrandom"]
 
 # v0.6.0 features
 vti      = ["dep:base64"]          # VTK ImageData (XML + base64 binary) export
@@ -134,12 +152,19 @@ name = "data_export_formats"
 path = "examples/data_export_formats.rs"
 
 [[example]]
+name = "fem_micromagnetics"
+path = "examples/fem_micromagnetics.rs"
+required-features = ["fem"]
+
+[[example]]
 name = "autodiff_parameter_fitting"
 path = "examples/autodiff_parameter_fitting.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "neural_exchange_training"
 path = "examples/neural_exchange_training.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "nanodisk_modes"
@@ -152,6 +177,7 @@ path = "examples/implicit_midpoint_stiff_demo.rs"
 [[example]]
 name = "pinn_llg_solver"
 path = "examples/pinn_llg_solver.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "magnonic_crystal_bandgap"
@@ -164,18 +190,27 @@ path = "examples/experimental_validation_demo.rs"
 [[example]]
 name = "heun_adaptive_thermal_llg"
 path = "examples/heun_adaptive_thermal_llg.rs"
+required-features = ["scirs2"]
 
 [[example]]
 name = "pimc_heisenberg_chain"
 path = "examples/pimc_heisenberg_chain.rs"
+required-features = ["scirs2"]
+
+[[example]]
+name = "advanced_spintronics"
+path = "examples/advanced_spintronics.rs"
+required-features = ["scirs2"]
 
 [[example]]
 name = "equivariant_nn_demo"
 path = "examples/equivariant_nn_demo.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "active_learning_demo"
 path = "examples/active_learning_demo.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "validation_landmark_suite"
@@ -184,10 +219,12 @@ path = "examples/validation_landmark_suite.rs"
 [[example]]
 name = "graph_nn_lattice"
 path = "examples/graph_nn_lattice.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "bayesian_opt_materials"
 path = "examples/bayesian_opt_materials.rs"
+required-features = ["autodiff"]
 
 [[example]]
 name = "validation_full_suite"
@@ -223,6 +260,34 @@ name = "variational_magnon_nn"
 path = "examples/variational_magnon_nn.rs"
 required-features = ["autodiff"]
 
+[[example]]
+name = "graded_interface"
+path = "examples/graded_interface.rs"
+
+[[example]]
+name = "streaming_simulation"
+path = "examples/streaming_simulation.rs"
+
+[[example]]
+name = "d_orbital_local_moments"
+path = "examples/d_orbital_local_moments.rs"
+
+[[example]]
+name = "frustrated_transport"
+path = "examples/frustrated_transport.rs"
+
+[[example]]
+name = "rvb_triangular_spin_liquid"
+path = "examples/rvb_triangular_spin_liquid.rs"
+
+[[example]]
+name = "altermagnet_spin_valve"
+path = "examples/altermagnet_spin_valve.rs"
+
+[[example]]
+name = "altermagnet_band_structure"
+path = "examples/altermagnet_band_structure.rs"
+
 [[bench]]
 name = "llg_benchmark"
 harness = false
@@ -235,11 +300,55 @@ harness = false
 name = "vector3_benchmark"
 harness = false
 
+[[bench]]
+name = "material_benchmark"
+harness = false
+
+[[bench]]
+name = "skyrmion_benchmark"
+harness = false
+
 [workspace]
 members = ["demo", "py"]
 
 [workspace.package]
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
 license = "Apache-2.0"
+
+[workspace.dependencies]
+# Core system: RNG, statistical distributions, physical computing utilities, parallelization
+scirs2-core = { version = "0.6.0", default-features = false, features = ["std", "array", "random", "parallel"] }
+
+# FEM (Finite Element Method) support
+scirs2-spatial = { version = "0.6.0", default-features = false }
+
+# Parallel computing support
+rayon = { version = "1.12" }
+
+# Serialization support (shared by root crate and demo)
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+
+# Python bindings (shared by root crate and py)
+pyo3 = { version = "0.29", features = ["extension-module"] }
+numpy = { version = "0.29" }
+
+# HDF5 file format support
+hdf5 = { version = "0.8" }
+
+# base64 encoding for VTI/ParaView binary appended data
+base64 = { version = "0.22" }
+
+# WebAssembly support
+wasm-bindgen = { version = "0.2" }
+wasm-bindgen-futures = { version = "0.4" }
+js-sys = { version = "0.3" }
+console_error_panic_hook = { version = "0.1" }
+getrandom = { version = "0.4", features = ["wasm_js"] }
+
+# Dev-dependencies shared across the workspace
+wasm-bindgen-test = "0.3"
+criterion = { version = "0.8", features = ["html_reports"] }
+proptest = "1.11"

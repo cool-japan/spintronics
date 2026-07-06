@@ -33,8 +33,14 @@
 //!   excitation threshold", *Sov. Phys. Usp.* **17**, 896 (1975).
 //! - A. Chumak et al., "Magnon spintronics", *Nat. Phys.* **11**, 453 (2015).
 
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::prelude::*;
 
+// This example exercises `spintronics::magnon` (four-magnon scattering, Suhl
+// instability, parametric amplification), which is excluded from wasm32 builds
+// (see `#[cfg(not(target_arch = "wasm32"))]` on `pub mod magnon;` in
+// `src/lib.rs`), so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("=================================================================");
     println!("  Nonlinear Magnon Physics: Suhl Instability & Parametric Amp.");
@@ -155,8 +161,13 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let omega_pump = f_pump_hz; // omega in rad/s (f_pump_hz is actually omega — see magnon_frequency)
     let alpha_pa = 3.0e-5_f64;
     let ms_pa = 1.4e5_f64;
-    // Pass pump angular freq omega_pump so signal/idler = omega_pump/2
-    let pa = ParametricAmplification::degenerate_from_yig(omega_pump, alpha_pa, ms_pa);
+    // Pass pump angular freq omega_pump so signal/idler = omega_pump/2.
+    // The preset's pump field is the physics-derived threshold h_th = α·ω_p/(γ·Ms),
+    // so it sits exactly at marginal stability. Operate it at twice-critical
+    // (ξ = h_p/h_th = 2) to demonstrate above-threshold parametric gain.
+    let pa = ParametricAmplification::degenerate_from_yig(omega_pump, alpha_pa, ms_pa)
+        .with_supercriticality(2.0)
+        .expect("twice-critical pump is a valid operating point");
 
     let h_thresh = pa.threshold_pump_field();
     let gain_coeff = pa.gain_coefficient();
@@ -285,3 +296,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

@@ -41,6 +41,12 @@ from .spintronics import (
     InverseSpinHall,
     LlgSimulator,
     SpinPumpingSimulation,
+    LlbMaterial,
+    LlbSolver,
+    OnsagerMatrix,
+    SpinCaloritronicsMaterial,
+    batch_rk4_step,
+    batch_rk4_multistep,
     HBAR,
     GAMMA,
     E_CHARGE,
@@ -48,7 +54,7 @@ from .spintronics import (
     KB,
 )
 
-__version__ = "0.5.0"
+__version__ = "0.3.2"
 __all__ = [
     "Vector3",
     "Ferromagnet",
@@ -56,6 +62,12 @@ __all__ = [
     "InverseSpinHall",
     "LlgSimulator",
     "SpinPumpingSimulation",
+    "LlbMaterial",
+    "LlbSolver",
+    "OnsagerMatrix",
+    "SpinCaloritronicsMaterial",
+    "batch_rk4_step",
+    "batch_rk4_multistep",
     "HBAR",
     "GAMMA",
     "E_CHARGE",

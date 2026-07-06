@@ -26,9 +26,9 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📊 Development Status
 
-**Current Version**: 0.3.1 ✅ **PRODUCTION READY**
+**Current Version**: 0.3.2 🚧 **IN DEVELOPMENT** (latest release: 0.3.1)
 
-**Latest Release**: June 2026 (2026-06-10)
+**Latest Release**: 0.3.1 — June 2026 (2026-06-10)
 
 ### Version 0.3.1 Highlights
 - ✅ **DemagField Performance**: Direct flat kernel indexing + optional rayon parallelism for demag computation
@@ -42,16 +42,16 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 - ✅ **Unit Validation**: Runtime checks for physical quantity sanity
 - ✅ **Performance**: SIMD-accelerated spin operations and parallel lattice evolution
 - ✅ **25 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
-- ✅ **1829 Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
+- ✅ **2012 Tests + 117 Doc Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
 
 ### Core Capabilities
-- ✅ **32 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
+- ✅ **34 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
 - ✅ **130+ Source Files**: Well-organized, modular codebase
 - ✅ **5 Experimental Validations**: Against landmark papers (Saitoh 2006, Woo 2016, etc.)
 - ✅ **Interactive Web Demo**: Modern HTMX + Axum subcrate for online demonstrations
 - ✅ **WebAssembly Support**: Browser-based simulations ready
 - ✅ **Multi-platform CI/CD**: Ubuntu, macOS, Windows tested
-- ✅ **Production Quality**: Zero warnings, 1829 tests passing
+- ✅ **Production Quality**: Zero warnings, 2059 tests + 118 doc tests passing
 
 ## ✨ Key Features
 
@@ -83,7 +83,7 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📦 Implemented Modules
 
-The library is organized into 32 physics-focused modules:
+The library is organized into 34 physics-focused modules:
 
 | Module | Physics Concept | Key Papers / Concepts |
 |--------|----------------|----------------------|
@@ -107,8 +107,8 @@ The library is organized into 32 physics-focused modules:
 | **units** | Unit Validation | 14 validators for physical quantities (v0.2.0) |
 | **visualization** | Data Export | HDF5, JSON, CSV, VTK formats (v0.2.0) |
 | **python** | Python Bindings | PyO3 integration for Python users (v0.2.0) |
-| **altermagnet** | Altermagnetism | Time-reversal symmetry breaking without net moment (v0.3.0) |
-| **orbitronics** | Orbital Hall Effect | Orbital current generation and orbital Hall effect (v0.3.0) |
+| **altermagnet** | Altermagnetism | Time-reversal symmetry breaking without net moment; k·p band model with Berry curvature and crystal/spin Hall conductivity, spin-valve GMR without ferromagnetism (v0.3.0; expanded v0.3.2) |
+| **orbitronics** | Orbital Hall Effect | Orbital current generation and orbital Hall effect; d-orbital local-moment magnetism via crystal-field and spin-orbit Hamiltonians (v0.3.0; expanded v0.3.2) |
 | **frustrated** | Frustrated Magnets | Kagome and triangular lattice antiferromagnets, spin ice (v0.3.0) |
 | **spinwave** | Spin Wave Dynamics | Spin wave dispersion and magnon dynamics (v0.3.0) |
 | **texture/hopfion** | Hopfion Topology | Hopfion topology and invariant calculation (v0.3.0) |
@@ -119,6 +119,8 @@ The library is organized into 32 physics-focused modules:
 | **simd** | SIMD Operations | SIMD-accelerated spin operations (v0.3.0) |
 | **parallel** | Parallel Lattice | Parallel spin lattice evolution (v0.3.0) |
 | **builder** | Simulation Builder | SimulationBuilder fluent API (v0.3.0) |
+| **frustrated/rvb** | RVB Spin Liquid | Resonating-valence-bond solver: dimer coverings, variational ground state, exact diagonalization, spinon/deconfinement diagnostics (v0.3.2) |
+| **frustrated/transport** | Frustration-to-Transport | Scalar spin chirality, emergent field, and topological Hall response for triangular/kagome/pyrochlore lattices (v0.3.2) |
 
 ### Module Architecture
 
@@ -215,14 +217,14 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-spintronics = "0.3.1"
+spintronics = "0.3.2"
 ```
 
 ### Optional Features
 
 ```toml
 [dependencies]
-spintronics = { version = "0.3.1", features = ["python", "hdf5", "serde"] }
+spintronics = { version = "0.3.2", features = ["python", "hdf5", "serde"] }
 ```
 
 Available features:
@@ -231,7 +233,6 @@ Available features:
 - `serde` - JSON/binary serialization
 - `fem` - Finite element method solver
 - `wasm` - WebAssembly support
-```
 
 Or install directly from the repository:
 
@@ -243,7 +244,7 @@ cargo build --release
 
 ## 💡 Examples
 
-The library includes **25 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
+The library includes **69 comprehensive examples** organized by difficulty level. See [`examples/README.md`](examples/README.md) for the complete guide with learning paths.
 
 ### 📚 Quick Start Examples (Beginner)
 
@@ -271,7 +272,7 @@ Reproduces the landmark Saitoh et al. (2006) experiment:
 - **Reservoir Computing** - Neuromorphic computing with magnons
 
 **See [`examples/README.md`](examples/README.md) for:**
-- Detailed descriptions of all 25 examples
+- Detailed descriptions of all 69 examples
 - Learning paths for different backgrounds
 - Difficulty ratings and prerequisites
 - Feature requirements and build commands
@@ -350,7 +351,7 @@ cargo test        # Unit tests
 
 ### Test Coverage
 
-**Total: 1829 lib + 111 doc tests passing**
+**Total: 2059 tests + 118 doc tests passing** (workspace)
 - ✅ **Unit Tests**: Core physics calculations
 - ✅ **Doc Tests**: Documentation examples
 - ✅ **Integration Tests**: Multi-module physics workflows
@@ -394,7 +395,7 @@ Minimal dependency footprint for fast compilation and easy integration:
 
 ```toml
 [dependencies]
-scirs2-core = { version = "0.5.0", default-features = false }
+scirs2-core = { version = "0.6.0", default-features = false }
 ```
 
 **scirs2-core** provides:
@@ -670,6 +671,31 @@ See `wasm-demo/` directory for complete interactive examples.
 
 **Quality**
 - ✅ 1829 lib + 111 doc tests passing, 0 warnings
+
+### Version 0.3.2 🚧 **IN DEVELOPMENT**
+
+**New Physics Modules**
+- ✅ Altermagnet band model: k·p Bloch Hamiltonian with Berry curvature, crystal Hall and spin Hall conductivity (`altermagnet::band_model`)
+- ✅ Altermagnetic spin valve: GMR without ferromagnetism from the relative crystal-axis angle (`altermagnet::spin_valve`)
+- ✅ d-orbital local-moment magnetism: crystal-field + spin-orbit Hamiltonians, Hund's-rule ground states, 12 preset 3d transition-metal ions (`orbitronics::crystal_field`, `orbitronics::d_orbital_moment`)
+- ✅ RVB quantum spin-liquid solver: dimer coverings, variational ground state, exact diagonalization, spinon/deconfinement diagnostics (`frustrated::rvb`)
+- ✅ Geometric frustration → transport: scalar spin chirality, emergent field, topological Hall response (`frustrated::transport`)
+- ✅ Graded/inhomogeneous material interfaces: Linear/Exponential/ErrorFunction Ms/A/K grading laws (`material::disorder::GradedInterface`)
+- ✅ Time-domain SAW / AC piezoelectric strain-driven LLG dynamics (`mech::strain_driven_dynamics`)
+- ✅ Spin-density-wave relaxational dynamics toward self-consistent equilibrium gap (`magnon::SdwRelaxationDynamics`)
+- ✅ Hopfion eigenmode stability: collective-coordinate linear-stability analysis (`texture::hopfion_stability_modes`)
+
+**Simulation Infrastructure & I/O**
+- ✅ Streaming simulation API: per-step callback without materializing the full trajectory (`Simulation::run_streaming`)
+- ✅ Binary OVF format read/write: `Binary4_1_0` (OVF 1.0, big-endian) and `Binary4_2_0`/`Binary8_2_0` (OVF 2.0, little-endian), with control-value validation to catch byte-order mismatches or truncated files (`src/io/ovf.rs`)
+- ✅ Material-preset and skyrmion-dynamics benchmarks (`material_benchmark`, `skyrmion_benchmark`)
+
+**Python Bindings**
+- ✅ Complete `.pyi` type stubs for `LlbMaterial`, `LlbSolver`, `OnsagerMatrix`, `SpinCaloritronicsMaterial`, and the batch RK4 helpers (`batch_rk4_step`, `batch_rk4_multistep`)
+- ✅ New pytest suite (168 tests) covering vectors, materials, LLG/LLB solvers, spin pumping, spin Hall, and caloritronics
+
+**Quality**
+- ✅ 2059 tests + 118 doc tests passing, 0 warnings
 
 ### Version 0.4.0+ (Future Enhancements)
 

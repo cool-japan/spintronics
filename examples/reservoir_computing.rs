@@ -4,9 +4,16 @@
 //! The magnon system acts as a non-linear, high-dimensional dynamical system
 //! for computation, with only the readout layer trained.
 
+// This example exercises `spintronics::ai` (magnon reservoir computing),
+// which is excluded from wasm32 builds (see
+// `#[cfg(not(target_arch = "wasm32"))]` on `pub mod ai;` in `src/lib.rs`),
+// so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::ai::MagnonReservoir;
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::vector3::Vector3;
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     println!("=== Physical Reservoir Computing with Magnons ===\n");
 
@@ -222,3 +229,6 @@ fn main() {
     println!("  - Signal processing");
     println!("  - Neuromorphic computing");
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

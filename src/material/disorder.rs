@@ -11,6 +11,11 @@
 //!   dilute impurities and random substitution.
 //! - **Surface roughness**: Height profile with RMS roughness and correlation
 //!   length, affecting effective surface anisotropy.
+//! - **Graded interfaces**: Smooth Linear/Exponential/error-function
+//!   transition profiles for a spatially-varying scalar material parameter
+//!   (Ms, exchange stiffness A, or anisotropy K) across a compositionally
+//!   graded or interdiffused interface region, with optional roughness-like
+//!   jitter of the transition position.
 //!
 //! # References
 //!
@@ -672,6 +677,271 @@ impl SurfaceRoughness {
 }
 
 // ============================================================================
+// Graded (inhomogeneous) interfaces
+// ============================================================================
+
+/// Abramowitz-Stegun 7.1.26 polynomial approximation of the Gauss error
+/// function `erf(x)`.
+///
+/// The maximum absolute error over all real `x` is `≤ 1.5×10⁻⁷`, which is
+/// more than sufficient for graded-interface material profiles (the
+/// physical width/shape of a real interdiffused interface is itself
+/// typically known only to a few percent). Implemented locally rather than
+/// reusing the `autodiff` module's private `erf_approx` so that graded
+/// interfaces remain available under the crate's default feature set.
+fn erf_approx(x: f64) -> f64 {
+    const A1: f64 = 0.254_829_592;
+    const A2: f64 = -0.284_496_736;
+    const A3: f64 = 1.421_413_741;
+    const A4: f64 = -1.453_152_027;
+    const A5: f64 = 1.061_405_429;
+    const P: f64 = 0.327_591_1;
+
+    let sign = if x < 0.0 { -1.0 } else { 1.0 };
+    let ax = x.abs();
+    let t = 1.0 / (1.0 + P * ax);
+    let poly = (((A5 * t + A4) * t + A3) * t + A2) * t + A1;
+    let y = 1.0 - poly * t * (-(ax * ax)).exp();
+    sign * y
+}
+
+/// Spatial grading law describing how a scalar material parameter (e.g.
+/// saturation magnetisation `Ms`, exchange stiffness `A`, or anisotropy `K`)
+/// transitions between two endpoint values across an interface region.
+///
+/// Writing `d = position − center` and `v̄ = (value_left + value_right) / 2`
+/// for the mean of the two endpoints, every law below satisfies the exact
+/// point-antisymmetry identity
+///
+/// ```text
+/// value(center + d) + value(center − d) = value_left + value_right
+/// ```
+///
+/// for *every* `d`, not merely in some asymptotic limit. This is what makes
+/// the barycenter of any position window that is symmetric about `center`
+/// equal exactly to the arithmetic mean of the two endpoints, independent of
+/// the transition `width` or the sampling density used to estimate it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum GradingLaw {
+    /// Piecewise-linear ramp with *compact support*: exactly equal to
+    /// `value_left` / `value_right` once `|position − center| ≥ width / 2`,
+    /// and linearly interpolated in between. Here `width` is the full
+    /// transition span (end to end).
+    Linear,
+    /// Two-sided exponential relaxation from each endpoint toward the mean
+    /// value, with decay length `width`; continuously differentiable (C¹)
+    /// at `center`. The endpoint values are reached only asymptotically:
+    /// the residual at `|d| = n · width` is a factor `exp(−n)` of
+    /// `(value_right − value_left) / 2`.
+    Exponential,
+    /// Smooth error-function (erf) sigmoid of characteristic width `width`
+    /// — the Boltzmann-Matano solution of the 1D diffusion equation for a
+    /// step initial condition, and the standard textbook model for
+    /// interdiffusion-broadened magnetic interfaces. Endpoint values are
+    /// reached only asymptotically, with residual `erfc(n)` at
+    /// `|d| = n · width`.
+    ErrorFunction,
+}
+
+/// A graded (inhomogeneous) interface: a scalar material parameter that
+/// varies smoothly across an interface transition region instead of
+/// jumping discontinuously between two bulk values, with optional
+/// site-to-site roughness broadening of the transition position.
+///
+/// The nominal (unperturbed) profile is centered at `center` with
+/// characteristic transition `width`, saturating to `value_left` for
+/// `position ≪ center` and to `value_right` for `position ≫ center`. The
+/// model is generic over *any* scalar material parameter — `Ms`, exchange
+/// stiffness `A`, anisotropy `K`, etc. — graded across a compositionally
+/// interdiffused or roughness-broadened interface.
+///
+/// # Example
+///
+/// ```
+/// use spintronics::material::disorder::{GradedInterface, GradingLaw};
+///
+/// // Ms graded across a 2 nm interdiffusion layer between two ferromagnets.
+/// let profile = GradedInterface::generate(
+///     GradingLaw::ErrorFunction,
+///     0.0,      // interface center at the origin
+///     2.0e-9,   // 2 nm characteristic width
+///     4.0e5,    // Ms = 4e5 A/m on the left
+///     8.0e5,    // Ms = 8e5 A/m on the right
+///     1,        // one lateral site (no roughness realization needed)
+///     0.0,      // no roughness jitter
+///     42,
+/// ).expect("valid parameters");
+///
+/// assert!((profile.value_at(0.0) - 6.0e5).abs() < 1.0);
+/// ```
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct GradedInterface {
+    /// Grading law used to interpolate between the two endpoint values.
+    pub law: GradingLaw,
+    /// Nominal position of the interface transition midpoint (same length
+    /// unit as the `position` argument of [`GradedInterface::value_at`]).
+    pub center: f64,
+    /// Characteristic transition width (see [`GradingLaw`] for the exact
+    /// meaning per law). Always finite and strictly positive.
+    pub width: f64,
+    /// Material-parameter value approached for `position ≪ center`.
+    pub value_left: f64,
+    /// Material-parameter value approached for `position ≫ center`.
+    pub value_right: f64,
+    /// Per-site random offsets of the local interface `center`, modeling
+    /// roughness-induced lateral fluctuation of the graded transition.
+    /// Always has length `num_sites` (as passed to `generate`); every
+    /// entry is exactly `0.0` when `jitter_rms == 0.0`.
+    pub center_offsets: Vec<f64>,
+    /// RMS amplitude of the center-position jitter (`0.0` = perfectly
+    /// flat, laterally uniform interface).
+    pub jitter_rms: f64,
+    /// PRNG seed used to generate `center_offsets`.
+    pub seed: u64,
+}
+
+impl GradedInterface {
+    /// Generate a graded interface profile.
+    ///
+    /// # Arguments
+    ///
+    /// * `law` - Grading law (see [`GradingLaw`])
+    /// * `center` - Nominal transition midpoint position (must be finite)
+    /// * `width` - Characteristic transition width (must be finite and > 0)
+    /// * `value_left` - Endpoint value for `position ≪ center` (must be finite)
+    /// * `value_right` - Endpoint value for `position ≫ center` (must be finite)
+    /// * `num_sites` - Number of lateral sites for interfacial-roughness
+    ///   realizations (must be > 0; pass `1` if no per-site variation is
+    ///   needed)
+    /// * `jitter_rms` - RMS roughness-induced jitter of the local interface
+    ///   center (must be finite and ≥ 0; `0.0` disables jitter)
+    /// * `seed` - PRNG seed for reproducibility
+    ///
+    /// # Errors
+    ///
+    /// Returns `Error::InvalidParameter` if `width` is not finite and
+    /// strictly positive, if `center`, `value_left`, `value_right`, or
+    /// `jitter_rms` is not finite, if `jitter_rms` is negative, or if
+    /// `num_sites == 0`.
+    pub fn generate(
+        law: GradingLaw,
+        center: f64,
+        width: f64,
+        value_left: f64,
+        value_right: f64,
+        num_sites: usize,
+        jitter_rms: f64,
+        seed: u64,
+    ) -> Result<Self> {
+        if !center.is_finite() {
+            return Err(Error::InvalidParameter {
+                param: "center".to_string(),
+                reason: "must be finite".to_string(),
+            });
+        }
+        if !(width.is_finite() && width > 0.0) {
+            return Err(Error::InvalidParameter {
+                param: "width".to_string(),
+                reason: "must be finite and strictly positive".to_string(),
+            });
+        }
+        if !value_left.is_finite() {
+            return Err(Error::InvalidParameter {
+                param: "value_left".to_string(),
+                reason: "must be finite".to_string(),
+            });
+        }
+        if !value_right.is_finite() {
+            return Err(Error::InvalidParameter {
+                param: "value_right".to_string(),
+                reason: "must be finite".to_string(),
+            });
+        }
+        if num_sites == 0 {
+            return Err(Error::InvalidParameter {
+                param: "num_sites".to_string(),
+                reason: "must be greater than zero".to_string(),
+            });
+        }
+        if !(jitter_rms.is_finite() && jitter_rms >= 0.0) {
+            return Err(Error::InvalidParameter {
+                param: "jitter_rms".to_string(),
+                reason: "must be finite and non-negative".to_string(),
+            });
+        }
+
+        let mut rng = Xorshift64::new(seed);
+        let center_offsets: Vec<f64> = (0..num_sites)
+            .map(|_| jitter_rms * rng.next_normal())
+            .collect();
+
+        Ok(Self {
+            law,
+            center,
+            width,
+            value_left,
+            value_right,
+            center_offsets,
+            jitter_rms,
+            seed,
+        })
+    }
+
+    /// Sample the graded material-parameter value at `position`, using the
+    /// nominal (unperturbed) interface `center`.
+    ///
+    /// Implements the grading law selected at construction time; see
+    /// [`GradingLaw`] for the exact functional form of each law.
+    pub fn value_at(&self, position: f64) -> f64 {
+        self.value_at_center(position, self.center)
+    }
+
+    /// Sample the graded profile at `position` for lateral site
+    /// `site_index`, using the (possibly roughness-jittered) local
+    /// interface center at that site.
+    ///
+    /// An out-of-range `site_index` (`>= self.center_offsets.len()`) is
+    /// treated as an unperturbed (zero-jitter) sample, gracefully falling
+    /// back to the nominal `center`.
+    pub fn value_at_site(&self, position: f64, site_index: usize) -> f64 {
+        let local_center =
+            self.center + self.center_offsets.get(site_index).copied().unwrap_or(0.0);
+        self.value_at_center(position, local_center)
+    }
+
+    /// Mean of the two endpoint values: the exact barycenter of any
+    /// position window that is symmetric about `center`, for every law.
+    pub fn barycenter(&self) -> f64 {
+        0.5 * (self.value_left + self.value_right)
+    }
+
+    /// Core grading-law evaluation about an arbitrary `center` position
+    /// (shared by [`Self::value_at`] and [`Self::value_at_site`]).
+    fn value_at_center(&self, position: f64, center: f64) -> f64 {
+        let d = position - center;
+        let mean = 0.5 * (self.value_left + self.value_right);
+        let half_delta = 0.5 * (self.value_right - self.value_left);
+
+        match self.law {
+            GradingLaw::Linear => {
+                let t = (d / (0.5 * self.width)).clamp(-1.0, 1.0);
+                mean + half_delta * t
+            },
+            GradingLaw::Exponential => {
+                if d >= 0.0 {
+                    self.value_right - half_delta * (-d / self.width).exp()
+                } else {
+                    self.value_left + half_delta * (d / self.width).exp()
+                }
+            },
+            GradingLaw::ErrorFunction => mean + half_delta * erf_approx(d / self.width),
+        }
+    }
+}
+
+// ============================================================================
 // Tests
 // ============================================================================
 
@@ -859,5 +1129,292 @@ mod tests {
         assert!(RandomAnisotropyModel::new(10, 10.0e-9, 1.0e4, -1.0, 1).is_err());
         assert!(RandomFieldDisorder::generate(0, 0.01, 0.0, 1).is_err());
         assert!(SurfaceRoughness::generate(0, 10, 1.0e-9, 0.5e-9, 0.0, 1).is_err());
+    }
+
+    // ------------------------------------------------------------------
+    // Graded interfaces
+    // ------------------------------------------------------------------
+
+    #[test]
+    fn test_graded_interface_linear_monotonic_and_endpoints() {
+        let profile =
+            GradedInterface::generate(GradingLaw::Linear, 0.0, 4.0e-9, 1.0e5, 3.0e5, 1, 0.0, 1)
+                .expect("valid parameters");
+
+        // Exact endpoint values once |position - center| >= width / 2
+        assert!((profile.value_at(-10.0e-9) - 1.0e5).abs() < 1e-6);
+        assert!((profile.value_at(10.0e-9) - 3.0e5).abs() < 1e-6);
+        // Exact midpoint value
+        assert!((profile.value_at(0.0) - 2.0e5).abs() < 1e-6);
+
+        let mut prev = profile.value_at(-10.0e-9);
+        for i in 1..=400 {
+            let x = -10.0e-9 + i as f64 * (20.0e-9 / 400.0);
+            let v = profile.value_at(x);
+            assert!(
+                v >= prev - 1e-12,
+                "Linear profile not monotonic at x = {}: {} < {}",
+                x,
+                v,
+                prev
+            );
+            prev = v;
+        }
+    }
+
+    #[test]
+    fn test_graded_interface_exponential_monotonic_and_endpoints() {
+        let width = 2.0e-9;
+        let profile =
+            GradedInterface::generate(GradingLaw::Exponential, 0.0, width, 1.0e5, 3.0e5, 1, 0.0, 2)
+                .expect("valid parameters");
+
+        let far = 10.0 * width;
+        let v_left = profile.value_at(-far);
+        let v_right = profile.value_at(far);
+        assert!(
+            (v_left - 1.0e5).abs() / 1.0e5 < 1e-3,
+            "Exponential left endpoint {} != 1e5",
+            v_left
+        );
+        assert!(
+            (v_right - 3.0e5).abs() / 3.0e5 < 1e-3,
+            "Exponential right endpoint {} != 3e5",
+            v_right
+        );
+
+        let mut prev = profile.value_at(-far);
+        for i in 1..=400 {
+            let x = -far + i as f64 * (2.0 * far / 400.0);
+            let v = profile.value_at(x);
+            assert!(
+                v >= prev - 1e-9,
+                "Exponential profile not monotonic at x = {}: {} < {}",
+                x,
+                v,
+                prev
+            );
+            prev = v;
+        }
+    }
+
+    #[test]
+    fn test_graded_interface_error_function_monotonic_and_endpoints() {
+        let width = 1.5e-9;
+        let profile = GradedInterface::generate(
+            GradingLaw::ErrorFunction,
+            0.0,
+            width,
+            2.0e5,
+            6.0e5,
+            1,
+            0.0,
+            3,
+        )
+        .expect("valid parameters");
+
+        let far = 10.0 * width;
+        let v_left = profile.value_at(-far);
+        let v_right = profile.value_at(far);
+        assert!((v_left - 2.0e5).abs() < 1.0, "erf left endpoint {}", v_left);
+        assert!(
+            (v_right - 6.0e5).abs() < 1.0,
+            "erf right endpoint {}",
+            v_right
+        );
+
+        let mut prev = profile.value_at(-far);
+        for i in 1..=400 {
+            let x = -far + i as f64 * (2.0 * far / 400.0);
+            let v = profile.value_at(x);
+            assert!(
+                v >= prev - 1e-9,
+                "ErrorFunction profile not monotonic at x = {}: {} < {}",
+                x,
+                v,
+                prev
+            );
+            prev = v;
+        }
+    }
+
+    #[test]
+    fn test_graded_interface_barycenter_symmetric_profile() {
+        // For every law, value(center+d) + value(center-d) == value_left +
+        // value_right exactly (to floating-point precision), independent of
+        // d and width -- this is what makes the mean over any
+        // center-symmetric sampling window equal the barycenter exactly.
+        for law in [
+            GradingLaw::Linear,
+            GradingLaw::Exponential,
+            GradingLaw::ErrorFunction,
+        ] {
+            let profile = GradedInterface::generate(law, 5.0e-9, 3.0e-9, 1.0e5, 7.0e5, 1, 0.0, 7)
+                .expect("valid parameters");
+            let expected_sum = profile.value_left + profile.value_right;
+            assert!(
+                (profile.barycenter() - 4.0e5).abs() < 1e-6,
+                "barycenter mismatch for {:?}",
+                law
+            );
+
+            for &d in &[0.0, 0.5e-9, 1.0e-9, 3.0e-9, 6.0e-9, 15.0e-9, 30.0e-9] {
+                let v_plus = profile.value_at(profile.center + d);
+                let v_minus = profile.value_at(profile.center - d);
+                let sum = v_plus + v_minus;
+                assert!(
+                    (sum - expected_sum).abs() / expected_sum.abs() < 1e-6,
+                    "{:?}: value(c+{}) + value(c-{}) = {}, expected {}",
+                    law,
+                    d,
+                    d,
+                    sum,
+                    expected_sum
+                );
+            }
+
+            // Discretised-mean check over a domain symmetric about the center.
+            let n = 201usize; // odd => the sampling grid includes the center itself
+            let half_span = 20.0 * profile.width;
+            let mut sum = 0.0;
+            for i in 0..n {
+                let frac = i as f64 / (n - 1) as f64; // 0..1
+                let x = profile.center - half_span + frac * 2.0 * half_span;
+                sum += profile.value_at(x);
+            }
+            let mean = sum / n as f64;
+            assert!(
+                (mean - profile.barycenter()).abs() / profile.barycenter().abs() < 1e-3,
+                "{:?}: discretised mean {} != barycenter {}",
+                law,
+                mean,
+                profile.barycenter()
+            );
+        }
+    }
+
+    #[test]
+    fn test_graded_interface_invalid_parameters() {
+        // width must be finite and strictly positive
+        assert!(
+            GradedInterface::generate(GradingLaw::Linear, 0.0, 0.0, 0.0, 1.0, 1, 0.0, 1).is_err()
+        );
+        assert!(
+            GradedInterface::generate(GradingLaw::Linear, 0.0, -1.0e-9, 0.0, 1.0, 1, 0.0, 1)
+                .is_err()
+        );
+        assert!(
+            GradedInterface::generate(GradingLaw::Linear, 0.0, f64::NAN, 0.0, 1.0, 1, 0.0, 1)
+                .is_err()
+        );
+        // endpoints must be finite
+        assert!(GradedInterface::generate(
+            GradingLaw::Linear,
+            0.0,
+            1.0e-9,
+            f64::NAN,
+            1.0,
+            1,
+            0.0,
+            1
+        )
+        .is_err());
+        assert!(GradedInterface::generate(
+            GradingLaw::Linear,
+            0.0,
+            1.0e-9,
+            0.0,
+            f64::INFINITY,
+            1,
+            0.0,
+            1
+        )
+        .is_err());
+        // center must be finite
+        assert!(GradedInterface::generate(
+            GradingLaw::Linear,
+            f64::NAN,
+            1.0e-9,
+            0.0,
+            1.0,
+            1,
+            0.0,
+            1
+        )
+        .is_err());
+        // num_sites must be > 0
+        assert!(
+            GradedInterface::generate(GradingLaw::Linear, 0.0, 1.0e-9, 0.0, 1.0, 0, 0.0, 1)
+                .is_err()
+        );
+        // jitter_rms must be finite and non-negative
+        assert!(
+            GradedInterface::generate(GradingLaw::Linear, 0.0, 1.0e-9, 0.0, 1.0, 1, -1.0, 1)
+                .is_err()
+        );
+        assert!(GradedInterface::generate(
+            GradingLaw::Linear,
+            0.0,
+            1.0e-9,
+            0.0,
+            1.0,
+            1,
+            f64::NAN,
+            1
+        )
+        .is_err());
+        // sanity: a valid call succeeds
+        assert!(
+            GradedInterface::generate(GradingLaw::Linear, 0.0, 1.0e-9, 0.0, 1.0, 1, 0.0, 1).is_ok()
+        );
+    }
+
+    #[test]
+    fn test_graded_interface_roughness_jitter_deterministic_and_scaled() {
+        let n_sites = 200usize;
+        let jitter_rms = 0.5e-9;
+        let p1 = GradedInterface::generate(
+            GradingLaw::ErrorFunction,
+            0.0,
+            2.0e-9,
+            1.0e5,
+            3.0e5,
+            n_sites,
+            jitter_rms,
+            123,
+        )
+        .expect("valid parameters");
+        let p2 = GradedInterface::generate(
+            GradingLaw::ErrorFunction,
+            0.0,
+            2.0e-9,
+            1.0e5,
+            3.0e5,
+            n_sites,
+            jitter_rms,
+            123,
+        )
+        .expect("valid parameters");
+
+        // Same seed => bit-identical jitter realization
+        assert_eq!(p1.center_offsets.len(), n_sites);
+        for (a, b) in p1.center_offsets.iter().zip(p2.center_offsets.iter()) {
+            assert_eq!(a, b);
+        }
+
+        // RMS of the realized offsets should be close to the requested jitter_rms
+        let mean_sq: f64 = p1.center_offsets.iter().map(|o| o * o).sum::<f64>() / n_sites as f64;
+        let actual_rms = mean_sq.sqrt();
+        assert!(
+            (actual_rms - jitter_rms).abs() / jitter_rms < 0.3,
+            "actual jitter RMS {} deviates too far from requested {}",
+            actual_rms,
+            jitter_rms
+        );
+
+        // An out-of-range site index gracefully falls back to the nominal center
+        let fallback = p1.value_at_site(0.0, n_sites + 1000);
+        let nominal = p1.value_at(0.0);
+        assert!((fallback - nominal).abs() < 1e-9);
     }
 }

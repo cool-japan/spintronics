@@ -4,14 +4,14 @@ build-backend = "maturin"
 
 [project]
 name = "spintronics"
-version = "0.5.0"
+version = "0.3.2"
 description = "High-performance spintronics simulation library"
 authors = [
     {name = "COOLJAPAN OU (Team Kitasan)", email = "contact@cooljapan.tech"}
 ]
 readme = {file = "PYPI_README.md", content-type = "text/markdown"}
 requires-python = ">=3.8"
-license = {text = "MIT OR Apache-2.0"}
+license = {text = "Apache-2.0"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
@@ -25,7 +25,6 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [

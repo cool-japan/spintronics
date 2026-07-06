@@ -77,8 +77,16 @@
 //! assert!(j_s.abs() > 0.0); // Nonzero spin current despite zero magnetization
 //! ```
 
+pub mod band_model;
+pub mod bloch_hamiltonian;
+pub mod kubo_berry;
 pub mod materials;
+pub mod spin_valve;
 pub mod transport;
 
+pub use band_model::{AltermagnetBandModel, Band, Spin, SpinBands};
+pub use bloch_hamiltonian::{AltermagnetSpinHamiltonian, BlochHamiltonian};
+pub use kubo_berry::KuboBerry;
 pub use materials::{Altermagnet, AltermagneticSymmetry};
+pub use spin_valve::AltermagnetSpinValve;
 pub use transport::AltermagnetTransport;

@@ -7,7 +7,9 @@
 
 use std::sync::Arc;
 
-use axum::response::IntoResponse;
+use askama::Template;
+use axum::http::StatusCode;
+use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use tower_http::cors::CorsLayer;
@@ -75,27 +77,44 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
+/// Bridge an Askama template into an axum response.
+///
+/// askama 0.13 removed the built-in web-framework integration crates
+/// (`askama_axum` is now a deprecated tombstone), so we render the template to a
+/// `String` and wrap it in `Html` ourselves instead of relying on a blanket
+/// `IntoResponse` impl.
+fn render_template<T: Template>(template: T) -> Response {
+    match template.render() {
+        Ok(body) => Html(body).into_response(),
+        Err(err) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("Template render error: {err}"),
+        )
+            .into_response(),
+    }
+}
+
 /// Home page
 async fn index() -> impl IntoResponse {
-    templates::IndexTemplate {}.into_response()
+    render_template(templates::IndexTemplate {})
 }
 
 /// LLG dynamics page
 async fn llg_page() -> impl IntoResponse {
-    templates::LlgTemplate {}.into_response()
+    render_template(templates::LlgTemplate {})
 }
 
 /// Spin pumping page
 async fn spin_pumping_page() -> impl IntoResponse {
-    templates::SpinPumpingTemplate {}.into_response()
+    render_template(templates::SpinPumpingTemplate {})
 }
 
 /// Materials explorer page
 async fn materials_page() -> impl IntoResponse {
-    templates::MaterialsTemplate {}.into_response()
+    render_template(templates::MaterialsTemplate {})
 }
 
 /// Skyrmion simulator page
 async fn skyrmion_page() -> impl IntoResponse {
-    templates::SkyrmionTemplate {}.into_response()
+    render_template(templates::SkyrmionTemplate {})
 }

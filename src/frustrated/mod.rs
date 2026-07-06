@@ -50,7 +50,9 @@
 
 pub mod kagome;
 pub mod lattice;
+pub mod rvb;
 pub mod spin_ice;
+pub mod transport;
 
 // Re-exports for convenience
 pub use kagome::{
@@ -60,7 +62,16 @@ pub use kagome::{
 pub use lattice::{
     curie_weiss_temperature, frustration_parameter, FrustratedLattice, LatticeType, Xorshift64,
 };
+pub use rvb::{
+    deconfinement_diagnostic, is_spin_liquid, spin_correlation, spinon_pair_energy,
+    structure_factor, DimerCovering, ExactDiagonalization, GroundState, RvbSolver, ShortRangeRvb,
+    SpinBasisState, SpinLiquidReport, SpinonSeparationPoint, ValenceBondState,
+};
 pub use spin_ice::{
     monopole_coulomb_interaction, monopole_creation_energy, monopole_density_factor,
     pauling_entropy, pauling_entropy_per_spin_kb, SpinIce, SpinIceParams, Tetrahedron,
+};
+pub use transport::{
+    berg_luscher_solid_angle, frustration_hall_response, scalar_spin_chirality,
+    FrustratedTransport, Plaquette,
 };

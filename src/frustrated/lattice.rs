@@ -581,6 +581,89 @@ impl FrustratedLattice {
         }
     }
 
+    /// Initialize spins to a noncoplanar "umbrella" 120-degree order
+    ///
+    /// Generalizes [`Self::set_120_degree_order`] by canting all three
+    /// 120-degree sublattice directions away from the xy-plane by a common
+    /// polar angle `polar_angle` (measured from +z), while keeping their
+    /// azimuthal directions 120 degrees apart:
+    ///
+    /// - Sublattice A: (sin θ, 0, cos θ)
+    /// - Sublattice B: (-sin θ / 2, sin θ · √3 / 2, cos θ)
+    /// - Sublattice C: (-sin θ / 2, -sin θ · √3 / 2, cos θ)
+    ///
+    /// At `polar_angle = π/2` this reduces exactly to the coplanar
+    /// [`Self::set_120_degree_order`] ground state (zero scalar spin
+    /// chirality on every plaquette, since three coplanar vectors have a
+    /// vanishing scalar triple product). At `polar_angle = 0` all three
+    /// sublattices collapse onto +z (collinear, also zero chirality). For
+    /// `0 < polar_angle < π/2` (or `π/2 < polar_angle < π`) the configuration
+    /// is genuinely noncoplanar and every elementary triangular plaquette
+    /// carries the same nonzero chirality *magnitude* -- this is the
+    /// canonical "umbrella state" of a triangular/kagome antiferromagnet
+    /// canted by an applied field along the C3 axis.
+    ///
+    /// # Lattice-dependent net chirality
+    ///
+    /// Whether the per-plaquette chirality has a *uniform sign* (giving a
+    /// nonzero net/total chirality summed over the whole lattice) or a
+    /// *staggered sign* (giving exact cancellation between the two
+    /// elementary-triangle orientations, like a Néel order canceling in net
+    /// magnetization) depends on the lattice geometry:
+    ///
+    /// - **Kagome**: the "up" (same-unit-cell) and "down"
+    ///   (corner-sharing) triangles enclose the three sublattices in the
+    ///   *same* counterclockwise cyclic order, so this umbrella state carries
+    ///   a uniform-sign chirality and a genuinely nonzero net topological
+    ///   Hall response (see `crate::frustrated::transport`).
+    /// - **Triangular**: the "up" and "down" triangles enclose the three
+    ///   sublattices in *opposite* counterclockwise cyclic order for the
+    ///   standard `(ix + 2*iy) % 3` 3-coloring used here, so their
+    ///   chiralities are equal in magnitude but opposite in sign, and the net
+    ///   chirality summed over the whole periodic lattice is exactly zero
+    ///   even though every individual plaquette is noncoplanar. A generic
+    ///   (non-uniform / disordered) noncoplanar spin texture on the same
+    ///   triangular lattice does *not* have this cancellation.
+    ///
+    /// # Arguments
+    ///
+    /// * `polar_angle` - Common canting angle θ from +z \[rad\]
+    pub fn set_umbrella_order(&mut self, polar_angle: f64) {
+        let sin_theta = polar_angle.sin();
+        let cos_theta = polar_angle.cos();
+        let sqrt3_half = 3.0_f64.sqrt() / 2.0;
+        let directions = [
+            Vector3::new(sin_theta, 0.0, cos_theta),
+            Vector3::new(-0.5 * sin_theta, sin_theta * sqrt3_half, cos_theta),
+            Vector3::new(-0.5 * sin_theta, -sin_theta * sqrt3_half, cos_theta),
+        ];
+
+        match self.lattice_type {
+            LatticeType::Triangular => {
+                let nx = self.size.0;
+                for (i, spin) in self.spins.iter_mut().enumerate() {
+                    let ix = i % nx;
+                    let iy = i / nx;
+                    // Same 3-coloring as set_120_degree_order
+                    let sub = (ix + 2 * iy) % 3;
+                    *spin = directions[sub];
+                }
+            },
+            LatticeType::Kagome => {
+                // Kagome sites are laid out sublattice-fastest (3 per cell)
+                for (i, spin) in self.spins.iter_mut().enumerate() {
+                    *spin = directions[i % 3];
+                }
+            },
+            LatticeType::Pyrochlore => {
+                // Not directly applicable, but set to canted 120-degree as approximation
+                for (i, spin) in self.spins.iter_mut().enumerate() {
+                    *spin = directions[i % 3];
+                }
+            },
+        }
+    }
+
     /// Run Metropolis Monte Carlo simulation
     ///
     /// Performs single-spin-flip Metropolis algorithm at the given temperature.
@@ -823,6 +906,57 @@ mod tests {
             (energy_per_site - (-1.5)).abs() < 0.01,
             "energy per site = {}, expected -1.5",
             energy_per_site
+        );
+    }
+
+    #[test]
+    fn test_umbrella_order_matches_120_degree_at_right_angle() {
+        // theta = pi/2 should reduce exactly to the coplanar 120-degree state
+        let mut lat_umbrella =
+            FrustratedLattice::triangular(6, 6, 1.0, 1e-10).expect("failed to create lattice");
+        lat_umbrella.set_umbrella_order(std::f64::consts::FRAC_PI_2);
+
+        let mut lat_planar =
+            FrustratedLattice::triangular(6, 6, 1.0, 1e-10).expect("failed to create lattice");
+        lat_planar.set_120_degree_order();
+
+        for (s_umbrella, s_planar) in lat_umbrella.spins.iter().zip(lat_planar.spins.iter()) {
+            assert!((s_umbrella.x - s_planar.x).abs() < 1e-12);
+            assert!((s_umbrella.y - s_planar.y).abs() < 1e-12);
+            assert!((s_umbrella.z - s_planar.z).abs() < 1e-12);
+        }
+    }
+
+    #[test]
+    fn test_umbrella_order_is_unit_normalized_and_canted() {
+        let mut lat =
+            FrustratedLattice::triangular(6, 6, 1.0, 1e-10).expect("failed to create lattice");
+        let theta = std::f64::consts::FRAC_PI_3; // 60 degrees: away from the coplanar case
+        lat.set_umbrella_order(theta);
+
+        for spin in &lat.spins {
+            assert!(
+                (spin.magnitude() - 1.0).abs() < 1e-12,
+                "umbrella spin {:?} is not unit length",
+                spin
+            );
+            assert!(
+                (spin.z - theta.cos()).abs() < 1e-12,
+                "z-component should equal cos(theta) for every sublattice"
+            );
+        }
+
+        // Sanity: with three distinct sublattices present, the configuration
+        // must be genuinely noncoplanar (not all spins identical or planar)
+        let distinct_xy: std::collections::HashSet<(i64, i64)> = lat
+            .spins
+            .iter()
+            .map(|s| ((s.x * 1e6).round() as i64, (s.y * 1e6).round() as i64))
+            .collect();
+        assert!(
+            distinct_xy.len() >= 3,
+            "expected 3 distinct sublattice directions, got {}",
+            distinct_xy.len()
         );
     }
 

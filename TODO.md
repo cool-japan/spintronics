@@ -1,10 +1,39 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.3.1
-**Last Updated**: 2026-06-10 - v0.3.1 released
-**Status**: 1829 lib + 111 doc tests passing, ~95K lines (Rust code: ~80K+)
+**Version**: 0.3.2
+**Last Updated**: 2026-07-06 - v0.3.2 in development
+**Status**: 1977 lib + 65 proptest passing = 2042 nextest (main crate, `cargo nextest run --all-features --workspace`) + 118 doctests passing, 5 ignored (`cargo test --all-features --doc`), 0 warnings, ~101K lines (Rust code: ~79.5K+)
 
 ---
+
+## Stubs to implement (added 2026-06-12 by /cooljapan-stub-check)
+
+- [x] `spintronics`: `src/magnon/nonlinear.rs` — replaced placeholder pump_h (0.1 mT) with the
+  physics-derived degenerate parametric **threshold field** `h_th = √(γ_s·γ_i)/κ = α·ω_p/(γ_gyro·Ms)`
+  in `ParametricAmplification::degenerate_from_yig`. Added the `with_supercriticality(ξ)` builder so
+  the preset (which now sits at marginal stability) can be moved to any operating point ξ = h_p/h_th.
+  3 new tests (threshold identity, α/ω_p/Ms scaling, supercriticality operating point); example
+  `nonlinear_magnon_suhl` updated to twice-critical operation. (2026-06-22, P2, done)
+
+### Build hygiene fixes (2026-06-22)
+- [x] Added `required-features = ["autodiff"]` to 7 previously-ungated autodiff examples
+  (`autodiff_parameter_fitting`, `neural_exchange_training`, `pinn_llg_solver`, `equivariant_nn_demo`,
+  `active_learning_demo`, `graph_nn_lattice`, `bayesian_opt_materials`) so `cargo build --examples`
+  no longer fails under default features.
+- [x] Fixed dead-code warning for `temp_path` in `data_export_formats` example via a precise
+  `cfg_attr(not(any(feature = "vti"/"netcdf"/"zarr")), allow(dead_code))`.
+- Verified: `cargo clippy --all-targets -- -D warnings` clean for both default and `autodiff` features.
+
+### Binary OVF I/O implemented (2026-06-22 by /stub-check)
+- [x] `spintronics`: `src/io/ovf.rs` — implemented binary OVF read/write, replacing the
+  `Err("Binary OVF format not yet implemented")` stub. Supports `Binary4_1_0` (OVF 1.0, **big-endian**),
+  `Binary4_2_0` and `Binary8_2_0` (OVF 2.0, **little-endian**) per the OOMMF OVF spec; control/check
+  values `1234567.0_f32` / `123456789012345.0_f64` validated on read to catch byte-order mismatch;
+  byte-oriented reader with truncation guards (text path unchanged). Header writing refactored into
+  shared `write_header_1_0/2_0` helpers. +5 round-trip/error tests (io::ovf now 9 tests). File 1162 lines.
+- Remaining intentional/blocked stubs (NOT implemented, correctly so): CUDA backend (`src/gpu/cuda.rs`,
+  needs `cudarc` + GPU hardware → v1.0.0 roadmap); HDF5 feature-off fallback (`src/visualization/hdf5.rs`,
+  correct feature-gating, full impl active under `--features hdf5`).
 
 ## v0.2.0 - COMPLETE (December 2025)
 
@@ -56,63 +85,130 @@
   - [x] Velocity Verlet variant for spin dynamics — `Yoshida4`, `ForestRuth`
   - [x] Partitioned Runge-Kutta methods
 - [x] Semi-implicit methods for stiff problems — `SemiImplicit`
-  - [ ] Implicit midpoint with Newton iteration (deferred)
-  - [ ] Crank-Nicolson for diffusion-dominated systems (deferred)
+  - [x] Implicit midpoint with Newton iteration (deferred) — shipped: src/dynamics/integrators/implicit_midpoint.rs (test: test_newton_converges_quickly)
+  - [x] Crank-Nicolson for diffusion-dominated systems (deferred) — shipped: src/dynamics/integrators/crank_nicolson.rs (test: test_unconditional_stability_large_dt)
 - [ ] Spectral methods for periodic systems (deferred to v0.4.0)
 
 ### Priority 2: Spin Wave Theory
 - [x] Analytical dispersion relations for thin films — `spinwave` module
 - [x] Magnon dispersion and band structure — `spin_wave_dispersion` example
-- [ ] Damon-Eshbach modes for in-plane magnetized films (deferred)
-- [ ] Backward volume modes for perpendicular magnetization (deferred)
-- [ ] Surface spin waves in semi-infinite media (deferred)
-- [ ] Spin wave quantization in nanostructures (deferred)
-- [ ] Mode decomposition and spectral analysis (deferred)
+- [x] Damon-Eshbach modes for in-plane magnetized films (deferred) — shipped: src/spinwave/damon_eshbach.rs (test: test_nonreciprocity_positive)
+- [x] Backward volume modes for perpendicular magnetization (deferred) — shipped: src/spinwave/bvmsw.rs (test: test_backward_group_velocity_small_k)
+- [x] Surface spin waves in semi-infinite media (deferred) — shipped: src/spinwave/surface.rs, semi_infinite_de.rs (test: test_penetration_depth_decreases_with_k)
+- [x] Spin wave quantization in nanostructures (deferred) — shipped: src/spinwave/quantization.rs, nanodisk.rs (analytic stripe/disk/rectangle + nanodisk radial-azimuthal quantization)
+- [x] Mode decomposition and spectral analysis (deferred) — shipped: src/magnon/spectral.rs (test: test_mode_decomposition_uniform_field)
 
 ### Priority 3: Altermagnets
 - [x] RuO2 material model and parameters — `altermagnet` module, `altermagnet_ruo2` example
 - [x] Spin splitter effect — implemented in `altermagnet`
 - [x] Anomalous Hall effect in altermagnets — implemented
-- [ ] CrSb material model (deferred)
-- [ ] MnTe material model (deferred)
-- [ ] Giant magnetoresistance without ferromagnetism (deferred)
+- [x] CrSb material model (deferred) (done 2026-07-05)
+  - **Goal:** Momentum-resolved electronic altermagnet band model with per-spin block-diagonal Hamiltonians, closed-form Berry curvature, Fermi-sea crystal/spin Hall (correctly zero without spin-orbit coupling, nonzero and Neel-sign-flipping with optional SOC), and an altermagnet spin-valve GMR-without-ferromagnetism device. Full design in Batch C1 of the woolly-prancing-squid planning notes (local Claude Code plan file, outside this repo).
+  - **Design:** Collinear Neel order along z, no SOC by default so spin is block-diagonal; per-spin H_sigma(k) = eps0(k)*tau0 + d_sigma(k).tau with d_sigma = (Re gamma, -Im gamma, eps_a(k) - sigma*M), altermagnetic form factor eps_a(k) = t_AM*(ak)^2*cos(n*(phi-phi_Neel)) with n = AltermagneticSymmetry::harmonic_order() (d/g/i = 2/4/6). SOC (when enabled) enters via a mixed-k-parity structure factor: b_x/b_z odd in k, b_y even in k (required by the Theta=i*tau_y*K operator identity Theta H(k;M) Theta^-1 = H(-k;-M); a fully-odd b_y would instead make the Neel-reversal Hall response even, incorrectly vanishing). New BlochHamiltonian trait (src/altermagnet/bloch_hamiltonian.rs: `hamiltonian_at`/`n_bands`/`diagonalize_at`) implemented for a per-spin sector via `AltermagnetSpinHamiltonian`, both paths (closed-form eigenvalues and the explicit 2x2 matrix) built from the same `spin_d_vector`/`eps0` so they cannot diverge; plus a standalone KuboBerry finite-difference cross-check calculator (src/altermagnet/kubo_berry.rs) built purely against the new trait. src/topomagnon/* shared code (BerryCurvature, MagnonBandModel, Chern/Wilson/axion/edge-modes) is NOT modified, to avoid Phase-3 test blast radius. Correct symmetry invariant is spin-group E_up(k) = E_down(R k), where R is a proper rotation by pi/n (n = harmonic_order()) -- generalizes to every harmonic order, NOT just the d-wave-specific (kx,ky)->(ky,kx) swap and NOT E_up(k) = E_down(-k).
+  - **Files:** src/altermagnet/band_model.rs (new), src/altermagnet/bloch_hamiltonian.rs (new: BlochHamiltonian trait + AltermagnetSpinHamiltonian), src/altermagnet/kubo_berry.rs (new: KuboBerry cross-check calculator), src/altermagnet/spin_valve.rs (new), src/altermagnet/mod.rs (+exports), src/prelude.rs (+exports for AltermagnetBandModel/Band/Spin/SpinBands only -- BlochHamiltonian/AltermagnetSpinHamiltonian/KuboBerry are reached via `spintronics::altermagnet::*`, not re-exported from the prelude), Cargo.toml (+examples), examples/altermagnet_band_structure.rs, examples/altermagnet_spin_valve.rs, tests/property_altermagnet.rs (new)
+  - **Prerequisites:** none - scalar Altermagnet/AltermagneticSymmetry presets (materials.rs), MagnonBandModel/BerryCurvature patterns (reference only, not modified), and MagneticMultilayer GMR template (multilayer.rs) all already shipped
+  - **Tests:** Hermiticity of H_sigma(k) (unit + property test, via the BlochHamiltonian trait); spin-degeneracy when M=0 or when t_AM=0 (latter = ordinary AFM limit); nodal lines at node_angles(); each spin even in k; spin-group relation E_up(k)=E_down(Rk) via the pi/n rotation, verified for d-wave (unit) and generalized to g-wave/i-wave (unit + property, any harmonic order); Berry curvature band-sum-to-zero (Omega_Lower(k)+Omega_Upper(k)=0, any spin) and oddness under the combined spin+momentum+Neel-order inversion Omega_sigma(k;M) = -Omega_{-sigma}(-k;-M) -- the naive same-spin Omega_sigma(k)=-Omega_sigma(-k) does NOT hold in general once delta_hyb and SOC are both nonzero (verified false by direct computation, residual comparable to the curvature itself), so the combined-flip form -- a direct consequence of the Theta=i*tau_y*K operator identity -- is what is tested; charge Hall approx 0 at lambda_soc=0, nonzero and sign-flipping under Neel reversal at lambda_soc!=0; zero net spin polarization (exact for d-wave at any parameters/Fermi energy/Neel angle; MnTe and CrSb presets individually asserted at their default Fermi energy); closed-form vs KuboBerry finite-difference cross-check agreement (relative agreement with SOC on, both vanish together with SOC off); GMR-without-FM: zero net magnetization in every configuration plus angle-dependent resistance
+  - **Risk:** highest of the three hard-physics modules (new trait, new physics domain, Hall-transport correctness subtlety) - mitigated by the BlochHamiltonian/KuboBerry cross-check and the invariant test battery above (property_altermagnet.rs plus band_model.rs/bloch_hamiltonian.rs/kubo_berry.rs unit tests); must NOT modify (and does not modify) src/topomagnon/* shared code
+- [x] MnTe material model (deferred) (done 2026-07-05)
+  - **Goal:** Momentum-resolved electronic altermagnet band model with per-spin block-diagonal Hamiltonians, closed-form Berry curvature, Fermi-sea crystal/spin Hall (correctly zero without spin-orbit coupling, nonzero and Neel-sign-flipping with optional SOC), and an altermagnet spin-valve GMR-without-ferromagnetism device. Full design in Batch C1 of the woolly-prancing-squid planning notes (local Claude Code plan file, outside this repo).
+  - **Design:** Collinear Neel order along z, no SOC by default so spin is block-diagonal; per-spin H_sigma(k) = eps0(k)*tau0 + d_sigma(k).tau with d_sigma = (Re gamma, -Im gamma, eps_a(k) - sigma*M), altermagnetic form factor eps_a(k) = t_AM*(ak)^2*cos(n*(phi-phi_Neel)) with n = AltermagneticSymmetry::harmonic_order() (d/g/i = 2/4/6). SOC (when enabled) enters via a mixed-k-parity structure factor: b_x/b_z odd in k, b_y even in k (required by the Theta=i*tau_y*K operator identity Theta H(k;M) Theta^-1 = H(-k;-M); a fully-odd b_y would instead make the Neel-reversal Hall response even, incorrectly vanishing). New BlochHamiltonian trait (src/altermagnet/bloch_hamiltonian.rs: `hamiltonian_at`/`n_bands`/`diagonalize_at`) implemented for a per-spin sector via `AltermagnetSpinHamiltonian`, both paths (closed-form eigenvalues and the explicit 2x2 matrix) built from the same `spin_d_vector`/`eps0` so they cannot diverge; plus a standalone KuboBerry finite-difference cross-check calculator (src/altermagnet/kubo_berry.rs) built purely against the new trait. src/topomagnon/* shared code (BerryCurvature, MagnonBandModel, Chern/Wilson/axion/edge-modes) is NOT modified, to avoid Phase-3 test blast radius. Correct symmetry invariant is spin-group E_up(k) = E_down(R k), where R is a proper rotation by pi/n (n = harmonic_order()) -- generalizes to every harmonic order, NOT just the d-wave-specific (kx,ky)->(ky,kx) swap and NOT E_up(k) = E_down(-k).
+  - **Files:** src/altermagnet/band_model.rs (new), src/altermagnet/bloch_hamiltonian.rs (new: BlochHamiltonian trait + AltermagnetSpinHamiltonian), src/altermagnet/kubo_berry.rs (new: KuboBerry cross-check calculator), src/altermagnet/spin_valve.rs (new), src/altermagnet/mod.rs (+exports), src/prelude.rs (+exports for AltermagnetBandModel/Band/Spin/SpinBands only -- BlochHamiltonian/AltermagnetSpinHamiltonian/KuboBerry are reached via `spintronics::altermagnet::*`, not re-exported from the prelude), Cargo.toml (+examples), examples/altermagnet_band_structure.rs, examples/altermagnet_spin_valve.rs, tests/property_altermagnet.rs (new)
+  - **Prerequisites:** none - scalar Altermagnet/AltermagneticSymmetry presets (materials.rs), MagnonBandModel/BerryCurvature patterns (reference only, not modified), and MagneticMultilayer GMR template (multilayer.rs) all already shipped
+  - **Tests:** Hermiticity of H_sigma(k) (unit + property test, via the BlochHamiltonian trait); spin-degeneracy when M=0 or when t_AM=0 (latter = ordinary AFM limit); nodal lines at node_angles(); each spin even in k; spin-group relation E_up(k)=E_down(Rk) via the pi/n rotation, verified for d-wave (unit) and generalized to g-wave/i-wave (unit + property, any harmonic order); Berry curvature band-sum-to-zero (Omega_Lower(k)+Omega_Upper(k)=0, any spin) and oddness under the combined spin+momentum+Neel-order inversion Omega_sigma(k;M) = -Omega_{-sigma}(-k;-M) -- the naive same-spin Omega_sigma(k)=-Omega_sigma(-k) does NOT hold in general once delta_hyb and SOC are both nonzero (verified false by direct computation, residual comparable to the curvature itself), so the combined-flip form -- a direct consequence of the Theta=i*tau_y*K operator identity -- is what is tested; charge Hall approx 0 at lambda_soc=0, nonzero and sign-flipping under Neel reversal at lambda_soc!=0; zero net spin polarization (exact for d-wave at any parameters/Fermi energy/Neel angle; MnTe and CrSb presets individually asserted at their default Fermi energy); closed-form vs KuboBerry finite-difference cross-check agreement (relative agreement with SOC on, both vanish together with SOC off); GMR-without-FM: zero net magnetization in every configuration plus angle-dependent resistance
+  - **Risk:** highest of the three hard-physics modules (new trait, new physics domain, Hall-transport correctness subtlety) - mitigated by the BlochHamiltonian/KuboBerry cross-check and the invariant test battery above (property_altermagnet.rs plus band_model.rs/bloch_hamiltonian.rs/kubo_berry.rs unit tests); must NOT modify (and does not modify) src/topomagnon/* shared code
+- [x] Giant magnetoresistance without ferromagnetism (deferred) (done 2026-07-05)
+  - **Goal:** Momentum-resolved electronic altermagnet band model with per-spin block-diagonal Hamiltonians, closed-form Berry curvature, Fermi-sea crystal/spin Hall (correctly zero without spin-orbit coupling, nonzero and Neel-sign-flipping with optional SOC), and an altermagnet spin-valve GMR-without-ferromagnetism device. Full design in Batch C1 of the woolly-prancing-squid planning notes (local Claude Code plan file, outside this repo).
+  - **Design:** Collinear Neel order along z, no SOC by default so spin is block-diagonal; per-spin H_sigma(k) = eps0(k)*tau0 + d_sigma(k).tau with d_sigma = (Re gamma, -Im gamma, eps_a(k) - sigma*M), altermagnetic form factor eps_a(k) = t_AM*(ak)^2*cos(n*(phi-phi_Neel)) with n = AltermagneticSymmetry::harmonic_order() (d/g/i = 2/4/6). SOC (when enabled) enters via a mixed-k-parity structure factor: b_x/b_z odd in k, b_y even in k (required by the Theta=i*tau_y*K operator identity Theta H(k;M) Theta^-1 = H(-k;-M); a fully-odd b_y would instead make the Neel-reversal Hall response even, incorrectly vanishing). New BlochHamiltonian trait (src/altermagnet/bloch_hamiltonian.rs: `hamiltonian_at`/`n_bands`/`diagonalize_at`) implemented for a per-spin sector via `AltermagnetSpinHamiltonian`, both paths (closed-form eigenvalues and the explicit 2x2 matrix) built from the same `spin_d_vector`/`eps0` so they cannot diverge; plus a standalone KuboBerry finite-difference cross-check calculator (src/altermagnet/kubo_berry.rs) built purely against the new trait. src/topomagnon/* shared code (BerryCurvature, MagnonBandModel, Chern/Wilson/axion/edge-modes) is NOT modified, to avoid Phase-3 test blast radius. Correct symmetry invariant is spin-group E_up(k) = E_down(R k), where R is a proper rotation by pi/n (n = harmonic_order()) -- generalizes to every harmonic order, NOT just the d-wave-specific (kx,ky)->(ky,kx) swap and NOT E_up(k) = E_down(-k).
+  - **Files:** src/altermagnet/band_model.rs (new), src/altermagnet/bloch_hamiltonian.rs (new: BlochHamiltonian trait + AltermagnetSpinHamiltonian), src/altermagnet/kubo_berry.rs (new: KuboBerry cross-check calculator), src/altermagnet/spin_valve.rs (new), src/altermagnet/mod.rs (+exports), src/prelude.rs (+exports for AltermagnetBandModel/Band/Spin/SpinBands only -- BlochHamiltonian/AltermagnetSpinHamiltonian/KuboBerry are reached via `spintronics::altermagnet::*`, not re-exported from the prelude), Cargo.toml (+examples), examples/altermagnet_band_structure.rs, examples/altermagnet_spin_valve.rs, tests/property_altermagnet.rs (new)
+  - **Prerequisites:** none - scalar Altermagnet/AltermagneticSymmetry presets (materials.rs), MagnonBandModel/BerryCurvature patterns (reference only, not modified), and MagneticMultilayer GMR template (multilayer.rs) all already shipped
+  - **Tests:** Hermiticity of H_sigma(k) (unit + property test, via the BlochHamiltonian trait); spin-degeneracy when M=0 or when t_AM=0 (latter = ordinary AFM limit); nodal lines at node_angles(); each spin even in k; spin-group relation E_up(k)=E_down(Rk) via the pi/n rotation, verified for d-wave (unit) and generalized to g-wave/i-wave (unit + property, any harmonic order); Berry curvature band-sum-to-zero (Omega_Lower(k)+Omega_Upper(k)=0, any spin) and oddness under the combined spin+momentum+Neel-order inversion Omega_sigma(k;M) = -Omega_{-sigma}(-k;-M) -- the naive same-spin Omega_sigma(k)=-Omega_sigma(-k) does NOT hold in general once delta_hyb and SOC are both nonzero (verified false by direct computation, residual comparable to the curvature itself), so the combined-flip form -- a direct consequence of the Theta=i*tau_y*K operator identity -- is what is tested; charge Hall approx 0 at lambda_soc=0, nonzero and sign-flipping under Neel reversal at lambda_soc!=0; zero net spin polarization (exact for d-wave at any parameters/Fermi energy/Neel angle; MnTe and CrSb presets individually asserted at their default Fermi energy); closed-form vs KuboBerry finite-difference cross-check agreement (relative agreement with SOC on, both vanish together with SOC off); GMR-without-FM: zero net magnetization in every configuration plus angle-dependent resistance
+  - **Risk:** highest of the three hard-physics modules (new trait, new physics domain, Hall-transport correctness subtlety) - mitigated by the BlochHamiltonian/KuboBerry cross-check and the invariant test battery above (property_altermagnet.rs plus band_model.rs/bloch_hamiltonian.rs/kubo_berry.rs unit tests); must NOT modify (and does not modify) src/topomagnon/* shared code
 
 ### Priority 4: Orbitronics
 - [x] Orbital Hall effect — `orbitronics` module
 - [x] Orbital torques — implemented
 - [x] Orbital-to-spin conversion — implemented
-- [ ] d-orbital magnetism (deferred)
+- [x] d-orbital magnetism (deferred) (done 2026-07-05)
+  - **Goal:** Local d-orbital moment model: crystal-field splitting (octahedral/tetrahedral/tetragonal), Hund's-rule free-ion terms, high-spin/low-spin, orbital quenching plus SOC-driven unquenching, effective moments, ~12 preset ions. Full design in Batch C2 of the woolly-prancing-squid planning notes (local Claude Code plan file, outside this repo).
+  - **Design:** Build L_x,L_y,L_z operators in the complex |l=2,m> basis (exact ladder operators) and rotate to the real cubic-harmonic basis via a fixed unitary U - do not hand-type the real matrices in code (use them only as test fixtures). Diagonal crystal-field Hamiltonians for O_h (t2g -0.4*10Dq, eg +0.6*10Dq), T_d (inverted), tetragonal (Ballhausen Ds/Dt). H_SOC = lambda*L.S on the 10x10 orbital-tensor-spin space. Documented fidelity boundary: single-configuration ligand-field + atomic Hund's rules + single-particle SOC, NOT full many-electron multiplet/Tanabe-Sugano CI.
+  - **Files:** src/orbitronics/crystal_field.rs (new - operators), src/orbitronics/d_orbital_moment.rs (new - CrystalFieldModel, Hund's rules, moments, presets), src/orbitronics/mod.rs (+exports), examples/d_orbital_local_moments.rs, Cargo.toml (+example)
+  - **Prerequisites:** none - OrbitalHallMaterial exists as a loose one-accessor bridge only, no type coupling
+  - **Tests:** full Hund's-rule d1-d9 (S,L,J) table including spot checks (d5 to S=5/2,L=0; d2 to S=1,L=3; d7 to S=3/2,L=3); electron-hole symmetry; Lande g-factor; spin-only mu_eff textbook values (Fe3+ 5.92, Ni2+ 2.83, Cr3+ 3.87); operator Hermiticity, [L_x,L_y]=iL_z commutator, L^2=6*I, L_z spectrum {-2..2}; orbital quenching for A/E ground terms (zero diagonal L_i); SOC-driven unquenching for T ground terms; 10Dq to infinity forces low-spin; preset ion table matches expected S/L/mu values
+  - **Risk:** moderate - self-contained new module, no shared-code touch, but real risk is physics-correctness (operator algebra bugs) rather than integration blast radius
 
 ### Priority 5: Frustrated Magnets
 - [x] Spin ice models — `frustrated` module, `spin_ice_monopoles` example
 - [x] Kagome lattice magnets — implemented in `frustrated`
-- [ ] Spin liquids (resonating valence bond states) (deferred)
-- [ ] Geometric frustration effects on transport (deferred)
+- [x] Spin liquids (resonating valence bond states) (deferred) (done 2026-07-05)
+  - **Goal:** Resonating-valence-bond quantum module: dimer-covering enumeration, Sutherland loop-counting overlaps, VB-basis Heisenberg matrix elements, generalized-eigenproblem ground state, exact-diagonalization benchmark (dense + Lanczos), spinon/deconfinement diagnostics. Full design in Batch C3 of the woolly-prancing-squid planning notes (local Claude Code plan file, outside this repo).
+  - **Design:** Abstract from_bonds(num_sites, bonds, J) API (open validation clusters, sign-free) plus from_lattice(&FrustratedLattice) (classical lattices use periodic BCs that would distort tiny-cluster matchings). Bipartite (positive-sign) path first, then non-bipartite signs (no Monte-Carlo sign problem since this is exact small-D linear algebra). CMatrix::MAX_DIM=64 drives the design: VB basis stays on CMatrix (cap D<=64, explicit error carrying the measured covering count if exceeded - never a silent cap); a matrix-free Lanczos S_z=0 exact-diagonalization backend (N<=16) is required for the benchmark since dense CMatrix ED already exceeds MAX_DIM at N=8 (C(8,4)=70>64). All matrices are real symmetric.
+  - **Files:** src/frustrated/rvb/mod.rs, dimer.rs, valence_bond.rs, solver.rs, exact.rs, spinon.rs, diagnostics.rs (all new), src/frustrated/mod.rs (+exports), examples/rvb_triangular_spin_liquid.rs, Cargo.toml (+example)
+  - **Prerequisites:** none - FrustratedLattice (neighbors/spins/positions) and CMatrix::hermitian_eigendecomposition already shipped as the foundation
+  - **Tests:** 2-site exact singlet E=-3J/4; 4-ring exact E=-2J matching a worked S/H example; covering counts vs known combinatorics (4-ring=2, 2x4 ladder=5, 4x4 square=36); loop-rule overlaps vs direct spin-basis inner products including a non-bipartite cluster; total spin S_tot^2 approx 0; variational ordering E_equal_amplitude >= E_ground_state >= E_exact_diagonalization; dense-vs-Lanczos ED agreement; explicit error (not silent truncation) when covering count exceeds MAX_VB_BASIS=64
+  - **Risk:** moderate-high - most numerically subtle (overcomplete non-orthogonal basis, generalized eigenproblem, non-bipartite sign bookkeeping) of the three hard modules; self-contained new subtree, no shared-code touch
+  - **Shipped:** src/frustrated/rvb/{mod,dimer,valence_bond,solver,exact,spinon,diagnostics}.rs (53 tests), examples/rvb_triangular_spin_liquid.rs. Bonus fix: while cross-checking exact.rs's total-spin-squared invariant, found and fixed a pre-existing sign/phase bug in `CMatrix::hermitian_eigendecomposition` (src/math/matrix.rs) — eigenvalues were always correct, but eigenvectors were wrong for any non-diagonal matrix of size >=3 (never caught since existing tests only checked eigenvalue correctness or eigenvector orthonormality, not the eigenvalue equation itself, beyond n<=2). Replaced the Householder+QL implementation with a cyclic Jacobi algorithm (phase pre-rotation + real 2x2 rotation per sweep step), verified to machine precision on real and complex Hermitian cases up to n=16; full workspace suite (1989 tests) passes after the fix, including several other consumer modules (topomagnon band models, orbitronics, hopfion stability modes) that were silently relying on eigenvectors this whole time.
+- [x] Geometric frustration effects on transport (deferred) (done 2026-07-05) -- shipped: src/frustrated/transport.rs (FrustratedTransport, plaquette chirality/solid-angle/emergent-field), src/frustrated/lattice.rs (set_umbrella_order), src/effect/topological_hall.rs (+emergent_field_from_solid_angle, +hall_resistivity_from_charge_density) (test: test_kagome_umbrella_gives_nonzero_uniform_sign_chirality_and_hall_response)
+  - **Goal:** Wire the scalar spin-chirality of a FrustratedLattice configuration into the existing topological-Hall transport machinery, giving a working chirality-to-emergent-field-to-Hall-response pipeline for frustrated (triangular/kagome/pyrochlore) spin textures.
+  - **Design:** New function/struct (e.g. FrustratedTransport or a free fn frustration_hall_response) computing per-plaquette scalar chirality chi = S_i . (S_j x S_k) from FrustratedLattice's spins/neighbors/positions, converting to an emergent field, and feeding src/effect/topological_hall.rs's TopologicalHallEffect.
+  - **Files:** src/frustrated/lattice.rs or new src/frustrated/transport.rs, src/effect/topological_hall.rs (extend, additive only), src/frustrated/mod.rs, examples/frustrated_transport.rs
+  - **Prerequisites:** none - both sides (FrustratedLattice, TopologicalHallEffect) already shipped
+  - **Tests:** zero Hall response for a coplanar spin configuration; nonzero for a noncoplanar 120-degree/umbrella configuration; sign reversal under chirality reversal; consistency with existing topological_hall.rs conventions
+  - **Risk:** low-moderate - touches effect/topological_hall.rs, but additively (new entry point, no signature changes to existing public API)
 
 ### Priority 6: Hopfions
 - [x] 3D topological soliton structure — `texture/hopfion_dynamics.rs`
 - [x] Hopf index computation — Berry-connection (Whitehead) method
 - [x] Current-driven dynamics — per-site LLG RK4 on 3D grid
-- [ ] Stability analysis (deferred)
+- [x] Stability analysis (deferred) (done 2026-07-05)
+  - **Goal:** Dynamical/eigenmode linear-stability analysis for a relaxed hopfion (the normal-mode spectrum / growth rates around equilibrium), complementing the already-shipped energy-landscape (collapse/expansion-radius) stability in src/texture/hopfion.rs.
+  - **Design:** A linear-stability analyzer computing the Hessian of the total-energy functional (HopfionEnergy in hopfion.rs) about a relaxed configuration via finite differences, then diagonalizing it (crate::math::CMatrix::hermitian_eigendecomposition) to get the normal-mode eigenvalue spectrum.
+  - **Files:** src/texture/hopfion.rs (extend) or new src/texture/hopfion_stability_modes.rs if hopfion.rs would cross 2000 lines (check with rslines/wc -l first; split via splitrs if needed)
+  - **Prerequisites:** none - HopfionEnergy and HopfionStability (energy-landscape variant) already shipped as the foundation
+  - **Tests:** positive-definite eigenvalue spectrum at a genuinely stable radius; at least one negative eigenvalue past the known collapse-radius boundary (from existing find_stability_boundaries); zero-modes corresponding to translation invariance (within numerical tolerance)
+  - **Risk:** low-moderate - check hopfion.rs current line count before extending; split via splitrs if it would cross 2000 lines
 
 ### Priority 7: Magnon BEC & Spin Density Waves
 - [x] Magnon Bose-Einstein condensation — `magnon/bec`, `magnon_bec` example
-- [ ] Spin density wave formation and dynamics (deferred)
-- [ ] Helical magnets and spirals (deferred)
+- [x] Spin density wave formation and dynamics (deferred) (done 2026-07-05) — shipped: `src/magnon/spin_density_wave.rs` (`SdwRelaxationDynamics`, test: `test_sdw_relaxation_converges_to_self_consistent_gap`)
+  - **Goal:** Time-domain evolution for the spin-density-wave order parameter (amplitude + phase), relaxing toward the existing self-consistent BCS-like gap, complementing the already-shipped static/thermodynamic SDW physics.
+  - **Design:** New time-stepping method(s) on or alongside SpinDensityWave/SdwGapSolver (src/magnon/spin_density_wave.rs) implementing TDGL-style relaxational dynamics: d(amplitude)/dt proportional to -dF/d(amplitude) toward the self-consistent gap at temperature T, plus phase dynamics if driven.
+  - **Files:** src/magnon/spin_density_wave.rs (extend)
+  - **Prerequisites:** none - static SDW machinery (order parameter, gap solver, energies) already shipped and is the foundation
+  - **Tests:** relaxation converges to the known self-consistent equilibrium gap value; free energy monotonically decreases during relaxation; amplitude vanishes continuously as T approaches T_N
+  - **Risk:** low - additive extension of an existing, well-tested module
+- [x] Helical magnets and spirals (deferred) — shipped: src/noncollinear/spiral.rs (test: test_helical_gives_no_polarization)
 - [ ] Magnon-magnon interactions (deferred)
 
 ### Priority 8: Magnetoelastic Coupling (Straintronics)
 - [x] Magnetoelastic coupling tensor — `mech/magnetoelastic`
 - [x] Strain-induced anisotropy — implemented
-- [ ] Piezoelectric control of magnetism (deferred)
-- [ ] Surface acoustic wave (SAW) driven spin dynamics (deferred)
+- [x] Piezoelectric control of magnetism (deferred) (done 2026-07-05) — shipped: src/mech/strain_driven_dynamics.rs (StrainDrivenLlgDriver, PiezoAcStrainDrive, test: test_piezo_driven_dynamics_evolves_and_conserves_norm)
+  - **Goal:** A time-domain LLG driver coupling the existing periodic strain fields (SAW: SawSource::strain_at_point(x,z,t); piezo: PiezoelectricSubstrate/StraintronicDevice strain) into a magnetoelastic effective field that drives real magnetization dynamics, complementing the shipped steady-state/analytical SAW and piezo-strain models.
+  - **Design:** New driver struct/function coupling strain(t) to magnetoelastic anisotropy field (reusing MagnetoelasticMaterial's villari_effective_field_vector / stress_induced_anisotropy machinery in src/mech/magnetoelastic.rs) to time-stepped LLG integration (reusing existing dynamics::llg / integrators infrastructure) over a driven simulation window.
+  - **Files:** src/mech/saw.rs (extend) and/or new src/mech/strain_driven_dynamics.rs, integrating with src/dynamics/llg.rs and existing integrators
+  - **Prerequisites:** none - all referenced components (SawSource, MagnetoelasticMaterial, LLG integrators) already shipped
+  - **Tests:** resonant magnetization response at the acoustic-FMR condition (acoustic_fmr_condition_h_ext); suppressed response off-resonance; net energy pumping into the magnetic subsystem over a drive cycle consistent with resonant_absorption()
+  - **Risk:** moderate - integrates across two subsystems (mech/ and dynamics/); keep the coupling as a new entry point, not a modification of either subsystem's existing public API
+- [x] Surface acoustic wave (SAW) driven spin dynamics (deferred) (done 2026-07-05) — shipped: src/mech/strain_driven_dynamics.rs (StrainDrivenLlgDriver::from_saw_magnetoacoustics, SawStrainDrive, test: test_resonant_response_exceeds_off_resonant)
+  - **Goal:** A time-domain LLG driver coupling the existing periodic strain fields (SAW: SawSource::strain_at_point(x,z,t); piezo: PiezoelectricSubstrate/StraintronicDevice strain) into a magnetoelastic effective field that drives real magnetization dynamics, complementing the shipped steady-state/analytical SAW and piezo-strain models.
+  - **Design:** New driver struct/function coupling strain(t) to magnetoelastic anisotropy field (reusing MagnetoelasticMaterial's villari_effective_field_vector / stress_induced_anisotropy machinery in src/mech/magnetoelastic.rs) to time-stepped LLG integration (reusing existing dynamics::llg / integrators infrastructure) over a driven simulation window.
+  - **Files:** src/mech/saw.rs (extend) and/or new src/mech/strain_driven_dynamics.rs, integrating with src/dynamics/llg.rs and existing integrators
+  - **Prerequisites:** none - all referenced components (SawSource, MagnetoelasticMaterial, LLG integrators) already shipped
+  - **Tests:** resonant magnetization response at the acoustic-FMR condition (acoustic_fmr_condition_h_ext); suppressed response off-resonance; net energy pumping into the magnetic subsystem over a drive cycle consistent with resonant_absorption()
+  - **Risk:** moderate - integrates across two subsystems (mech/ and dynamics/); keep the coupling as a new entry point, not a modification of either subsystem's existing public API
 
 ### Priority 9: Advanced Disorder & Defects
-- [ ] Random anisotropy model (deferred to v0.4.0)
-- [ ] Grain boundary effects in polycrystalline films (deferred)
-- [ ] Point defects and pinning sites (deferred)
-- [ ] Surface roughness modeling (deferred)
-- [ ] Inhomogeneous material parameters (graded interfaces) (deferred)
+- [x] Random anisotropy model (deferred to v0.4.0) — shipped: src/material/random_anisotropy.rs (test: test_imry_ma_length_positive)
+- [x] Grain boundary effects in polycrystalline films (deferred) — shipped: src/material/defects.rs (GrainBoundary), src/material/disorder.rs (GrainStructure)
+- [x] Point defects and pinning sites (deferred) — shipped: src/material/defects.rs (DefectSite/DepinningParams, test: coercivity_estimate)
+- [x] Surface roughness modeling (deferred) — shipped: src/material/disorder.rs (SurfaceRoughness::generate, test: actual_rms)
+- [x] Inhomogeneous material parameters (graded interfaces) (deferred) (done 2026-07-05) — shipped: src/material/disorder.rs (GradedInterface::generate, GradingLaw, test: test_graded_interface_barycenter_symmetric_profile)
+  - **Goal:** A GradedInterface model producing spatially-varying Ms/A/K material-parameter profiles across an interface region (linear, exponential, and error-function grading laws), sampled on a simulation grid.
+  - **Design:** New struct in src/material/disorder.rs following the sibling generate(...) -> Result<Self> + seeded Xorshift64 pattern used by SurfaceRoughness/GrainStructure. Grading law enum (Linear, Exponential, ErrorFunction) parameterized by transition width and endpoint values; a sampling method returning the parameter value at a given position/depth.
+  - **Files:** src/material/disorder.rs (extend), src/material/mod.rs (re-export), examples/graded_interface.rs
+  - **Prerequisites:** none - sibling disorder infra already shipped
+  - **Tests:** monotonic profile across the transition; correct endpoint values at the domain boundary; correct mean/barycenter for symmetric profiles; invalid-parameter rejection (negative width, non-finite bounds)
+  - **Risk:** low - purely additive, follows an established sibling pattern (SurfaceRoughness/GrainStructure) closely; no shared-code touch
 
 ### Priority 10: SIMD Optimization
 - [x] Auto-vectorization hints for vector operations — `simd` module
@@ -132,16 +228,34 @@
 ### Priority 12: Criterion Benchmarks
 - [x] Benchmark suite in `benches/` — `llg_benchmark.rs`
 - [x] LLG solver performance (scalar vs SIMD batch)
-- [ ] Material creation benchmarks (deferred)
-- [ ] Skyrmion dynamics benchmarks (deferred)
+- [x] Material creation benchmarks (deferred) (done 2026-07-05)
+  - **Goal:** Two new criterion benches: material-preset creation cost (Ferromagnet::yig/permalloy/cofeb/iron/cobalt/nickel/cofe) and skyrmion-dynamics simulation cost (SimulationBuilder::skyrmion_dynamics() preset run).
+  - **Design:** New benches/material_benchmark.rs and benches/skyrmion_benchmark.rs, harness=false matching existing benches/{llg,spinchain,vector3}_benchmark.rs style; register [[bench]] entries in Cargo.toml.
+  - **Files:** benches/material_benchmark.rs (new), benches/skyrmion_benchmark.rs (new), Cargo.toml (+2 [[bench]] entries)
+  - **Prerequisites:** none
+  - **Tests:** benches must compile cleanly under `cargo bench --no-run` and execute at least one iteration
+  - **Risk:** low - purely additive dev-only files, zero production code touched
+- [x] Skyrmion dynamics benchmarks (deferred) (done 2026-07-05)
+  - **Goal:** Two new criterion benches: material-preset creation cost (Ferromagnet::yig/permalloy/cofeb/iron/cobalt/nickel/cofe) and skyrmion-dynamics simulation cost (SimulationBuilder::skyrmion_dynamics() preset run).
+  - **Design:** New benches/material_benchmark.rs and benches/skyrmion_benchmark.rs, harness=false matching existing benches/{llg,spinchain,vector3}_benchmark.rs style; register [[bench]] entries in Cargo.toml.
+  - **Files:** benches/material_benchmark.rs (new), benches/skyrmion_benchmark.rs (new), Cargo.toml (+2 [[bench]] entries)
+  - **Prerequisites:** none
+  - **Tests:** benches must compile cleanly under `cargo bench --no-run` and execute at least one iteration
+  - **Risk:** low - purely additive dev-only files, zero production code touched
 - [ ] Automated regression alerts (deferred)
 
 ### Priority 13: SimulationBuilder
 - [x] SimulationBuilder with method chaining — `builder` module
 - [x] 8 SolverKind variants: Rk4, Euler, Heun, Dp45, Dp87, Yoshida4, ForestRuth, SemiImplicit
 - [x] Preset configurations — `simulation_builder` example
-- [ ] Type-state pattern compile-time validation (deferred)
-- [ ] Streaming API for large datasets (deferred)
+- [x] Type-state pattern compile-time validation (deferred) — shipped: src/builder/mod.rs, states.rs (type-state SimulationBuilder<M,F,S>, compile_fail doctest proof)
+- [x] Streaming API for large datasets (deferred) (done 2026-07-05)
+  - **Goal:** A streaming/iterator (or callback) simulation-output path that does not retain the full trajectory in memory, for large-N or long-run simulations.
+  - **Design:** Extend Simulation/SimulationBuilder (src/builder/mod.rs) with a run_streaming<F: FnMut(usize, &Vector3<f64>, f64)>(&self, callback: F) -> Result<()> method (or a StepIterator implementing Iterator<Item=Result<(f64,Vector3<f64>,f64)>>) that performs the same integration loop as run() but yields/calls back per-step instead of collecting into trajectory/energies Vecs.
+  - **Files:** src/builder/mod.rs (extend, additive method only - no breaking change to existing run()/SimulationResult), examples/streaming_simulation.rs
+  - **Prerequisites:** none
+  - **Tests:** streamed per-step values equal the corresponding entries from the collected run() trajectory on a small cross-check case; memory-behavior test showing no growing Vec accumulation during streaming
+  - **Risk:** low-moderate - touches builder/mod.rs (a core, heavily-used file); must be strictly additive (new method(s), zero changes to existing run()/build() signatures or behavior)
 
 ### Spin Caloritronics (New in v0.3.0)
 - [x] `OnsagerMatrix` with yig_pt, fe_pt, cofeb_pt presets
@@ -482,9 +596,9 @@
 - [ ] Long-term support announcements
 
 ### Advanced ML Phase 5
-- [ ] Hybrid quantum-classical NN for magnetic Hamiltonians
-- [ ] Diffusion models for skyrmion lattice generation
-- [ ] Reinforcement learning for SOT switching protocol design
+- [x] Hybrid quantum-classical NN for magnetic Hamiltonians — shipped: src/autodiff/quantum_classical.rs (test: test_training_reduces_loss)
+- [x] Diffusion models for skyrmion lattice generation — shipped: src/autodiff/diffusion_model.rs (test: test_topological_charge_skyrmion)
+- [x] Reinforcement learning for SOT switching protocol design — shipped: src/ai/rl.rs (test: test_cem_policy_converges)
 
 ---
 
@@ -505,8 +619,8 @@
   - [ ] Parallel magnetization dynamics for large systems (>1M spins)
   - [ ] Benchmark against CPU (target: 10-100x speedup)
 - [ ] ROCm support for AMD GPUs (feature = "rocm")
-- [ ] Fallback to CPU for systems without GPU
-- [ ] Unified API: transparent GPU/CPU selection
+- [x] Fallback to CPU for systems without GPU — shipped: src/gpu/cpu.rs (CpuDevice, test: test_multi_step_runs_and_norm_preserved)
+- [x] Unified API: transparent GPU/CPU selection — shipped: src/gpu/mod.rs (select_best_device())
 
 ### MPI Distributed Computing (Feature-Gated, Not Default)
 - [ ] MPI support for distributed computing (feature = "mpi")
@@ -555,7 +669,7 @@
 
 ### Testing
 - [ ] Code coverage with tarpaulin or cargo-llvm-cov (target: >80%)
-- [ ] Property-based testing with proptest (conservation laws, symmetries)
+- [x] Property-based testing with proptest (conservation laws, symmetries) — shipped: tests/property_conservation.rs, property_symmetries.rs, property_physics.rs, property_optics_saw.rs (58 proptest properties total)
 - [ ] Fuzzing with cargo-fuzz (numerical solvers, serialization)
 - [ ] Mutation testing with cargo-mutants
 
@@ -574,9 +688,9 @@
 ## Research & Validation
 
 ### Experimental Validation
-- [ ] Spin Pumping: Validate against Saitoh et al. 2006 APL
-- [ ] Spin Seebeck Effect: Compare with Uchida et al. 2008 Nature
-- [ ] Skyrmion Size: Validate with Woo 2016 Nat. Mater.
+- [x] Spin Pumping: Validate against Saitoh et al. 2006 APL — shipped: src/validation/experimental/saitoh_2006.rs (test: test_ishe_scaling_linear)
+- [x] Spin Seebeck Effect: Compare with Uchida et al. 2008 Nature — shipped: src/validation/experimental/uchida_2008.rs (test: test_seebeck_coefficient_in_order_window)
+- [x] Skyrmion Size: Validate with Woo 2016 Nat. Mater. — shipped: src/validation/experimental/woo_2016.rs (test: test_validation_passes_30pct)
 - [ ] Magnon Dispersion: Check against neutron scattering data
 - [ ] Thermal Transport: Validate magnon thermal conductivity in YIG
 - [ ] Micromagnetic Benchmarks: Cross-check with OOMMF, mumax3
@@ -615,6 +729,7 @@
 | v0.2.0 | Dec 2025 | Python Bindings, HDF5, Memory Optimization | COMPLETE |
 | v0.3.0 | 2026-03-13 | Advanced Physics, Performance, Simulation Infrastructure | COMPLETE |
 | v0.3.1 | 2026-06-10 | DemagField optimization, hamiltonian_at Result, scirs2 0.5.0 | COMPLETE |
+| v0.3.2 | TBD | In development | IN PROGRESS |
 | v0.4.0 | Q4 2026 | Research Features, ML, Ecosystem Expansion | Planned |
 | v1.0.0 | 2027 | API Stabilization, Production-Grade | Planned |
 

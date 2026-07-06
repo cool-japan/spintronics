@@ -4,6 +4,16 @@
 *.pdb
 Cargo.lock
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+*.so
+/py/dist/
+
 # WASM build artifacts
 /pkg/
 /pkg-bundler/
@@ -32,8 +42,8 @@ Thumbs.db
 *.vtk
 
 # Test and example binaries
-test_*
-performance_*
+/test_*
+/performance_*
 /examples/*/target/
 
 # Rustc ICE dumps

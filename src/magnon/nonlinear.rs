@@ -460,18 +460,59 @@ impl ParametricAmplification {
     /// * `ms` - Saturation magnetization \[A/m\]
     pub fn degenerate_from_yig(pump_freq: f64, alpha: f64, ms: f64) -> Self {
         let omega_half = pump_freq / 2.0;
-        // Coupling: γ · Ms / 2 in rad/(s·T)
+        // Parametric coupling κ = γ_gyro · Ms / 2  [rad/(s·T)]
         let coupling = GAMMA * ms / 2.0;
-        // Linewidth from Gilbert damping at the signal/idler frequency
+        // Signal/idler linewidth from Gilbert damping at ω_p/2:  γ = α · ω_half
         let gamma = alpha * omega_half;
+        // Physics-derived pump field: the degenerate parametric *threshold* field.
+        //
+        // The coupled-mode equations for the signal/idler amplitudes
+        //   ȧ_s = −γ_s a_s + i κ h a_i*,   ȧ_i = −γ_i a_i + i κ h a_s*
+        // have a marginal (Re σ = 0) solution when κ² h² = γ_s γ_i, hence
+        //   h_th = √(γ_s · γ_i) / κ = γ / κ = α · ω_p / (γ_gyro · Ms).
+        // This is the unique material-intrinsic field scale (onset of parametric
+        // oscillation), replacing the former hard-coded 0.1 mT placeholder. The
+        // preset therefore sits exactly at marginal stability (gain G = 0); use
+        // [`with_supercriticality`](Self::with_supercriticality) to move the
+        // operating point above (oscillator) or below (sub-threshold amplifier).
+        let pump_h = (gamma * gamma).sqrt() / coupling;
         Self {
             coupling,
             omega_signal: omega_half,
             omega_idler: omega_half,
-            pump_h: 1.0e-4, // placeholder 0.1 mT pump
+            pump_h,
             gamma_s: gamma,
             gamma_i: gamma,
         }
+    }
+
+    /// Rescale the pump field to a chosen supercriticality ξ = h_p / h_th.
+    ///
+    /// Presets such as [`degenerate_from_yig`](Self::degenerate_from_yig) sit
+    /// exactly at the parametric threshold (ξ = 1, marginal stability). This
+    /// consuming builder rescales the pump field to `xi × h_th`, where h_th is
+    /// the [`threshold_pump_field`](Self::threshold_pump_field). Because the
+    /// threshold depends only on κ and the linewidths (not on `pump_h`), the
+    /// call is idempotent regardless of the current pump field.
+    ///
+    /// - `xi < 1` → sub-threshold (phase-sensitive amplifier; growth rate G = 0)
+    /// - `xi = 1` → marginal (onset of oscillation, G = 0)
+    /// - `xi > 1` → above threshold (parametric oscillator, G = γ·√(ξ²−1) > 0)
+    ///
+    /// # Arguments
+    /// * `xi` - Supercriticality h_p / h_th (dimensionless); must be positive
+    ///
+    /// # Errors
+    /// Returns [`crate::error::Error::InvalidParameter`] if `xi` is not positive.
+    pub fn with_supercriticality(mut self, xi: f64) -> Result<Self> {
+        if xi <= 0.0 {
+            return Err(error::invalid_param(
+                "xi",
+                "supercriticality must be positive",
+            ));
+        }
+        self.pump_h = xi * self.threshold_pump_field();
+        Ok(self)
     }
 
     /// Return the idler angular frequency ω_i \[rad/s\].
@@ -1133,6 +1174,111 @@ mod tests {
         assert!(
             (e2 / e - 2.0).abs() < 1.0e-12,
             "interaction energy must be linear in n1"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // 15. degenerate_from_yig: pump field is the physics-derived threshold field
+    // -------------------------------------------------------------------------
+    #[test]
+    fn test_degenerate_from_yig_pump_is_threshold_field() {
+        let pump_freq = 2.0 * PI * 7.0e9; // 7 GHz pump
+        let alpha = 3.0e-5;
+        let ms = 1.4e5; // YIG saturation magnetization [A/m]
+        let pa = ParametricAmplification::degenerate_from_yig(pump_freq, alpha, ms);
+
+        // The preset must sit exactly at the parametric threshold (marginal).
+        let h_th = pa.threshold_pump_field();
+        // pump_h is private, so probe it through the threshold-consistent observables.
+        assert!(
+            !pa.is_above_threshold(),
+            "degenerate preset must sit at (not above) threshold"
+        );
+        assert!(
+            pa.gain_coefficient() < 1.0e-3,
+            "gain must vanish at the threshold field; got {}",
+            pa.gain_coefficient()
+        );
+
+        // Closed form: h_th = α · ω_p / (γ_gyro · Ms), no hard-coded 0.1 mT.
+        let expected = alpha * pump_freq / (GAMMA * ms);
+        let rel_error = (h_th - expected).abs() / expected;
+        assert!(
+            rel_error < 1.0e-12,
+            "threshold field must equal α·ω_p/(γ·Ms); rel error {rel_error:.2e}"
+        );
+
+        // It must NOT be the legacy placeholder of 1e-4 T (0.1 mT).
+        assert!(
+            (h_th - 1.0e-4).abs() / 1.0e-4 > 0.1,
+            "pump field must be derived, not the legacy 0.1 mT placeholder"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // 16. Threshold field scales correctly with α, ω_p and 1/Ms
+    // -------------------------------------------------------------------------
+    #[test]
+    fn test_degenerate_from_yig_threshold_scaling() {
+        let f0 = 2.0 * PI * 6.0e9;
+        let a0 = 2.0e-5;
+        let m0 = 1.4e5;
+        let base = ParametricAmplification::degenerate_from_yig(f0, a0, m0).threshold_pump_field();
+
+        // Doubling damping doubles the threshold field.
+        let da =
+            ParametricAmplification::degenerate_from_yig(f0, 2.0 * a0, m0).threshold_pump_field();
+        assert!((da / base - 2.0).abs() < 1.0e-12, "h_th must scale ∝ α");
+
+        // Doubling the pump frequency doubles the threshold field.
+        let df =
+            ParametricAmplification::degenerate_from_yig(2.0 * f0, a0, m0).threshold_pump_field();
+        assert!((df / base - 2.0).abs() < 1.0e-12, "h_th must scale ∝ ω_p");
+
+        // Doubling Ms halves the threshold field.
+        let dm =
+            ParametricAmplification::degenerate_from_yig(f0, a0, 2.0 * m0).threshold_pump_field();
+        assert!((dm / base - 0.5).abs() < 1.0e-12, "h_th must scale ∝ 1/Ms");
+    }
+
+    // -------------------------------------------------------------------------
+    // 17. with_supercriticality moves the operating point relative to threshold
+    // -------------------------------------------------------------------------
+    #[test]
+    fn test_with_supercriticality_operating_point() {
+        let pump_freq = 2.0 * PI * 8.0e9;
+        let alpha = 4.0e-5;
+        let ms = 1.4e5;
+        let base = ParametricAmplification::degenerate_from_yig(pump_freq, alpha, ms);
+        let gamma = alpha * pump_freq / 2.0; // signal/idler linewidth
+
+        // Twice-critical: above threshold with growth rate G = γ·√(ξ²−1) = γ·√3.
+        let osc = base.clone().with_supercriticality(2.0).expect("xi=2 valid");
+        assert!(osc.is_above_threshold(), "ξ=2 must be above threshold");
+        let expected_g = gamma * 3.0_f64.sqrt();
+        let rel = (osc.gain_coefficient() - expected_g).abs() / expected_g;
+        assert!(
+            rel < 1.0e-9,
+            "G(ξ=2) must equal γ·√3; got {} expected {expected_g} (rel {rel:.2e})",
+            osc.gain_coefficient()
+        );
+
+        // Sub-threshold: ξ = 0.5 stays below threshold with zero growth rate.
+        let amp = base
+            .clone()
+            .with_supercriticality(0.5)
+            .expect("xi=0.5 valid");
+        assert!(!amp.is_above_threshold(), "ξ=0.5 must be below threshold");
+        assert_eq!(
+            amp.gain_coefficient(),
+            0.0,
+            "sub-threshold growth must be 0"
+        );
+
+        // Non-positive supercriticality is rejected.
+        assert!(
+            base.with_supercriticality(0.0).is_err(),
+            "ξ ≤ 0 must be rejected"
         );
     }
 }

@@ -405,6 +405,10 @@ impl VtkWriter {
 mod tests {
     use super::*;
 
+    fn temp_path(name: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(name)
+    }
+
     #[test]
     fn test_vtk_writer_creation() {
         let writer = VtkWriter::new("test_output");
@@ -414,7 +418,8 @@ mod tests {
 
     #[test]
     fn test_write_simple_snapshot() {
-        let mut writer = VtkWriter::new("/tmp/test_spin");
+        let path = temp_path("vtk_test_spin");
+        let mut writer = VtkWriter::new(path.to_str().expect("path should be valid UTF-8"));
 
         let spins = vec![
             Vector3::new(1.0, 0.0, 0.0),
@@ -430,7 +435,8 @@ mod tests {
 
     #[test]
     fn test_write_multiple_snapshots() {
-        let mut writer = VtkWriter::new("/tmp/test_series");
+        let path = temp_path("vtk_test_series");
+        let mut writer = VtkWriter::new(path.to_str().expect("path should be valid UTF-8"));
 
         let spins = vec![Vector3::new(1.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0)];
 
@@ -445,7 +451,8 @@ mod tests {
 
     #[test]
     fn test_size_mismatch_error() {
-        let mut writer = VtkWriter::new("/tmp/test_error");
+        let path = temp_path("vtk_test_error");
+        let mut writer = VtkWriter::new(path.to_str().expect("path should be valid UTF-8"));
 
         let spins = vec![Vector3::new(1.0, 0.0, 0.0)];
 
@@ -456,7 +463,8 @@ mod tests {
 
     #[test]
     fn test_with_scalar_field() {
-        let mut writer = VtkWriter::new("/tmp/test_scalar");
+        let path = temp_path("vtk_test_scalar");
+        let mut writer = VtkWriter::new(path.to_str().expect("path should be valid UTF-8"));
 
         let spins = vec![Vector3::new(1.0, 0.0, 0.0), Vector3::new(0.0, 1.0, 0.0)];
 
@@ -468,7 +476,8 @@ mod tests {
 
     #[test]
     fn test_reset_counter() {
-        let mut writer = VtkWriter::new("/tmp/test_reset");
+        let path = temp_path("vtk_test_reset");
+        let mut writer = VtkWriter::new(path.to_str().expect("path should be valid UTF-8"));
 
         let spins = vec![Vector3::new(1.0, 0.0, 0.0)];
 
@@ -483,7 +492,9 @@ mod tests {
 
     #[test]
     fn test_with_cells() {
-        let writer = VtkWriter::new("/tmp/test_cells").with_cells();
+        let path = temp_path("vtk_test_cells");
+        let writer =
+            VtkWriter::new(path.to_str().expect("path should be valid UTF-8")).with_cells();
         assert!(writer.include_cells);
     }
 }

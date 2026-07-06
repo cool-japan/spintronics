@@ -1,6 +1,7 @@
 //! Python bindings for high-level simulation workflows
 
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 
 use super::vector::PyVector3;
 use crate::constants::GAMMA;
@@ -84,7 +85,12 @@ impl PySpinPumpingSimulation {
     ///
     /// Returns:
     ///     Dictionary with simulation results
-    pub fn run(&mut self, duration: f64, n_steps: usize) -> PyResult<PyObject> {
+    pub fn run<'py>(
+        &mut self,
+        py: Python<'py>,
+        duration: f64,
+        n_steps: usize,
+    ) -> PyResult<Bound<'py, PyDict>> {
         let dt = duration / n_steps as f64;
         let alpha = self.ferromagnet.alpha;
 
@@ -99,6 +105,12 @@ impl PySpinPumpingSimulation {
         let mut m = self.magnetization;
         let h = self.external_field;
 
+        // Tracks the magnetization as of the most recently recorded
+        // trajectory point (see below: the loop computes one trailing
+        // RK4 step past the last recorded sample, so `m` itself ends up
+        // one step ahead of the returned trajectory once the loop ends).
+        let mut last_recorded_m = m;
+
         // Spin current flow direction (from FM to NM, along interface normal)
         let js_flow = self.interface.normal;
 
@@ -108,6 +120,7 @@ impl PySpinPumpingSimulation {
             mx_vals.push(m.x);
             my_vals.push(m.y);
             mz_vals.push(m.z);
+            last_recorded_m = m;
 
             // Calculate dm/dt
             let dm_dt = calc_dm_dt(m, h, GAMMA, alpha);
@@ -139,20 +152,24 @@ impl PySpinPumpingSimulation {
         let avg_voltage: f64 = voltage_vals.iter().sum::<f64>() / voltage_vals.len() as f64;
         let peak_js = js_vals.iter().cloned().fold(0.0_f64, f64::max);
 
+        // Persist the final evolved magnetization (matching the last point
+        // of the returned trajectory, i.e. `mx_vals`/`my_vals`/`mz_vals`
+        // last entries) so that `get_magnetization()` reflects the state
+        // after `run()`, consistent with `LlgSimulator::evolve()`.
+        self.magnetization = last_recorded_m;
+
         // Build result dictionary
-        Python::with_gil(|py| {
-            let dict = pyo3::types::PyDict::new(py);
-            dict.set_item("times", times)?;
-            dict.set_item("mx", mx_vals)?;
-            dict.set_item("my", my_vals)?;
-            dict.set_item("mz", mz_vals)?;
-            dict.set_item("spin_current", js_vals)?;
-            dict.set_item("voltage", voltage_vals)?;
-            dict.set_item("peak_voltage", peak_voltage)?;
-            dict.set_item("avg_voltage", avg_voltage)?;
-            dict.set_item("peak_spin_current", peak_js)?;
-            Ok(dict.into())
-        })
+        let dict = PyDict::new(py);
+        dict.set_item("times", times)?;
+        dict.set_item("mx", mx_vals)?;
+        dict.set_item("my", my_vals)?;
+        dict.set_item("mz", mz_vals)?;
+        dict.set_item("spin_current", js_vals)?;
+        dict.set_item("voltage", voltage_vals)?;
+        dict.set_item("peak_voltage", peak_voltage)?;
+        dict.set_item("avg_voltage", avg_voltage)?;
+        dict.set_item("peak_spin_current", peak_js)?;
+        Ok(dict)
     }
 
     /// Get current magnetization

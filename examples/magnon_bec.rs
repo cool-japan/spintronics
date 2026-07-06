@@ -18,11 +18,18 @@
 //! - Demokritov et al., Nature 443, 430 (2006)
 //! - Serga et al., Nat. Commun. 5, 3452 (2014)
 
+// This example exercises `spintronics::magnon::bec` (magnon BEC, parametric
+// pumping), which is excluded from wasm32 builds (see
+// `#[cfg(not(target_arch = "wasm32"))]` on `pub mod magnon;` in
+// `src/lib.rs`), so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::magnon::bec::{
     bec_temperature, critical_density, magnon_distribution, MagnonCondensate, ParametricPumping,
 };
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::prelude::*;
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     println!("=== Magnon Bose-Einstein Condensation ===\n");
 
@@ -190,3 +197,6 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

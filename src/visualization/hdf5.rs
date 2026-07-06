@@ -321,7 +321,8 @@ mod tests {
     #[test]
     #[cfg(not(feature = "hdf5"))]
     fn test_hdf5_disabled() {
-        let result = Hdf5Writer::create("/tmp/test.h5");
+        let path = std::env::temp_dir().join("hdf5_test_disabled.h5");
+        let result = Hdf5Writer::create(path.to_str().expect("path should be valid UTF-8"));
         assert!(result.is_err());
     }
 }

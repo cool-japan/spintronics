@@ -8,11 +8,20 @@
 //! This reproduces the experimental setup from Saitoh group's research on
 //! magnon-driven spin currents and their electrical detection.
 
+// This example exercises `spintronics::magnon` (spin-chain solver, RF
+// excitation, spin-pumping detector), which is excluded from wasm32 builds
+// (see `#[cfg(not(target_arch = "wasm32"))]` on `pub mod magnon;` in
+// `src/lib.rs`), so it is a no-op there.
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::magnon::chain::{ChainParameters, SpinChain};
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::magnon::detector::SpinPumpingDetector;
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::magnon::solver::{MagnonSolver, RfExcitation};
+#[cfg(not(target_arch = "wasm32"))]
 use spintronics::vector3::Vector3;
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     println!("=== Magnon Propagation in YIG Wire ===\n");
 
@@ -185,3 +194,6 @@ fn main() {
     println!("  - Long-distance magnon transport in YIG");
     println!("  - Efficient spin-to-charge conversion in Pt");
 }
+
+#[cfg(target_arch = "wasm32")]
+fn main() {}

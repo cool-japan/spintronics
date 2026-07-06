@@ -22,7 +22,7 @@ use crate::effect::InverseSpinHall;
 /// e_field = pt.convert(js_flow, js_pol)
 /// print(f"Electric field: {e_field} V/m")
 /// ```
-#[pyclass(name = "InverseSpinHall")]
+#[pyclass(name = "InverseSpinHall", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyInverseSpinHall {
     inner: InverseSpinHall,

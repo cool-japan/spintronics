@@ -39,6 +39,20 @@
 use std::f64::consts::PI;
 use std::fmt;
 
+use crate::error::{Error, Result};
+
+/// Magnetic flux quantum used by this module's Berry-phase / Aharonov-Bohm
+/// convention, Φ₀ = h/e ≈ 4.136×10⁻¹⁵ V·s.
+///
+/// This is the *electronic* flux quantum appropriate for the Berry phase
+/// that conduction electrons accumulate circling a noncoplanar spin texture
+/// (as used internally by [`TopologicalHall::emergent_magnetic_field`] and by
+/// [`TopologicalHall::emergent_field_from_solid_angle`]). It is exactly twice
+/// the *superconducting* flux quantum `crate::constants::FLUX_QUANTUM` =
+/// h/(2e), which governs Cooper-pair (Aharonov-Bohm) interference and is a
+/// different physical convention not used in this module.
+pub const PHI_0: f64 = 4.136e-15;
+
 /// Topological Hall effect in skyrmion-hosting materials
 #[derive(Debug, Clone)]
 pub struct TopologicalHall {
@@ -351,6 +365,118 @@ impl TopologicalHall {
         self.hall_coefficient = r0;
         self
     }
+
+    /// Emergent magnetic field implied by a signed solid angle subtended by a
+    /// noncoplanar spin texture over a given real-space area.
+    ///
+    /// Generalizes [`TopologicalHall::emergent_magnetic_field`] from a single
+    /// skyrmion (Ω = 4π·Q over area π·r²) to an arbitrary noncoplanar
+    /// texture -- e.g. a discretized scalar-spin-chirality field on a
+    /// frustrated (triangular/kagome/pyrochlore) lattice, as produced by
+    /// `crate::frustrated::transport::FrustratedTransport`:
+    ///
+    /// $$ B_{\text{eff}} = \frac{\Phi_0 \, \Omega}{4\pi A} $$
+    ///
+    /// where Ω is the (signed) solid angle \[sr\] swept by the local spin
+    /// texture (e.g. via the Berg-Lüscher / Van Oosterom-Strackee triangle
+    /// formula) and A is the real-space area \[m²\] it is distributed over.
+    ///
+    /// This function implements the direct SI relation with no additional
+    /// scale factor. Note that `emergent_magnetic_field` carries an extra
+    /// empirical 10⁻⁴ prefactor beyond this SI relation; that legacy
+    /// single-skyrmion helper is left unmodified, so the two are related by
+    /// `emergent_magnetic_field(q) == 1e-4 * emergent_field_from_solid_angle(4*PI*q, PI*r^2)`
+    /// for a skyrmion of radius `r` (see the crate tests for this exact
+    /// cross-check).
+    ///
+    /// # Arguments
+    /// * `solid_angle` - Signed solid angle Ω \[sr\]
+    /// * `area` - Real-space area \[m²\] the solid angle is distributed over
+    ///
+    /// # Errors
+    /// Returns an error if `area` is not finite and strictly positive, or if
+    /// `solid_angle` is not finite.
+    ///
+    /// # Example
+    /// ```
+    /// use spintronics::effect::topological_hall::TopologicalHall;
+    ///
+    /// // A full skyrmion subtends the full 4*pi solid angle over its area
+    /// let radius = 9e-9; // 9 nm radius (18 nm diameter, like MnSi)
+    /// let area = std::f64::consts::PI * radius * radius;
+    /// let omega_full_skyrmion = 4.0 * std::f64::consts::PI;
+    ///
+    /// let b_eff = TopologicalHall::emergent_field_from_solid_angle(omega_full_skyrmion, area)
+    ///     .expect("valid area");
+    ///
+    /// assert!(b_eff > 0.0);
+    /// assert!(b_eff.is_finite());
+    ///
+    /// // Degenerate (zero or negative) area is rejected
+    /// assert!(TopologicalHall::emergent_field_from_solid_angle(1.0, 0.0).is_err());
+    /// assert!(TopologicalHall::emergent_field_from_solid_angle(1.0, -1.0).is_err());
+    /// ```
+    pub fn emergent_field_from_solid_angle(solid_angle: f64, area: f64) -> Result<f64> {
+        if !area.is_finite() || area <= 0.0 {
+            return Err(Error::InvalidParameter {
+                param: "area".to_string(),
+                reason: "area must be finite and strictly positive".to_string(),
+            });
+        }
+        if !solid_angle.is_finite() {
+            return Err(Error::InvalidParameter {
+                param: "solid_angle".to_string(),
+                reason: "solid angle must be finite".to_string(),
+            });
+        }
+        Ok(PHI_0 * solid_angle / (4.0 * PI * area))
+    }
+
+    /// Topological Hall resistivity driven by an externally supplied *signed
+    /// effective topological charge density* \[m⁻²\], rather than by a
+    /// discrete skyrmion count.
+    ///
+    /// This is an additive alternative entry point to
+    /// [`TopologicalHall::topological_hall_resistivity`] for sources that do
+    /// not have a natural discrete skyrmion density/charge decomposition --
+    /// e.g. a frustrated lattice's scalar spin chirality field, aggregated
+    /// into an effective charge density via the Berg-Lüscher solid-angle
+    /// relation (see `crate::frustrated::transport`). The sign of
+    /// `signed_charge_density` plays the role of `topological_charge` in the
+    /// original formula, so the two agree exactly whenever
+    /// `signed_charge_density == skyrmion_density * topological_charge`
+    /// (this exact identity is checked in the crate tests).
+    ///
+    /// # Arguments
+    /// * `signed_charge_density` - Signed effective topological charge
+    ///   density \[m⁻²\]: magnitude is "windings per unit area", sign is the
+    ///   net chirality handedness.
+    ///
+    /// # Returns
+    /// Topological Hall resistivity \[Ω·cm\], with the same R₀·n·Q sign
+    /// convention as `topological_hall_resistivity`.
+    ///
+    /// # Example
+    /// ```
+    /// use spintronics::effect::topological_hall::TopologicalHall;
+    ///
+    /// let mnsi = TopologicalHall::mnsi();
+    ///
+    /// // A signed charge density equivalent to n_sk = 1e14 m^-2 at Q = +1
+    /// let rho_direct = mnsi.topological_hall_resistivity(1.0e14, 1.0);
+    /// let rho_from_density = mnsi.hall_resistivity_from_charge_density(1.0e14);
+    /// assert!((rho_direct - rho_from_density).abs() < 1e-30);
+    ///
+    /// // Negative charge density flips the sign, matching Q = -1
+    /// let rho_negative = mnsi.hall_resistivity_from_charge_density(-1.0e14);
+    /// assert!((rho_negative + rho_from_density).abs() < 1e-30);
+    /// ```
+    pub fn hall_resistivity_from_charge_density(&self, signed_charge_density: f64) -> f64 {
+        self.topological_hall_resistivity(
+            signed_charge_density.abs(),
+            signed_charge_density.signum(),
+        )
+    }
 }
 
 impl fmt::Display for TopologicalHall {
@@ -490,5 +616,57 @@ mod tests {
 
         assert_eq!(custom.skyrmion_diameter, 100.0);
         assert_eq!(custom.hall_coefficient, 5.0e-10);
+    }
+
+    #[test]
+    fn test_emergent_field_from_solid_angle_matches_legacy_up_to_documented_prefactor() {
+        // The legacy single-skyrmion `emergent_magnetic_field` carries an extra
+        // empirical 1e-4 prefactor beyond the direct SI solid-angle relation
+        // implemented by `emergent_field_from_solid_angle`; verify the exact,
+        // documented ratio between the two rather than silently diverging.
+        let mnsi = TopologicalHall::mnsi();
+        let q = 1.0;
+        let radius = mnsi.skyrmion_diameter * 0.5 * 1e-9; // nm -> m, matches internal conversion
+        let area = PI * radius * radius;
+        let omega_full_skyrmion = 4.0 * PI * q;
+
+        let legacy = mnsi.emergent_magnetic_field(q);
+        let mine = TopologicalHall::emergent_field_from_solid_angle(omega_full_skyrmion, area)
+            .expect("area must be valid");
+
+        assert!(
+            (legacy - mine * 1e-4).abs() / legacy.abs() < 1e-9,
+            "legacy = {:.6e}, mine*1e-4 = {:.6e}",
+            legacy,
+            mine * 1e-4
+        );
+    }
+
+    #[test]
+    fn test_emergent_field_from_solid_angle_rejects_invalid_inputs() {
+        assert!(TopologicalHall::emergent_field_from_solid_angle(1.0, 0.0).is_err());
+        assert!(TopologicalHall::emergent_field_from_solid_angle(1.0, -1.0).is_err());
+        assert!(TopologicalHall::emergent_field_from_solid_angle(1.0, f64::INFINITY).is_err());
+        assert!(TopologicalHall::emergent_field_from_solid_angle(f64::NAN, 1.0).is_err());
+    }
+
+    #[test]
+    fn test_hall_resistivity_from_charge_density_matches_direct_formula() {
+        let mnsi = TopologicalHall::mnsi();
+        let n_sk = 2.5e14;
+
+        let direct = mnsi.topological_hall_resistivity(n_sk, 1.0);
+        let from_density = mnsi.hall_resistivity_from_charge_density(n_sk);
+        assert!((direct - from_density).abs() < 1e-30);
+
+        let direct_neg = mnsi.topological_hall_resistivity(n_sk, -1.0);
+        let from_density_neg = mnsi.hall_resistivity_from_charge_density(-n_sk);
+        assert!((direct_neg - from_density_neg).abs() < 1e-30);
+    }
+
+    #[test]
+    fn test_hall_resistivity_from_charge_density_zero_is_zero() {
+        let mnsi = TopologicalHall::mnsi();
+        assert_eq!(mnsi.hall_resistivity_from_charge_density(0.0), 0.0);
     }
 }

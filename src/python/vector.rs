@@ -15,7 +15,7 @@ use crate::vector3::Vector3;
 /// cross = v1.cross(v2)
 /// print(f"Cross product: ({cross.x}, {cross.y}, {cross.z})")
 /// ```
-#[pyclass(name = "Vector3")]
+#[pyclass(name = "Vector3", skip_from_py_object)]
 #[derive(Clone)]
 pub struct PyVector3 {
     inner: Vector3<f64>,

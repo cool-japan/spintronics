@@ -19,6 +19,9 @@
 //! examples on regression.
 
 #![allow(clippy::needless_pass_by_value)]
+// proptest depends on rusty-fork -> wait-timeout, which has no wasm32 backend
+// (no process-fork model on wasm32-unknown-unknown); this suite is native-only.
+#![cfg(not(target_arch = "wasm32"))]
 
 use std::f64::consts::PI;
 
