@@ -26,23 +26,19 @@ A pure Rust library for simulating spin dynamics, spin current generation, and c
 
 ## 📊 Development Status
 
-**Current Version**: 0.3.2 🚧 **IN DEVELOPMENT** (latest release: 0.3.1)
+**Current Version**: 0.3.3 🚧 **IN DEVELOPMENT** (latest release: 0.3.2)
 
-**Latest Release**: 0.3.1 — June 2026 (2026-06-10)
+**Latest Release**: 0.3.2 — July 2026 (2026-07-06)
 
-### Version 0.3.1 Highlights
-- ✅ **DemagField Performance**: Direct flat kernel indexing + optional rayon parallelism for demag computation
-- ✅ **API**: `BbhModel::hamiltonian_at` now returns `Result<CMatrix>` for proper error propagation (breaking)
-- ✅ **Dependencies**: scirs2-core and scirs2-spatial upgraded to 0.5.0 (default-features = false)
-- ✅ **Interactive Web Demo**: HTMX + Axum demonstration subcrate with 4 physics simulations
-- ✅ **Python Bindings (PyO3)**: Use from Python with native performance
-- ✅ **HDF5 Export**: Large-scale data storage for simulation results
-- ✅ **Memory Pool Allocator**: 99% allocation reduction in hot paths
-- ✅ **Serde Serialization**: JSON/binary data interchange
-- ✅ **Unit Validation**: Runtime checks for physical quantity sanity
-- ✅ **Performance**: SIMD-accelerated spin operations and parallel lattice evolution
-- ✅ **25 Examples**: Organized by difficulty (Basic/Intermediate/Advanced)
-- ✅ **2012 Tests + 117 Doc Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
+### Version 0.3.2 Highlights
+- ✅ **Altermagnets**: k·p Bloch Hamiltonian with Berry curvature, crystal/spin Hall conductivity, and GMR-like spin valves without ferromagnetism
+- ✅ **Orbitronics**: d-orbital local-moment magnetism with crystal-field + spin-orbit Hamiltonians and 12 preset 3d transition-metal ions
+- ✅ **Frustrated Magnetism / RVB**: Quantum spin-liquid solver (dimer coverings, variational ground state, exact diagonalization) plus chirality-driven topological Hall transport
+- ✅ **Hopfion Stability Modes**: Collective-coordinate linear-stability analysis for hopfion eigenmodes
+- ✅ **Strain-Driven Dynamics**: Time-domain SAW / AC piezoelectric strain-driven LLG dynamics
+- ✅ **Streaming Simulation + Binary OVF**: Per-step callback API without materializing the full trajectory, plus binary OVF 1.0/2.0 read/write with control-value validation
+- ✅ **Python Bindings Expansion**: Complete `.pyi` type stubs plus a new 168-test pytest suite covering vectors, materials, solvers, and transport
+- ✅ **2059 Tests + 118 Doc Tests Passing**: Comprehensive unit, doc, and integration tests, zero warnings
 
 ### Core Capabilities
 - ✅ **34 Implemented Modules**: Comprehensive physics coverage from fundamentals to advanced phenomena
@@ -672,7 +668,7 @@ See `wasm-demo/` directory for complete interactive examples.
 **Quality**
 - ✅ 1829 lib + 111 doc tests passing, 0 warnings
 
-### Version 0.3.2 🚧 **IN DEVELOPMENT**
+### Version 0.3.2 ✅ **COMPLETE**
 
 **New Physics Modules**
 - ✅ Altermagnet band model: k·p Bloch Hamiltonian with Berry curvature, crystal Hall and spin Hall conductivity (`altermagnet::band_model`)

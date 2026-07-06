@@ -312,7 +312,7 @@ harness = false
 members = ["demo", "py"]
 
 [workspace.package]
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 authors = ["COOLJAPAN OÜ (Team KitaSan)"]
 license = "Apache-2.0"

@@ -1,7 +1,7 @@
 # TODO List for Spintronics Library
 
-**Version**: 0.3.2
-**Last Updated**: 2026-07-06 - v0.3.2 in development
+**Version**: 0.3.3
+**Last Updated**: 2026-07-07 - v0.3.3 in development
 **Status**: 1977 lib + 65 proptest passing = 2042 nextest (main crate, `cargo nextest run --all-features --workspace`) + 118 doctests passing, 5 ignored (`cargo test --all-features --doc`), 0 warnings, ~101K lines (Rust code: ~79.5K+)
 
 ---
@@ -177,7 +177,7 @@
   - **Tests:** relaxation converges to the known self-consistent equilibrium gap value; free energy monotonically decreases during relaxation; amplitude vanishes continuously as T approaches T_N
   - **Risk:** low - additive extension of an existing, well-tested module
 - [x] Helical magnets and spirals (deferred) — shipped: src/noncollinear/spiral.rs (test: test_helical_gives_no_polarization)
-- [ ] Magnon-magnon interactions (deferred)
+- [x] Magnon-magnon interactions (deferred) — shipped: src/magnon/nonlinear.rs (three- and four-magnon Suhl instabilities, parametric amplification, `magnon_magnon_interaction_energy`; test: `test_magnon_magnon_interaction_energy_positive`)
 
 ### Priority 8: Magnetoelastic Coupling (Straintronics)
 - [x] Magnetoelastic coupling tensor — `mech/magnetoelastic`
@@ -729,7 +729,8 @@
 | v0.2.0 | Dec 2025 | Python Bindings, HDF5, Memory Optimization | COMPLETE |
 | v0.3.0 | 2026-03-13 | Advanced Physics, Performance, Simulation Infrastructure | COMPLETE |
 | v0.3.1 | 2026-06-10 | DemagField optimization, hamiltonian_at Result, scirs2 0.5.0 | COMPLETE |
-| v0.3.2 | TBD | In development | IN PROGRESS |
+| v0.3.2 | 2026-07-06 | Altermagnets, orbitronics, frustrated magnetism (RVB), hopfion stability modes, strain-driven dynamics, Python bindings expansion | COMPLETE |
+| v0.3.3 | TBD | In development | IN PROGRESS |
 | v0.4.0 | Q4 2026 | Research Features, ML, Ecosystem Expansion | Planned |
 | v1.0.0 | 2027 | API Stabilization, Production-Grade | Planned |
 
