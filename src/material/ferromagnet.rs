@@ -105,10 +105,10 @@ impl Ferromagnet {
     pub fn cofeb() -> Self {
         Self {
             alpha: 0.004,
-            ms: 1.0e6,
+            ms: 1.2e6,
             anisotropy_k: 1.0e5,
             easy_axis: Vector3::new(0.0, 0.0, 1.0),
-            exchange_a: 2.0e-11,
+            exchange_a: 1.5e-11,
         }
     }
 
@@ -281,9 +281,12 @@ mod tests {
 
     #[test]
     fn test_cofeb_properties() {
+        use super::super::traits::MagneticMaterial;
+
         let cofeb = Ferromagnet::cofeb();
-        assert!(cofeb.ms > 9.0e5);
-        assert!(cofeb.anisotropy_k > 0.0); // Has PMA
+        assert_eq!(cofeb.saturation_magnetization(), 1.2e6);
+        assert_eq!(cofeb.damping(), 0.004);
+        assert_eq!(cofeb.exchange_stiffness(), 1.5e-11);
     }
 
     #[test]
