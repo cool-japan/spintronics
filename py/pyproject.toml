@@ -7,7 +7,7 @@ name = "spintronics"
 version = "0.3.3"
 description = "High-performance spintronics simulation library"
 authors = [
-    {name = "COOLJAPAN OU (Team Kitasan)", email = "contact@cooljapan.tech"}
+    {name = "COOLJAPAN OU (Team KitaSan)", email = "contact@cooljapan.tech"}
 ]
 readme = {file = "PYPI_README.md", content-type = "text/markdown"}
 requires-python = ">=3.8"

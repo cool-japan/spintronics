@@ -1,6 +1,6 @@
 # ============================================================
 # spintronics Python bindings — Makefile
-# COOLJAPAN OU (Team Kitasan)
+# COOLJAPAN OU (Team KitaSan)
 # ============================================================
 
 .PHONY: build build-debug install dev test clean wheel lint fmt check
